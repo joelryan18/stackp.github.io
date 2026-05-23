@@ -1,902 +1,1286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Maison Noir — Haute Horlogerie Since 1887</title>
-<meta name="description" content="Maison Noir crafts the world's finest mechanical timepieces. Discover heritage watchmaking, hand-finished movements, and timeless elegance." />
-
-<!-- Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<!-- Icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTMS — Cognitive Traffic Management System | PBL Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{
-  --bg:#0a0a0a;
-  --bg-2:#111111;
-  --bg-3:#181818;
-  --ivory:#f4ecd8;
-  --cream:#e8dfc7;
-  --gold:#c9a961;
-  --gold-light:#e0c989;
-  --gold-dark:#8b7332;
-  --text:#e8e4dc;
-  --muted:#9a948a;
-  --line:rgba(201,169,97,0.22);
+/* ═══════════════════════════════════════
+   ROOT VARIABLES
+═══════════════════════════════════════ */
+:root {
+  --bg:      #04080f;
+  --bg2:     #080f1c;
+  --bg3:     #0c1626;
+  --bg4:     #101e30;
+  --bd:      #162030;
+  --bd2:     #1e3048;
+  --ac:      #00e5b8;
+  --ac2:     #1a7cff;
+  --ac3:     #7c3aed;
+  --warn:    #f59e0b;
+  --danger:  #ef4444;
+  --ok:      #22c55e;
+  --txt:     #8ba8c4;
+  --txtd:    #3d5872;
+  --txtb:    #cde0f5;
+  --white:   #eaf2ff;
+  --f1:      'Rajdhani', sans-serif;
+  --f2:      'JetBrains Mono', monospace;
+  --f3:      'Noto Sans', sans-serif;
 }
+*{margin:0;padding:0;box-sizing:border-box;scroll-behavior:smooth;}
+html{font-size:16px;}
+body{background:var(--bg);color:var(--txt);font-family:var(--f3);overflow-x:hidden;}
+::selection{background:rgba(0,229,184,.25);color:var(--white);}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
-*{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{
-  font-family:'Inter',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  overflow-x:hidden;
-  line-height:1.6;
-  -webkit-font-smoothing:antialiased;
+/* ═══════════════════════════════════════
+   TOPNAV
+═══════════════════════════════════════ */
+#topnav {
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:rgba(4,8,15,.88);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:58px;transition:background .3s;
 }
-img{max-width:100%;display:block;}
-
-/* ============ Custom Cursor (desktop) ============ */
-.cursor-dot,.cursor-ring{
-  position:fixed;top:0;left:0;pointer-events:none;z-index:9999;
-  transform:translate(-50%,-50%);transition:width .25s,height .25s,opacity .25s;
-}
-.cursor-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;}
-.cursor-ring{width:36px;height:36px;border:1px solid var(--gold);border-radius:50%;transition:transform .15s linear,width .25s,height .25s;}
-@media (max-width:900px){.cursor-dot,.cursor-ring{display:none;}}
-
-/* ============ Loader ============ */
-.loader{
-  position:fixed;inset:0;background:var(--bg);z-index:10000;
-  display:flex;align-items:center;justify-content:center;flex-direction:column;
-  transition:opacity .8s ease,visibility .8s ease;
-}
-.loader.hidden{opacity:0;visibility:hidden;}
-.loader .mark{
-  font-family:'Playfair Display',serif;color:var(--gold);
-  font-size:48px;letter-spacing:.4em;font-weight:500;
-  border:1px solid var(--gold);padding:18px 28px;
-}
-.loader .bar{margin-top:30px;width:200px;height:1px;background:rgba(201,169,97,.2);position:relative;overflow:hidden;}
-.loader .bar::after{content:"";position:absolute;left:-40%;top:0;width:40%;height:100%;background:var(--gold);animation:slide 1.2s ease-in-out infinite;}
-@keyframes slide{to{left:100%;}}
-
-/* ============ Navigation ============ */
-.nav{
-  position:fixed;top:0;left:0;width:100%;z-index:1000;
-  padding:22px 60px;display:flex;justify-content:space-between;align-items:center;
-  transition:all .4s ease;
-  background:linear-gradient(to bottom,rgba(10,10,10,.85),transparent);
-  backdrop-filter:blur(0px);
-}
-.nav.scrolled{
-  background:rgba(10,10,10,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--line);padding:14px 60px;
-}
-.nav-logo{
-  font-family:'Playfair Display',serif;font-size:26px;font-weight:500;
-  color:var(--ivory);letter-spacing:.35em;text-decoration:none;
-}
-.nav-logo span{color:var(--gold);}
-.nav-links{display:flex;list-style:none;gap:42px;}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.nav-mark{width:34px;height:34px;border-radius:8px;background:var(--ac);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f1);font-weight:700;font-size:12px;color:#04080f;letter-spacing:0;}
+.nav-title{font-family:var(--f1);font-weight:700;font-size:17px;color:var(--white);letter-spacing:2px;}
+.nav-links{display:flex;gap:4px;}
 .nav-links a{
-  color:var(--text);text-decoration:none;font-size:12px;
-  letter-spacing:.25em;text-transform:uppercase;font-weight:400;
-  position:relative;transition:color .3s;
+  font-family:var(--f2);font-size:11px;color:var(--txtd);
+  text-decoration:none;padding:6px 12px;border-radius:6px;
+  letter-spacing:.5px;transition:color .2s,background .2s;
 }
-.nav-links a::after{
-  content:"";position:absolute;left:0;bottom:-6px;width:0;height:1px;
-  background:var(--gold);transition:width .3s;
+.nav-links a:hover,.nav-links a.active{color:var(--ac);background:rgba(0,229,184,.07);}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-badge{
+  font-family:var(--f2);font-size:10px;padding:4px 10px;border-radius:4px;
+  background:rgba(0,229,184,.08);color:var(--ac);border:1px solid rgba(0,229,184,.2);
+  letter-spacing:.5px;
 }
-.nav-links a:hover{color:var(--gold);}
-.nav-links a:hover::after{width:100%;}
-.nav-icons{display:flex;gap:24px;align-items:center;}
-.nav-icons i{color:var(--ivory);font-size:14px;cursor:pointer;transition:color .3s;}
-.nav-icons i:hover{color:var(--gold);}
-.nav-toggle{display:none;background:none;border:none;color:var(--ivory);font-size:20px;cursor:pointer;}
+#nav-clock{font-family:var(--f2);font-size:12px;color:var(--txtd);}
 
-@media (max-width:900px){
-  .nav{padding:18px 24px;}
-  .nav.scrolled{padding:14px 24px;}
-  .nav-links{
-    position:fixed;top:0;right:-100%;width:75%;height:100vh;
-    background:var(--bg-2);flex-direction:column;justify-content:center;
-    align-items:center;gap:36px;transition:right .4s ease;border-left:1px solid var(--line);
-  }
-  .nav-links.open{right:0;}
-  .nav-toggle{display:block;}
+/* ═══════════════════════════════════════
+   HERO SECTION
+═══════════════════════════════════════ */
+#hero {
+  min-height:100vh;display:flex;align-items:center;
+  position:relative;overflow:hidden;padding-top:58px;
 }
-
-/* ============ Hero ============ */
-.hero{
-  min-height:100vh;position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-  background:
-    radial-gradient(circle at 20% 20%,rgba(201,169,97,.12),transparent 50%),
-    radial-gradient(circle at 80% 80%,rgba(201,169,97,.08),transparent 50%),
-    var(--bg);
+.hero-grid-bg {
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(0,229,184,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,184,.04) 1px, transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 100%);
 }
-.hero::before{
-  content:"";position:absolute;inset:0;
-  background:url("https://images.pexels.com/photos/10414974/pexels-photo-10414974.jpeg?auto=compress&cs=tinysrgb&w=2000") center/cover no-repeat;
-  opacity:.28;filter:contrast(1.05) brightness(.55);
-}
-.hero::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(10,10,10,.5) 0%,rgba(10,10,10,.4) 40%,rgba(10,10,10,.95) 100%);
-}
-.hero-content{
-  position:relative;z-index:2;text-align:center;max-width:1100px;padding:0 30px;
-}
-.hero-eyebrow{
-  font-size:11px;letter-spacing:.55em;color:var(--gold);
-  text-transform:uppercase;margin-bottom:28px;font-weight:500;
-  display:inline-flex;align-items:center;gap:18px;
-}
-.hero-eyebrow::before,.hero-eyebrow::after{
-  content:"";width:38px;height:1px;background:var(--gold);
-}
-.hero h1{
-  font-family:'Playfair Display',serif;
-  font-size:clamp(48px,8vw,120px);font-weight:400;
-  line-height:.98;color:var(--ivory);margin-bottom:30px;letter-spacing:-.01em;
-}
-.hero h1 .accent{
-  color:var(--gold);font-style:italic;font-weight:400;
-  display:inline-block;
-}
-.hero p.lead{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(18px,2.3vw,26px);font-weight:300;
-  color:var(--cream);max-width:680px;margin:0 auto 44px;font-style:italic;
-}
-.hero-actions{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;}
-
-.btn{
-  display:inline-flex;align-items:center;gap:14px;
-  padding:18px 38px;font-size:11px;letter-spacing:.32em;
-  text-transform:uppercase;text-decoration:none;cursor:pointer;
-  font-weight:500;transition:all .4s ease;border:1px solid var(--gold);
-  font-family:'Inter',sans-serif;background:transparent;color:var(--ivory);
-}
-.btn-primary{background:var(--gold);color:var(--bg);}
-.btn-primary:hover{background:var(--gold-light);box-shadow:0 10px 40px rgba(201,169,97,.25);transform:translateY(-2px);}
-.btn-ghost:hover{background:var(--gold);color:var(--bg);transform:translateY(-2px);}
-.btn i{font-size:10px;transition:transform .3s;}
-.btn:hover i{transform:translateX(4px);}
-
-.hero-scroll{
-  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
-  z-index:2;text-align:center;color:var(--muted);
-  font-size:10px;letter-spacing:.4em;text-transform:uppercase;
-}
-.hero-scroll::after{
-  content:"";display:block;width:1px;height:60px;background:var(--gold);
-  margin:14px auto 0;animation:scrollLine 2.2s ease-in-out infinite;
-  transform-origin:top;
-}
-@keyframes scrollLine{
-  0%,100%{transform:scaleY(.3);}
-  50%{transform:scaleY(1);}
-}
-
-/* ============ Section base ============ */
-section{padding:140px 60px;position:relative;}
-@media (max-width:768px){section{padding:90px 24px;}}
-.container{max-width:1380px;margin:0 auto;}
-.section-eyebrow{
-  font-size:11px;letter-spacing:.5em;color:var(--gold);
-  text-transform:uppercase;margin-bottom:18px;font-weight:500;
-  display:inline-flex;align-items:center;gap:14px;
-}
-.section-eyebrow::before{content:"";width:30px;height:1px;background:var(--gold);}
-.section-title{
-  font-family:'Playfair Display',serif;font-weight:400;
-  font-size:clamp(36px,5vw,64px);color:var(--ivory);
-  line-height:1.05;letter-spacing:-.01em;margin-bottom:24px;
-}
-.section-title em{color:var(--gold);font-style:italic;font-weight:400;}
-.section-sub{
-  font-family:'Cormorant Garamond',serif;font-size:20px;
-  color:var(--cream);font-style:italic;max-width:640px;font-weight:400;
-}
-
-/* ============ Heritage ============ */
-.heritage{background:var(--bg-2);}
-.heritage-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:90px;align-items:center;}
-@media (max-width:900px){.heritage-grid{grid-template-columns:1fr;gap:50px;}}
-.heritage-text p{
-  font-family:'Cormorant Garamond',serif;font-size:20px;
-  color:var(--cream);margin-bottom:22px;line-height:1.65;
-}
-.heritage-text p:first-of-type::first-letter{
-  font-family:'Playfair Display',serif;font-size:74px;color:var(--gold);
-  float:left;line-height:.85;padding:8px 14px 0 0;font-style:italic;
-}
-.heritage-stats{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  margin-top:46px;border-top:1px solid var(--line);padding-top:34px;
-}
-.heritage-stats .stat{text-align:center;}
-.heritage-stats .num{
-  font-family:'Playfair Display',serif;color:var(--gold);
-  font-size:46px;font-weight:500;line-height:1;
-}
-.heritage-stats .lbl{
-  font-size:10px;letter-spacing:.3em;text-transform:uppercase;
-  color:var(--muted);margin-top:10px;
-}
-.heritage-img{position:relative;}
-.heritage-img img{
-  width:100%;aspect-ratio:4/5;object-fit:cover;
-  filter:contrast(1.05) brightness(.9);
-}
-.heritage-img::before{
-  content:"";position:absolute;inset:-20px;border:1px solid var(--gold);
-  z-index:-1;
-}
-.heritage-img::after{
-  content:"EST. 1887";position:absolute;top:-12px;left:-12px;
-  background:var(--bg-2);color:var(--gold);padding:8px 16px;
-  font-size:10px;letter-spacing:.4em;border:1px solid var(--gold);
-}
-
-/* ============ Collection ============ */
-.collection{background:var(--bg);}
-.collection-head{
-  display:flex;justify-content:space-between;align-items:flex-end;
-  margin-bottom:70px;flex-wrap:wrap;gap:24px;
-}
-.collection-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:34px;
-}
-@media (max-width:1000px){.collection-grid{grid-template-columns:repeat(2,1fr);}}
-@media (max-width:640px){.collection-grid{grid-template-columns:1fr;}}
-
-.watch-card{
-  background:var(--bg-2);border:1px solid rgba(255,255,255,.04);
-  overflow:hidden;transition:all .5s ease;position:relative;cursor:pointer;
-}
-.watch-card:hover{border-color:var(--gold);transform:translateY(-8px);box-shadow:0 30px 60px rgba(0,0,0,.6);}
-.watch-card .img-wrap{
-  position:relative;overflow:hidden;aspect-ratio:1/1;
-  background:linear-gradient(135deg,#1a1a1a 0%,#0d0d0d 100%);
-  display:flex;align-items:center;justify-content:center;
-}
-.watch-card .img-wrap img{
-  width:100%;height:100%;object-fit:cover;
-  transition:transform .9s ease;
-}
-.watch-card:hover .img-wrap img{transform:scale(1.06);}
-.watch-card .badge{
-  position:absolute;top:18px;left:18px;
-  font-size:9px;letter-spacing:.3em;color:var(--gold);
-  background:rgba(10,10,10,.7);padding:6px 12px;
-  border:1px solid var(--gold);text-transform:uppercase;backdrop-filter:blur(6px);
-}
-.watch-card .heart{
-  position:absolute;top:18px;right:18px;width:38px;height:38px;
-  background:rgba(10,10,10,.6);border:1px solid rgba(255,255,255,.1);
-  border-radius:50%;display:flex;align-items:center;justify-content:center;
-  color:var(--ivory);transition:all .3s;backdrop-filter:blur(8px);font-size:12px;
-}
-.watch-card:hover .heart{border-color:var(--gold);color:var(--gold);}
-.watch-card .info{padding:28px 26px;}
-.watch-card .ref{
-  font-size:10px;letter-spacing:.3em;color:var(--muted);
-  text-transform:uppercase;margin-bottom:10px;
-}
-.watch-card .name{
-  font-family:'Playfair Display',serif;font-size:22px;color:var(--ivory);
-  margin-bottom:6px;font-weight:500;
-}
-.watch-card .desc{
-  font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;
-  color:var(--cream);margin-bottom:18px;
-}
-.watch-card .row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding-top:18px;border-top:1px solid var(--line);
-}
-.watch-card .price{
-  font-family:'Playfair Display',serif;color:var(--gold);
-  font-size:20px;font-weight:500;
-}
-.watch-card .view{
-  font-size:10px;letter-spacing:.3em;color:var(--ivory);
-  text-transform:uppercase;transition:color .3s;
-}
-.watch-card:hover .view{color:var(--gold);}
-
-/* ============ Craftsmanship parallax ============ */
-.craft{
-  background:url("https://images.pexels.com/photos/3083461/pexels-photo-3083461.jpeg?auto=compress&cs=tinysrgb&w=2400") center/cover no-repeat fixed;
-  position:relative;
-}
-@media (max-width:768px){.craft{background-attachment:scroll;}}
-.craft::before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(10,10,10,.92) 0%,rgba(10,10,10,.7) 100%);
-}
-.craft-inner{position:relative;z-index:2;text-align:center;max-width:900px;margin:0 auto;}
-.craft .section-title{margin:0 auto 24px;}
-.craft-quote{
-  font-family:'Cormorant Garamond',serif;font-size:clamp(22px,3vw,32px);
-  font-style:italic;color:var(--cream);line-height:1.5;margin:36px 0;
-  font-weight:300;
-}
-.craft-quote::before,.craft-quote::after{color:var(--gold);font-size:48px;line-height:0;vertical-align:-12px;}
-.craft-quote::before{content:"“";margin-right:8px;}
-.craft-quote::after{content:"”";margin-left:8px;}
-.craft-author{
-  font-size:11px;letter-spacing:.4em;color:var(--gold);
-  text-transform:uppercase;
-}
-
-/* ============ Features ============ */
-.features{background:var(--bg-2);}
-.features-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:60px;}
-@media (max-width:900px){.features-grid{grid-template-columns:repeat(2,1fr);}}
-@media (max-width:520px){.features-grid{grid-template-columns:1fr;}}
-.feature{
-  padding:50px 36px;text-align:center;
-  border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
-  transition:background .4s ease;
-}
-.feature:nth-child(4n){border-right:none;}
-.feature:hover{background:rgba(201,169,97,.04);}
-.feature i{
-  font-size:36px;color:var(--gold);margin-bottom:24px;display:block;
-}
-.feature h4{
-  font-family:'Playfair Display',serif;font-size:20px;
-  color:var(--ivory);margin-bottom:12px;font-weight:500;
-}
-.feature p{
-  font-family:'Cormorant Garamond',serif;font-size:17px;
-  color:var(--muted);font-style:italic;line-height:1.5;
-}
-
-/* ============ Boutique / CTA ============ */
-.boutique{
-  background:var(--bg);position:relative;overflow:hidden;
-}
-.boutique::before{
-  content:"";position:absolute;top:-200px;left:-200px;width:500px;height:500px;
-  background:radial-gradient(circle,rgba(201,169,97,.15),transparent 70%);
-}
-.boutique-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1;
-}
-@media (max-width:900px){.boutique-grid{grid-template-columns:1fr;gap:50px;}}
-.boutique-img{
-  aspect-ratio:4/5;
-  background:url("https://images.pexels.com/photos/16093238/pexels-photo-16093238.jpeg?auto=compress&cs=tinysrgb&w=1600") center/cover no-repeat;
-  position:relative;
-}
-.boutique-img::after{
-  content:"";position:absolute;inset:12px;border:1px solid rgba(201,169,97,.5);
+.hero-glow1{
+  position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle, rgba(0,229,184,.09) 0%, transparent 70%);
   pointer-events:none;
 }
-.boutique p.body{
-  font-family:'Cormorant Garamond',serif;font-size:20px;
-  color:var(--cream);line-height:1.65;margin:24px 0 36px;font-style:italic;
+.hero-glow2{
+  position:absolute;bottom:-80px;right:-100px;
+  width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle, rgba(26,124,255,.07) 0%, transparent 70%);
+  pointer-events:none;
 }
-.boutique-list{list-style:none;margin-bottom:40px;}
-.boutique-list li{
-  display:flex;align-items:center;gap:18px;padding:18px 0;
-  border-top:1px solid var(--line);
+.hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:60px 28px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--f2);font-size:10px;color:var(--ac);
+  background:rgba(0,229,184,.06);border:1px solid rgba(0,229,184,.18);
+  border-radius:20px;padding:5px 14px;letter-spacing:.8px;margin-bottom:22px;
 }
-.boutique-list li:last-child{border-bottom:1px solid var(--line);}
-.boutique-list i{color:var(--gold);font-size:14px;width:24px;}
-.boutique-list .city{
-  font-family:'Playfair Display',serif;color:var(--ivory);
-  font-size:18px;flex:1;
+.htag-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1.hero-title{
+  font-family:var(--f1);font-weight:700;font-size:clamp(36px,5vw,62px);
+  color:var(--white);line-height:1.05;margin-bottom:18px;letter-spacing:1px;
 }
-.boutique-list .addr{
-  color:var(--muted);font-size:13px;letter-spacing:.05em;
+h1.hero-title span{color:var(--ac);}
+.hero-desc{font-size:15px;line-height:1.7;color:var(--txt);max-width:520px;margin-bottom:30px;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-primary{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--ac);color:#04080f;padding:12px 22px;border-radius:9px;
+  font-family:var(--f1);font-weight:700;font-size:14px;letter-spacing:1px;
+  text-decoration:none;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,229,184,.28);}
+.btn-outline{
+  display:inline-flex;align-items:center;gap:8px;
+  background:transparent;color:var(--txtb);padding:12px 22px;border-radius:9px;
+  font-family:var(--f1);font-weight:600;font-size:14px;letter-spacing:1px;
+  text-decoration:none;border:1px solid var(--bd2);cursor:pointer;transition:border-color .2s,color .2s;
+}
+.btn-outline:hover{border-color:var(--ac2);color:var(--ac2);}
+
+/* Hero — right column: team card */
+.hero-card{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:16px;
+  overflow:hidden;
+}
+.hc-top{padding:18px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.hc-top-title{font-family:var(--f2);font-size:11px;color:var(--txtd);letter-spacing:.8px;}
+.hc-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:blink 2s ease-in-out infinite;}
+.hc-meta{padding:16px 20px;border-bottom:1px solid var(--bd);}
+.hc-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;font-family:var(--f2);}
+.hck{color:var(--txtd);}
+.hcv{color:var(--txtb);}
+.team-list{padding:14px 20px;}
+.team-row{
+  display:flex;align-items:center;gap:12px;padding:8px 0;
+  border-bottom:1px solid rgba(22,32,48,.8);
+}
+.team-row:last-child{border-bottom:none;}
+.team-num{
+  width:28px;height:28px;border-radius:7px;
+  background:rgba(0,229,184,.08);color:var(--ac);
+  font-family:var(--f2);font-size:10px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.team-usn{font-family:var(--f2);font-size:10px;color:var(--txtd);}
+.team-name{font-size:13px;font-family:var(--f3);font-weight:600;color:var(--txtb);}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--bd);}
+.hstat{padding:14px 18px;text-align:center;border-right:1px solid var(--bd);}
+.hstat:last-child{border-right:none;}
+.hstat-v{font-family:var(--f2);font-size:20px;font-weight:600;color:var(--ac);line-height:1;}
+.hstat-l{font-size:9px;color:var(--txtd);font-family:var(--f2);margin-top:3px;letter-spacing:.5px;}
+
+/* ═══════════════════════════════════════
+   SECTION COMMON
+═══════════════════════════════════════ */
+section{padding:80px 0;}
+.section-inner{max-width:1200px;margin:0 auto;padding:0 28px;}
+.sec-tag{
+  font-family:var(--f2);font-size:10px;color:var(--ac);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.sec-tag::before{content:'';width:20px;height:1px;background:var(--ac);}
+h2.sec-title{
+  font-family:var(--f1);font-weight:700;font-size:clamp(28px,3.5vw,42px);
+  color:var(--white);margin-bottom:14px;letter-spacing:.5px;line-height:1.1;
+}
+h2.sec-title span{color:var(--ac);}
+.sec-desc{font-size:15px;line-height:1.7;color:var(--txt);max-width:640px;margin-bottom:44px;}
+.sec-divider{height:1px;background:linear-gradient(90deg,var(--ac) 0%,transparent 100%);margin-bottom:0;opacity:.3;}
+
+/* ═══════════════════════════════════════
+   PROBLEM SECTION
+═══════════════════════════════════════ */
+#problem{background:var(--bg2);}
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.pcard{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:12px;
+  padding:20px;transition:border-color .25s,transform .25s;position:relative;overflow:hidden;
+}
+.pcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--danger),transparent);
+  opacity:0;transition:opacity .25s;
+}
+.pcard:hover{border-color:rgba(239,68,68,.35);transform:translateY(-3px);}
+.pcard:hover::before{opacity:1;}
+.pico{font-size:26px;margin-bottom:12px;}
+.ptitle{font-family:var(--f1);font-weight:700;font-size:16px;color:var(--txtb);margin-bottom:8px;}
+.pdesc{font-size:13px;line-height:1.6;color:var(--txt);}
+.pnum{
+  position:absolute;top:14px;right:14px;font-family:var(--f2);font-size:11px;
+  color:var(--bd2);font-weight:600;
 }
 
-/* ============ Newsletter ============ */
-.newsletter{
-  background:linear-gradient(135deg,#1a1610 0%,#0a0a0a 100%);
-  text-align:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-}
-.newsletter .container{max-width:720px;}
-.newsletter form{
-  display:flex;gap:0;margin-top:36px;
-  border:1px solid var(--gold);
-}
-.newsletter input{
-  flex:1;padding:20px 24px;background:transparent;border:none;
-  color:var(--ivory);font-family:'Cormorant Garamond',serif;font-size:17px;
-  outline:none;letter-spacing:.05em;
-}
-.newsletter input::placeholder{color:var(--muted);font-style:italic;}
-.newsletter button{
-  padding:0 36px;background:var(--gold);color:var(--bg);
-  border:none;font-size:11px;letter-spacing:.32em;text-transform:uppercase;
-  cursor:pointer;font-weight:600;transition:background .3s;
-}
-.newsletter button:hover{background:var(--gold-light);}
-.newsletter .note{
-  font-size:11px;color:var(--muted);margin-top:18px;letter-spacing:.05em;
+/* ═══════════════════════════════════════
+   LIVE DASHBOARD SECTION
+═══════════════════════════════════════ */
+#dashboard{background:var(--bg);}
+.dash-wrap{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:16px;
+  overflow:hidden;
 }
 
-/* ============ Footer ============ */
-footer{background:#070707;padding:90px 60px 30px;border-top:1px solid var(--line);}
-@media (max-width:768px){footer{padding:60px 24px 24px;}}
-.foot-grid{
-  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;
-  gap:60px;max-width:1380px;margin:0 auto 60px;
+/* Metrics strip */
+.dmetrics{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--bd);}
+.dmc{
+  padding:16px 20px;border-right:1px solid var(--bd);
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg2);transition:background .2s;
 }
-@media (max-width:900px){.foot-grid{grid-template-columns:1fr 1fr;gap:40px;}}
-@media (max-width:520px){.foot-grid{grid-template-columns:1fr;}}
-.foot-brand .logo{
-  font-family:'Playfair Display',serif;font-size:28px;
-  color:var(--ivory);letter-spacing:.35em;margin-bottom:18px;
+.dmc:last-child{border-right:none;}
+.dmc:hover{background:var(--bg3);}
+.dmico{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
 }
-.foot-brand .logo span{color:var(--gold);}
-.foot-brand p{
-  font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--muted);
-  font-style:italic;line-height:1.6;max-width:340px;
-}
-.foot-col h5{
-  font-family:'Playfair Display',serif;color:var(--gold);
-  font-size:15px;letter-spacing:.25em;text-transform:uppercase;
-  margin-bottom:24px;font-weight:500;
-}
-.foot-col ul{list-style:none;}
-.foot-col li{margin-bottom:12px;}
-.foot-col a{
-  color:var(--muted);text-decoration:none;font-size:13px;
-  letter-spacing:.04em;transition:color .3s;
-}
-.foot-col a:hover{color:var(--gold);}
-.foot-socials{display:flex;gap:14px;margin-top:20px;}
-.foot-socials a{
-  width:38px;height:38px;border:1px solid var(--line);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;color:var(--ivory);
-  transition:all .3s;font-size:13px;
-}
-.foot-socials a:hover{background:var(--gold);color:var(--bg);border-color:var(--gold);transform:translateY(-3px);}
-.foot-bottom{
-  max-width:1380px;margin:0 auto;padding-top:30px;
-  border-top:1px solid var(--line);
-  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;
-}
-.foot-bottom p,.foot-bottom a{
-  color:var(--muted);font-size:11px;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;
-}
-.foot-bottom a:hover{color:var(--gold);}
+.dmico.t{background:rgba(0,229,184,.09);}
+.dmico.b{background:rgba(26,124,255,.09);}
+.dmico.a{background:rgba(245,158,11,.09);}
+.dmico.g{background:rgba(34,197,94,.09);}
+.dmlabel{font-size:9px;color:var(--txtd);font-family:var(--f2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;}
+.dmval{font-size:24px;font-weight:700;color:var(--white);line-height:1;font-family:var(--f2);}
+.dmval small{font-size:12px;color:var(--txtd);font-weight:400;}
+.dmdelta{font-size:10px;font-family:var(--f2);margin-top:3px;color:var(--ok);}
 
-/* ============ Reveal animation ============ */
-.reveal{opacity:0;transform:translateY(40px);transition:opacity 1s ease,transform 1s ease;}
-.reveal.visible{opacity:1;transform:translateY(0);}
+/* 3-col main */
+.dmain{display:grid;grid-template-columns:1fr 380px 320px;min-height:460px;}
+.dp{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;}
+.dp:last-child{border-right:none;}
+.dph{
+  padding:12px 18px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.dphttl{
+  font-size:11px;font-weight:600;color:var(--txtb);font-family:var(--f2);
+  text-transform:uppercase;letter-spacing:.9px;
+  display:flex;align-items:center;gap:7px;
+}
+.dphttl::before{content:'';width:3px;height:12px;background:var(--ac);border-radius:2px;}
+.dp-badge{
+  font-size:9px;font-family:var(--f2);padding:3px 9px;border-radius:4px;
+  background:rgba(0,229,184,.07);color:var(--ac);border:1px solid rgba(0,229,184,.18);
+  letter-spacing:.5px;
+}
+.dpbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px;}
+.dpbody::-webkit-scrollbar{width:2px;}
+.dpbody::-webkit-scrollbar-thumb{background:var(--bd);}
 
-/* ============ Floating ornaments ============ */
-.ornament{
-  position:absolute;font-family:'Playfair Display',serif;
-  color:var(--gold);opacity:.08;font-size:340px;line-height:1;pointer-events:none;
-  font-style:italic;
+/* Intersection grid */
+.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.icell{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:9px;
+  padding:9px;cursor:pointer;transition:border-color .2s,transform .15s;
+}
+.icell:hover{border-color:rgba(0,229,184,.4);transform:scale(1.02);}
+.icell.emg{border-color:var(--danger)!important;animation:epulse .7s ease-in-out infinite alternate;}
+@keyframes epulse{from{box-shadow:0 0 4px rgba(239,68,68,.2)}to{box-shadow:0 0 20px rgba(239,68,68,.6)}}
+.ihead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.iid{font-size:11px;font-weight:700;color:var(--ac);font-family:var(--f2);}
+.iphase{font-size:8px;font-family:var(--f2);padding:2px 6px;border-radius:3px;}
+.iphase.NS{background:rgba(0,229,184,.1);color:var(--ac);border:1px solid rgba(0,229,184,.25);}
+.iphase.EW{background:rgba(26,124,255,.1);color:var(--ac2);border:1px solid rgba(26,124,255,.25);}
+.iphase.EMG{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.35);}
+.isvg{width:100%;aspect-ratio:1;margin-bottom:6px;display:block;}
+.dbars{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.dbar-item{font-size:8px;font-family:var(--f2);color:var(--txtd);}
+.dbar-lbl{margin-bottom:2px;}
+.dbar-track{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;}
+.dbar-fill{height:100%;border-radius:2px;transition:width 1s ease;}
+.dbar-fill.lo{background:var(--ok);}
+.dbar-fill.md{background:var(--warn);}
+.dbar-fill.hi{background:var(--danger);}
+.idqn-row{margin-top:6px;display:flex;justify-content:space-between;font-size:8px;font-family:var(--f2);color:var(--txtd);}
+.idqn-score{color:var(--ac);}
+.itimer{color:var(--warn);}
+
+/* Chart + events col */
+.chart-wrap{flex:0 0 52%;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;}
+.ccanvas-wrap{flex:1;min-height:0;position:relative;padding:10px 14px;}
+.events-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.evfeed{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:4px;}
+.evfeed::-webkit-scrollbar{width:2px;}
+.evfeed::-webkit-scrollbar-thumb{background:var(--bd);}
+.evitem{
+  display:flex;gap:7px;align-items:flex-start;padding:5px 8px;
+  background:var(--bg3);border-radius:5px;border-left:2px solid transparent;
+  font-size:9px;font-family:var(--f2);animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.evitem.info{border-left-color:var(--ac2);}
+.evitem.warn{border-left-color:var(--warn);}
+.evitem.danger{border-left-color:var(--danger);}
+.evitem.success{border-left-color:var(--ok);}
+.evt{color:var(--txtd);flex-shrink:0;font-size:8px;padding-top:1px;}
+.evm{color:var(--txt);line-height:1.45;}
+
+/* AI panel */
+.ai-sec{margin-bottom:14px;}
+.ai-sec-title{
+  font-size:9px;font-family:var(--f2);color:var(--txtd);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.ai-sec-title::after{content:'';flex:1;height:1px;background:var(--bd);}
+.ai-dbox{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:10px;}
+.ai-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:10px;font-family:var(--f2);}
+.ai-k{color:var(--txtd);}
+.ai-v{color:var(--txtb);font-weight:500;}
+.ai-v.ac{color:var(--ac);}
+.ai-v.ok{color:var(--ok);}
+.ai-v.danger{color:var(--danger);}
+.dqn-ring-row{display:flex;align-items:center;gap:10px;padding:5px 0 10px;}
+.rsvg{width:44px;height:44px;flex-shrink:0;}
+.rstats .rlbl{font-size:8px;color:var(--txtd);font-family:var(--f2);letter-spacing:.5px;}
+.rstats .rval{font-size:18px;font-weight:700;color:var(--ac);font-family:var(--f2);line-height:1.1;}
+.rstats .rsub{font-size:8px;color:var(--txtd);font-family:var(--f2);margin-top:1px;}
+.det-list{display:flex;flex-direction:column;gap:4px;}
+.det-item{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:7px;
+  padding:7px 9px;display:flex;align-items:center;gap:8px;
+  font-size:10px;font-family:var(--f2);
+}
+.det-item.emg{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.05);}
+.dico{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.dtype{color:var(--txtb);font-weight:500;}
+.dloc{color:var(--txtd);font-size:8px;margin-top:1px;}
+.dconf{font-size:10px;font-weight:700;}
+.dconf.ok{color:var(--ok);}
+.dconf.emg{color:var(--danger);}
+
+/* Emergency */
+#emg-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:900;
+  border:3px solid transparent;display:none;transition:all .3s;
+}
+#emg-overlay.on{
+  display:block;
+  border-color:rgba(239,68,68,.7);
+  background:rgba(239,68,68,.04);
+  animation:eframe .6s ease-in-out infinite alternate;
+}
+@keyframes eframe{
+  from{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.02)}
+  to{border-color:rgba(239,68,68,.9);background:rgba(239,68,68,.07)}
+}
+#emg-banner{
+  position:fixed;top:58px;left:0;right:0;z-index:901;
+  background:var(--danger);color:#fff;
+  display:none;padding:9px 24px;text-align:center;
+  font-family:var(--f2);font-size:12px;font-weight:600;letter-spacing:.8px;
+  animation:slideDown .35s ease-out;
+}
+#emg-banner.on{display:block;}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.emg-act-btn{
+  width:100%;padding:10px;background:rgba(239,68,68,.08);
+  border:1px solid rgba(239,68,68,.3);border-radius:8px;
+  color:var(--danger);font-family:var(--f2);font-size:10px;font-weight:700;
+  cursor:pointer;letter-spacing:.5px;transition:all .2s;
+}
+.emg-act-btn:hover{background:rgba(239,68,68,.18);border-color:var(--danger);}
+
+/* ═══════════════════════════════════════
+   ARCHITECTURE SECTION
+═══════════════════════════════════════ */
+#architecture{background:var(--bg2);}
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;}
+.arch-card{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:22px;
+  position:relative;overflow:hidden;transition:border-color .25s,transform .25s;
+}
+.arch-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity .25s;
+}
+.arch-card.c1::after{background:linear-gradient(90deg,var(--ac),transparent);}
+.arch-card.c2::after{background:linear-gradient(90deg,var(--ac2),transparent);}
+.arch-card.c3::after{background:linear-gradient(90deg,var(--warn),transparent);}
+.arch-card.c4::after{background:linear-gradient(90deg,var(--ok),transparent);}
+.arch-card.c5::after{background:linear-gradient(90deg,var(--danger),transparent);}
+.arch-card:hover::after{opacity:1;}
+.arch-card:hover{transform:translateY(-4px);}
+.arch-card.c1:hover{border-color:rgba(0,229,184,.35);}
+.arch-card.c2:hover{border-color:rgba(26,124,255,.35);}
+.arch-card.c3:hover{border-color:rgba(245,158,11,.35);}
+.arch-card.c4:hover{border-color:rgba(34,197,94,.35);}
+.arch-card.c5:hover{border-color:rgba(239,68,68,.35);}
+.arch-icon{font-size:32px;margin-bottom:14px;}
+.arch-title{font-family:var(--f1);font-weight:700;font-size:17px;color:var(--white);margin-bottom:8px;}
+.arch-desc{font-size:13px;line-height:1.65;color:var(--txt);margin-bottom:14px;}
+.arch-tech{display:flex;flex-wrap:wrap;gap:5px;}
+.tech-tag{
+  font-family:var(--f2);font-size:9px;padding:3px 8px;border-radius:4px;
+  background:var(--bg4);border:1px solid var(--bd2);color:var(--txtd);letter-spacing:.3px;
+}
+
+/* ═══════════════════════════════════════
+   RESEARCH SECTION
+═══════════════════════════════════════ */
+#research{background:var(--bg);}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
+.res-card{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:20px;
+  transition:border-color .25s;
+}
+.res-card:hover{border-color:var(--bd2);}
+.res-num{
+  width:28px;height:28px;border-radius:7px;background:rgba(0,229,184,.08);
+  color:var(--ac);font-family:var(--f2);font-size:11px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;margin-bottom:12px;
+}
+.res-title{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--white);margin-bottom:8px;line-height:1.3;}
+.res-desc{font-size:13px;line-height:1.65;color:var(--txt);}
+
+/* Refs */
+.ref-list{display:flex;flex-direction:column;gap:10px;margin-top:30px;}
+.ref-item{
+  background:var(--bg2);border:1px solid var(--bd);border-radius:9px;
+  padding:13px 16px;display:flex;align-items:center;gap:14px;
+  font-size:12px;transition:border-color .2s;
+}
+.ref-item:hover{border-color:var(--ac2);}
+.ref-ico{font-size:18px;flex-shrink:0;}
+.ref-title{font-family:var(--f3);font-weight:600;color:var(--txtb);font-size:13px;}
+.ref-src{font-family:var(--f2);font-size:10px;color:var(--txtd);margin-top:2px;}
+
+/* ═══════════════════════════════════════
+   EMPATHY MAP SECTION
+═══════════════════════════════════════ */
+#empathy{background:var(--bg2);}
+.emp-outer{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:16px;overflow:hidden;
+}
+.emp-header{
+  padding:16px 24px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:14px;background:var(--bg4);
+}
+.emp-avatar{
+  width:42px;height:42px;border-radius:10px;background:rgba(0,229,184,.1);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.emp-who{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--white);}
+.emp-role{font-size:12px;color:var(--txtd);font-family:var(--f2);}
+.emp-grid{display:grid;grid-template-columns:repeat(3,1fr);}
+.emp-zone{
+  padding:20px 22px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);
+  min-height:160px;
+}
+.emp-zone:nth-child(3n){border-right:none;}
+.emp-zone:nth-child(n+7){border-bottom:none;}
+.emp-zone-label{
+  font-family:var(--f2);font-size:9px;color:var(--txtd);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.emp-zone-label span{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+}
+.ez-think .emp-zone-label span{background:var(--ac3);}
+.ez-do .emp-zone-label span{background:var(--ac2);}
+.ez-hear .emp-zone-label span{background:var(--ok);}
+.ez-say .emp-zone-label span{background:var(--warn);}
+.ez-see .emp-zone-label span{background:var(--ac);}
+.ez-pain .emp-zone-label span{background:var(--danger);}
+.ez-gain .emp-zone-label span{background:var(--ok);}
+.ez-needs .emp-zone-label span{background:var(--ac2);}
+.emp-zone-title{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--txtb);margin-bottom:8px;}
+.emp-points{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.emp-points li{
+  font-size:12px;line-height:1.55;color:var(--txt);
+  padding-left:14px;position:relative;
+}
+.emp-points li::before{
+  content:'›';position:absolute;left:0;color:var(--ac);font-size:14px;line-height:1.3;
+}
+
+/* ═══════════════════════════════════════
+   PERFORMANCE SECTION
+═══════════════════════════════════════ */
+#performance{background:var(--bg);}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.perf-card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:24px;}
+.perf-title{font-family:var(--f1);font-weight:700;font-size:16px;color:var(--txtb);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.perf-bar-wrap{margin-bottom:12px;}
+.perf-bar-head{display:flex;justify-content:space-between;font-size:11px;font-family:var(--f2);margin-bottom:5px;}
+.perf-bar-lbl{color:var(--txtd);}
+.perf-bar-val{color:var(--txtb);font-weight:500;}
+.perf-bar-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
+.perf-bar-fill{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.22,1,.36,1);}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.stat-box{
+  background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:16px;text-align:center;
+}
+.stat-box-v{font-family:var(--f2);font-size:28px;font-weight:600;line-height:1;}
+.stat-box-l{font-size:11px;color:var(--txtd);font-family:var(--f2);margin-top:5px;letter-spacing:.4px;}
+.stat-box-c{font-size:10px;margin-top:4px;font-family:var(--f2);}
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer{
+  background:var(--bg2);border-top:1px solid var(--bd);
+  padding:32px 28px;text-align:center;
+}
+.footer-inner{max-width:1200px;margin:0 auto;}
+.footer-title{font-family:var(--f1);font-weight:700;font-size:18px;color:var(--white);letter-spacing:1.5px;margin-bottom:6px;}
+.footer-sub{font-size:12px;color:var(--txtd);font-family:var(--f2);margin-bottom:16px;}
+.footer-team{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;font-size:11px;color:var(--txt);font-family:var(--f2);}
+.footer-team span{color:var(--ac);}
+
+/* ═══════════════════════════════════════
+   SCROLL REVEAL
+═══════════════════════════════════════ */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:none;}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:36px;}
+  .dmetrics{grid-template-columns:repeat(2,1fr);}
+  .dmain{grid-template-columns:1fr;}
+  .dp:nth-child(2),.dp:nth-child(3){border-right:none;border-top:1px solid var(--bd);}
+  .chart-wrap{flex:0 0 auto;min-height:220px;}
+  .perf-grid{grid-template-columns:1fr;}
+  .emp-grid{grid-template-columns:1fr 1fr;}
+  .emp-zone:nth-child(2n){border-right:none;}
+  .emp-zone:nth-child(3n){border-right:1px solid var(--bd);}
+  .nav-links{display:none;}
+}
+@media(max-width:600px){
+  .hero-inner{padding:40px 18px;}
+  .emp-grid{grid-template-columns:1fr;}
+  .emp-zone{border-right:none!important;}
+  .dmetrics{grid-template-columns:1fr 1fr;}
+  .section-inner{padding:0 16px;}
+  #topnav{padding:0 16px;}
 }
 </style>
 </head>
 <body>
 
-<!-- Cursor -->
-<div class="cursor-dot"></div>
-<div class="cursor-ring"></div>
-
-<!-- Loader -->
-<div class="loader" id="loader">
-  <div class="mark">M·N</div>
-  <div class="bar"></div>
-</div>
-
-<!-- Navigation -->
-<nav class="nav" id="nav">
-  <a href="#" class="nav-logo">MAISON <span>NOIR</span></a>
-  <ul class="nav-links" id="navLinks">
-    <li><a href="#collection">Collection</a></li>
-    <li><a href="#heritage">Heritage</a></li>
-    <li><a href="#craft">Craft</a></li>
-    <li><a href="#boutique">Boutiques</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ul>
-  <div class="nav-icons">
-    <i class="fas fa-search" aria-label="Search"></i>
-    <i class="fas fa-user" aria-label="Account"></i>
-    <i class="fas fa-shopping-bag" aria-label="Bag"></i>
-    <button class="nav-toggle" id="navToggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+<!-- ─────────── TOPNAV ─────────── -->
+<nav id="topnav">
+  <a class="nav-brand" href="#hero">
+    <div class="nav-mark">CT</div>
+    <div class="nav-title">CTMS</div>
+  </a>
+  <div class="nav-links">
+    <a href="#problem">Problem</a>
+    <a href="#dashboard">Live Demo</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#research">Research</a>
+    <a href="#empathy">Empathy Map</a>
+    <a href="#performance">Results</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-badge">IV SEM · CSE-B</div>
+    <div id="nav-clock">--:--:--</div>
   </div>
 </nav>
 
-<!-- Hero -->
-<header class="hero">
-  <div class="hero-content">
-    <div class="hero-eyebrow">Haute Horlogerie · Geneva</div>
-    <h1>Time, <span class="accent">Eternalised</span><br/>in Movement</h1>
-    <p class="lead">For seven generations, Maison Noir has shaped the soul of Swiss watchmaking — one hand-finished movement at a time.</p>
-    <div class="hero-actions">
-      <a href="#collection" class="btn btn-primary">Explore Collection <i class="fas fa-arrow-right"></i></a>
-      <a href="#craft" class="btn btn-ghost">Our Story <i class="fas fa-play"></i></a>
-    </div>
-  </div>
-  <div class="hero-scroll">Scroll to Discover</div>
-</header>
-
-<!-- Heritage -->
-<section class="heritage" id="heritage">
-  <span class="ornament" style="top:60px;right:-40px;">N</span>
-  <div class="container">
-    <div class="heritage-grid">
-      <div class="heritage-text reveal">
-        <div class="section-eyebrow">Our Heritage</div>
-        <h2 class="section-title">A Century of <em>Quiet</em> Mastery</h2>
-        <p>Founded in 1887 in the snow-veiled valleys of Vallée de Joux, Maison Noir was born from a single, uncompromising principle — that a timepiece is not measured by what it shows, but by what it contains.</p>
-        <p>Each calibre is conceived, decorated and assembled by a single master watchmaker. From the anglage of the bridges to the black-polished steel, every detail is an act of devotion to the craft.</p>
-        <div class="heritage-stats">
-          <div class="stat"><div class="num">137</div><div class="lbl">Years</div></div>
-          <div class="stat"><div class="num">48</div><div class="lbl">Master Artisans</div></div>
-          <div class="stat"><div class="num">1,200</div><div class="lbl">Pieces / Year</div></div>
-        </div>
-      </div>
-      <div class="heritage-img reveal">
-        <img src="https://images.pexels.com/photos/14105030/pexels-photo-14105030.jpeg?auto=compress&cs=tinysrgb&w=1400" alt="Heritage watchmaking" />
+<!-- ─────────── HERO ─────────── -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow1"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag"><div class="htag-dot"></div>PBL PROJECT · TEAM 1 · 22CSE43</div>
+      <h1 class="hero-title">Smart Cities:<br><span>Intelligent Traffic</span><br>Management</h1>
+      <p class="hero-desc">
+        An integrated Cognitive Traffic Management System (CTMS) that uses IoT sensing,
+        Deep Q-Network AI, YOLO object detection, and real-time stream processing
+        to dynamically optimize intersection throughput and prioritize emergency logistics.
+      </p>
+      <div class="hero-btns">
+        <a href="#dashboard" class="btn-primary">▶ View Live Demo</a>
+        <a href="#architecture" class="btn-outline">Explore Architecture</a>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- Collection -->
-<section class="collection" id="collection">
-  <div class="container">
-    <div class="collection-head">
-      <div class="reveal">
-        <div class="section-eyebrow">The Collection</div>
-        <h2 class="section-title">Signature <em>Timepieces</em></h2>
+    <div class="hero-card">
+      <div class="hc-top">
+        <div class="hc-top-title">PROJECT INFO</div>
+        <div class="hc-dot"></div>
       </div>
-      <p class="section-sub reveal">Six instruments of time. Each a quiet rebellion against the ordinary.</p>
-    </div>
-
-    <div class="collection-grid">
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">Limited · 88 pcs</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/10414974/pexels-photo-10414974.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Le Noir Chronograph" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-887 · Édition Noire</div>
-          <h3 class="name">Le Noir Chronograph</h3>
-          <p class="desc">Black-polished case, integrated rose-gold bezel</p>
-          <div class="row">
-            <span class="price">$ 42,800</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">New Arrival</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/3083461/pexels-photo-3083461.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Heritage 1887" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-115 · Patrimoine</div>
-          <h3 class="name">Heritage 1887</h3>
-          <p class="desc">Hand-stitched alligator strap, yellow-gold dial</p>
-          <div class="row">
-            <span class="price">$ 28,500</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">Best Seller</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/13009437/pexels-photo-13009437.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="L'Or Pur" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-220 · Or Pur</div>
-          <h3 class="name">L'Or Pur Automatique</h3>
-          <p class="desc">18k solid gold, sapphire skeleton movement</p>
-          <div class="row">
-            <span class="price">$ 56,900</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">Atelier</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/22032441/pexels-photo-22032441.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Nuit Profonde" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-401 · Nuit</div>
-          <h3 class="name">Nuit Profonde GMT</h3>
-          <p class="desc">Aventurine dial, second time-zone complication</p>
-          <div class="row">
-            <span class="price">$ 38,200</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">Limited · 50 pcs</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/7552835/pexels-photo-7552835.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Lumière Blanche" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-330 · Lumière</div>
-          <h3 class="name">Lumière Blanche</h3>
-          <p class="desc">Mother-of-pearl dial, diamond-set bezel</p>
-          <div class="row">
-            <span class="price">$ 34,700</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-      <article class="watch-card reveal">
-        <div class="img-wrap">
-          <span class="badge">Bespoke</span>
-          <span class="heart"><i class="far fa-heart"></i></span>
-          <img src="https://images.pexels.com/photos/125779/pexels-photo-125779.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Argent Royal" />
-        </div>
-        <div class="info">
-          <div class="ref">Ref. MN-555 · Argent</div>
-          <h3 class="name">Argent Royal</h3>
-          <p class="desc">Platinum case, hand-engraved guilloché dial</p>
-          <div class="row">
-            <span class="price">$ 72,400</span>
-            <span class="view">Discover <i class="fas fa-arrow-right" style="font-size:9px;margin-left:6px;"></i></span>
-          </div>
-        </div>
-      </article>
-
-    </div>
-
-    <div style="text-align:center;margin-top:70px;" class="reveal">
-      <a href="#" class="btn btn-ghost">View All 24 References <i class="fas fa-arrow-right"></i></a>
-    </div>
-  </div>
-</section>
-
-<!-- Craftsmanship parallax -->
-<section class="craft" id="craft">
-  <div class="craft-inner reveal">
-    <div class="section-eyebrow" style="justify-content:center;">The Atelier</div>
-    <h2 class="section-title">Where Time Becomes <em>Art</em></h2>
-    <p class="craft-quote">A movement is not built — it is born, slowly, beneath the loupe. Each bridge, each jewel, each beat of the balance wheel carries the signature of the hand that shaped it.</p>
-    <div class="craft-author">— Henri Vaillant, Master Watchmaker</div>
-    <div style="margin-top:50px;">
-      <a href="#" class="btn btn-primary">Visit the Atelier <i class="fas fa-arrow-right"></i></a>
-    </div>
-  </div>
-</section>
-
-<!-- Features -->
-<section class="features">
-  <div class="container">
-    <div style="text-align:center;max-width:720px;margin:0 auto;" class="reveal">
-      <div class="section-eyebrow" style="justify-content:center;">The Promise</div>
-      <h2 class="section-title">Crafted to <em>Outlive</em> Us</h2>
-      <p class="section-sub" style="margin:0 auto;text-align:center;">Every Maison Noir timepiece is accompanied by guarantees as enduring as the watch itself.</p>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature reveal">
-        <i class="fas fa-award"></i>
-        <h4>Lifetime Warranty</h4>
-        <p>A guarantee that travels with the piece, through generations.</p>
+      <div class="hc-meta">
+        <div class="hc-row"><span class="hck">Subject</span><span class="hcv">Database Management System</span></div>
+        <div class="hc-row"><span class="hck">Code</span><span class="hcv">22CSE43</span></div>
+        <div class="hc-row"><span class="hck">Section</span><span class="hcv">B · IV Semester</span></div>
+        <div class="hc-row"><span class="hck">Department</span><span class="hcv">Computer Science & Engineering</span></div>
+        <div class="hc-row"><span class="hck">Team No.</span><span class="hcv">1</span></div>
       </div>
-      <div class="feature reveal">
-        <i class="fas fa-shield-halved"></i>
-        <h4>Certified Origin</h4>
-        <p>Each watch bears the Poinçon de Genève seal of excellence.</p>
+      <div class="team-list">
+        <div class="team-row"><div class="team-num">01</div><div><div class="team-name">Joel Ryan Bangera</div><div class="team-usn">4S024CS098</div></div></div>
+        <div class="team-row"><div class="team-num">02</div><div><div class="team-name">Jovin Sequeira</div><div class="team-usn">4S024CS100</div></div></div>
+        <div class="team-row"><div class="team-num">03</div><div><div class="team-name">Keshav Aditiya</div><div class="team-usn">4S024CS103</div></div></div>
+        <div class="team-row"><div class="team-num">04</div><div><div class="team-name">Loyston Leon D Souza</div><div class="team-usn">4S024CS135</div></div></div>
       </div>
-      <div class="feature reveal">
-        <i class="fas fa-gem"></i>
-        <h4>Hand-Finished</h4>
-        <p>120+ hours of artisanal work in every single movement.</p>
-      </div>
-      <div class="feature reveal">
-        <i class="fas fa-globe"></i>
-        <h4>Private Delivery</h4>
-        <p>White-glove courier to 84 countries, fully insured.</p>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-v">40%</div><div class="hstat-l">WAIT REDUCTION</div></div>
+        <div class="hstat"><div class="hstat-v">50%</div><div class="hstat-l">FASTER EMS</div></div>
+        <div class="hstat"><div class="hstat-v">&lt;10μs</div><div class="hstat-l">DB LATENCY</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Boutique -->
-<section class="boutique" id="boutique">
-  <div class="container">
-    <div class="boutique-grid">
-      <div class="boutique-img reveal"></div>
-      <div class="reveal">
-        <div class="section-eyebrow">Our Boutiques</div>
-        <h2 class="section-title">An <em>Invitation</em>, by Appointment</h2>
-        <p class="body">Step inside one of our seven private salons across the world's most storied cities. Discover our collections, meet our master watchmakers, and explore bespoke commissions.</p>
-        <ul class="boutique-list">
-          <li><i class="fas fa-location-dot"></i><span class="city">Geneva</span><span class="addr">Rue du Rhône 32</span></li>
-          <li><i class="fas fa-location-dot"></i><span class="city">Paris</span><span class="addr">Place Vendôme 14</span></li>
-          <li><i class="fas fa-location-dot"></i><span class="city">London</span><span class="addr">Old Bond Street 47</span></li>
-          <li><i class="fas fa-location-dot"></i><span class="city">New York</span><span class="addr">Madison Avenue 745</span></li>
-          <li><i class="fas fa-location-dot"></i><span class="city">Tokyo</span><span class="addr">Ginza 5-Chōme</span></li>
-        </ul>
-        <a href="#" class="btn btn-primary">Reserve a Private Viewing <i class="fas fa-arrow-right"></i></a>
+<!-- ─────────── PROBLEM ─────────── -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">The Problem</div>
+      <h2 class="sec-title">Why Static Signals <span>Fail Cities</span></h2>
+      <p class="sec-desc">Urban transportation networks are increasingly strained by population growth and aging infrastructure. Current timer-based systems can't adapt to real-time conditions — creating congestion, emissions, and delayed emergency responses.</p>
+    </div>
+    <div class="prob-grid reveal">
+      <div class="pcard"><div class="pnum">01</div><div class="pico">⏱</div><div class="ptitle">Inefficient Static Timing</div><div class="pdesc">Fixed green-light cycles ignore real-time traffic density, leading to unnecessary wait times and gridlock during peak hours or unexpected surges.</div></div>
+      <div class="pcard"><div class="pnum">02</div><div class="pico">🚑</div><div class="ptitle">Emergency Vehicle Delay</div><div class="pdesc">Ambulances and fire trucks are trapped behind standard red lights for up to 10 minutes — directly impacting life-threatening response times.</div></div>
+      <div class="pcard"><div class="pnum">03</div><div class="pico">🏚</div><div class="ptitle">Siloed Infrastructure</div><div class="pdesc">Traffic, emergency, and public-works departments operate in data silos with no shared platform — preventing coordinated city-wide responses.</div></div>
+      <div class="pcard"><div class="pnum">04</div><div class="pico">⚡</div><div class="ptitle">High Latency Decisions</div><div class="pdesc">Manual operator monitoring of video walls introduces minutes of delay before any action. Cities need sub-second automated decision-making at scale.</div></div>
+      <div class="pcard"><div class="pnum">05</div><div class="pico">🌊</div><div class="ptitle">Cascading Gridlock</div><div class="pdesc">One blocked intersection triggers a domino effect across corridors — phantom jams spreading system-wide with no predictive mechanism to stop them.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── LIVE DASHBOARD ─────────── -->
+<section id="dashboard">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">Live Simulation</div>
+      <h2 class="sec-title">CTMS <span>Dashboard</span></h2>
+      <p class="sec-desc">Real-time simulation of 9 intersections powered by a Deep Q-Network AI, YOLO object detection, and Kafka stream processing. Click <strong style="color:var(--ac)">🚨 Simulate Emergency</strong> to see the priority override in action.</p>
+    </div>
+    <div class="dash-wrap reveal">
+      <!-- Metrics -->
+      <div class="dmetrics">
+        <div class="dmc"><div class="dmico t">⏱</div><div><div class="dmlabel">Avg Wait Time</div><div class="dmval"><span id="m-wait">18.3</span><small> sec</small></div><div class="dmdelta">↓ 35.2% vs static timers</div></div></div>
+        <div class="dmc"><div class="dmico b">🚦</div><div><div class="dmlabel">Vehicle Throughput</div><div class="dmval"><span id="m-thru">4,821</span><small> /hr</small></div><div class="dmdelta">↑ 40.1% vs baseline</div></div></div>
+        <div class="dmc"><div class="dmico a">🚑</div><div><div class="dmlabel">Emergency Response</div><div class="dmval"><span id="m-ems">2.4</span><small> min</small></div><div class="dmdelta">↓ 51.3% improvement</div></div></div>
+        <div class="dmc"><div class="dmico g">🌱</div><div><div class="dmlabel">CO₂ Avoided</div><div class="dmval"><span id="m-co2">28.7</span><small> %</small></div><div class="dmdelta">↓ Idle emissions saved</div></div></div>
+      </div>
+      <!-- 3-col main -->
+      <div class="dmain">
+        <!-- Intersections -->
+        <div class="dp">
+          <div class="dph"><div class="dphttl">Live Intersection Grid</div><span class="dp-badge" id="dp-badge">DQN ACTIVE</span></div>
+          <div class="dpbody"><div class="igrid" id="igrid"></div></div>
+        </div>
+        <!-- Chart + Events -->
+        <div class="dp" style="display:flex;flex-direction:column;">
+          <div class="chart-wrap">
+            <div class="dph"><div class="dphttl">Throughput (vehicles/hr)</div></div>
+            <div class="ccanvas-wrap"><canvas id="tchart" role="img" aria-label="Real-time throughput line chart">Live traffic throughput data.</canvas></div>
+          </div>
+          <div class="events-col">
+            <div class="dph"><div class="dphttl">CEP Event Stream</div><span id="ev-count" style="font-size:9px;color:var(--txtd);font-family:var(--f2)">0 events</span></div>
+            <div class="evfeed" id="evfeed"></div>
+          </div>
+        </div>
+        <!-- AI Engine -->
+        <div class="dp">
+          <div class="dph"><div class="dphttl">AI Control Engine</div><span class="dp-badge">ONLINE</span></div>
+          <div class="dpbody">
+            <div class="ai-sec">
+              <div class="ai-sec-title">Deep Q-Network</div>
+              <div class="ai-dbox">
+                <div class="dqn-ring-row">
+                  <svg class="rsvg" viewBox="0 0 44 44">
+                    <circle cx="22" cy="22" r="18" fill="none" stroke="#162030" stroke-width="4"/>
+                    <circle id="rring" cx="22" cy="22" r="18" fill="none" stroke="#00e5b8" stroke-width="4"
+                      stroke-dasharray="113.1" stroke-dashoffset="14" stroke-linecap="round"
+                      transform="rotate(-90 22 22)"/>
+                    <text id="rrtxt" x="22" y="26" text-anchor="middle" fill="#00e5b8" font-family="JetBrains Mono,monospace" font-size="8" font-weight="600">87%</text>
+                  </svg>
+                  <div class="rstats">
+                    <div class="rlbl">CUMULATIVE REWARD</div>
+                    <div class="rval" id="dqn-r">+0.872</div>
+                    <div class="rsub" id="dqn-ep">Episode 14,392 · ε=0.05</div>
+                  </div>
+                </div>
+                <div class="ai-row"><span class="ai-k">Status</span><span class="ai-v ok">● INFERENCE</span></div>
+                <div class="ai-row"><span class="ai-k">Architecture</span><span class="ai-v">DQN ResNet-18</span></div>
+                <div class="ai-row"><span class="ai-k">Decision Rate</span><span class="ai-v ac" id="dqn-dec">47 dec/s</span></div>
+                <div class="ai-row"><span class="ai-k">Horizon</span><span class="ai-v">γ=0.99 · T+30s</span></div>
+                <div class="ai-row"><span class="ai-k">Digital Twin</span><span class="ai-v ok">● SYNC</span></div>
+              </div>
+            </div>
+            <div class="ai-sec">
+              <div class="ai-sec-title">YOLO v8 Object Detection</div>
+              <div class="det-list" id="yololist"></div>
+            </div>
+            <div class="ai-sec">
+              <div class="ai-sec-title">Kafka + ksqlDB</div>
+              <div class="ai-dbox">
+                <div class="ai-row"><span class="ai-k">Active Topics</span><span class="ai-v">9</span></div>
+                <div class="ai-row"><span class="ai-k">Msg Rate</span><span class="ai-v ac" id="kafka">2,840/s</span></div>
+                <div class="ai-row"><span class="ai-k">CEP Patterns</span><span class="ai-v">12 loaded</span></div>
+                <div class="ai-row"><span class="ai-k">Redis Latency</span><span class="ai-v ac" id="redis">6.2μs</span></div>
+                <div class="ai-row"><span class="ai-k">Floodgates</span><span class="ai-v ok" id="fgstatus">● READY</span></div>
+              </div>
+            </div>
+            <div class="ai-sec">
+              <div class="ai-sec-title">Emergency Override</div>
+              <button class="emg-act-btn" onclick="triggerEmergency()">🚨 SIMULATE EMERGENCY VEHICLE</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Newsletter -->
-<section class="newsletter" id="contact">
-  <div class="container reveal">
-    <div class="section-eyebrow" style="justify-content:center;">Le Cercle Noir</div>
-    <h2 class="section-title">A Quiet Conversation</h2>
-    <p class="section-sub" style="margin:18px auto 0;text-align:center;">Receive private invitations, limited-edition previews, and stories from the atelier — reserved for those who appreciate the slow art of time.</p>
-    <form onsubmit="event.preventDefault();this.querySelector('button').innerText='Welcome ✦';">
-      <input type="email" placeholder="Your private email" required />
-      <button type="submit">Subscribe</button>
-    </form>
-    <p class="note">By subscribing you agree to receive correspondence from Maison Noir. Unsubscribe at any time.</p>
+<!-- ─────────── ARCHITECTURE ─────────── -->
+<section id="architecture">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">System Design</div>
+      <h2 class="sec-title">Technical <span>Architecture</span></h2>
+      <p class="sec-desc">A layered system combining edge computing, in-memory databases, reinforcement learning, and stream processing — each component purpose-built for sub-second urban mobility decisions.</p>
+    </div>
+    <div class="arch-grid reveal">
+      <div class="arch-card c1">
+        <div class="arch-icon">🔌</div>
+        <div class="arch-title">IoT Sensor Layer</div>
+        <div class="arch-desc">Inductive loop sensors, radar units, and cameras mounted at intersections capture raw vehicle counts, speeds, and visual feeds as input to the AI pipeline.</div>
+        <div class="arch-tech"><span class="tech-tag">Inductive Loops</span><span class="tech-tag">RADAR</span><span class="tech-tag">IP Cameras</span><span class="tech-tag">Edge Nodes</span></div>
+      </div>
+      <div class="arch-card c2">
+        <div class="arch-icon">⚡</div>
+        <div class="arch-title">Redis In-Memory Cache</div>
+        <div class="arch-desc">All intersection state is held in a Redis edge cache, guaranteeing &lt;10μs state access latency — critical for real-time AI inference in safety-critical transport infrastructure.</div>
+        <div class="arch-tech"><span class="tech-tag">Redis</span><span class="tech-tag">ACID Compliance</span><span class="tech-tag">Edge Computing</span><span class="tech-tag">&lt;10μs Latency</span></div>
+      </div>
+      <div class="arch-card c3">
+        <div class="arch-icon">🧠</div>
+        <div class="arch-title">Deep Q-Network (DQN)</div>
+        <div class="arch-desc">Trained via reinforcement learning on a digital twin of the city grid. Learns optimal green-phase policies maximizing cumulative throughput — extending green waves for arterials during peak hours.</div>
+        <div class="arch-tech"><span class="tech-tag">DQN</span><span class="tech-tag">RL</span><span class="tech-tag">Digital Twin</span><span class="tech-tag">γ=0.99</span></div>
+      </div>
+      <div class="arch-card c4">
+        <div class="arch-icon">👁</div>
+        <div class="arch-title">YOLO Object Detection</div>
+        <div class="arch-desc">YOLOv8 processes live camera feeds to classify road users. Ambulance detection triggers an instant priority override — clearing a path while ignoring standard rules for that cycle.</div>
+        <div class="arch-tech"><span class="tech-tag">YOLOv8</span><span class="tech-tag">CV</span><span class="tech-tag">GPU Edge</span><span class="tech-tag">Priority Override</span></div>
+      </div>
+      <div class="arch-card c5">
+        <div class="arch-icon">🌊</div>
+        <div class="arch-title">Complex Event Processing</div>
+        <div class="arch-desc">Kafka and ksqlDB monitor streams from all intersections. Detects density patterns like "two intersections &gt;90% within 30s" and fires the floodgate protocol before gridlock forms.</div>
+        <div class="arch-tech"><span class="tech-tag">Apache Kafka</span><span class="tech-tag">ksqlDB</span><span class="tech-tag">CEP</span><span class="tech-tag">Floodgate Protocol</span></div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Footer -->
+<!-- ─────────── RESEARCH ─────────── -->
+<section id="research">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">Secondary Research</div>
+      <h2 class="sec-title">Research <span>Summary</span></h2>
+      <p class="sec-desc">Five key research areas explored during the secondary research phase, covering comparative algorithms, benchmarking, stream processing, ethics, and environmental impact.</p>
+    </div>
+    <div class="res-grid reveal">
+      <div class="res-card">
+        <div class="res-num">R1</div>
+        <div class="res-title">DQN vs Traditional Adaptive Algorithms</div>
+        <div class="res-desc">Comparative analysis from Pittsburgh (SCATS) and Los Angeles (ATCS) quantifying throughput improvements when replacing rule-based systems with Deep RL models that optimize long-term horizon rewards over immediate queue clearance.</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num">R2</div>
+        <div class="res-title">In-Memory DB Benchmarking at the Edge</div>
+        <div class="res-desc">Investigating latency trade-offs between Redis and Hazelcast in edge-based traffic controllers — balancing ACID compliance against the microsecond latency required for real-time AI inference in safety-critical systems.</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num">R3</div>
+        <div class="res-title">Stream Processing for Predictive Congestion</div>
+        <div class="res-desc">How CEP engines (ksqlDB, Flink) detect phantom jams using the Lighthill-Whitham-Richards model integrated with Kafka streams, predicting congestion 5 minutes ahead based on density fluctuations.</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num">R4</div>
+        <div class="res-title">Ethical Implications of AI Priority Overrides</div>
+        <div class="res-desc">Social equity study on AI-controlled intersections — focusing on algorithmic bias risks that could deprioritize low-income zones during optimization, referencing U.S. Department of Transportation ethical AI guidelines.</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num">R5</div>
+        <div class="res-title">Energy vs Throughput Trade-offs</div>
+        <div class="res-desc">Analysing whether CO₂ reductions from minimized idling justify the higher energy consumption of edge GPUs for YOLO inference and constant Kafka data streaming infrastructure in deployed smart cities.</div>
+      </div>
+    </div>
+    <div class="ref-list reveal" style="margin-top:32px;">
+      <div style="font-family:var(--f2);font-size:10px;color:var(--txtd);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px;">Key References</div>
+      <div class="ref-item"><div class="ref-ico">🔬</div><div><div class="ref-title">AI for Intersection Congestion — Istanbul & Helsinki</div><div class="ref-src">ResearchGate · Tackling intersection congestion using AI</div></div></div>
+      <div class="ref-item"><div class="ref-ico">📡</div><div><div class="ref-title">Distributed Traffic Signal Control using DQN</div><div class="ref-src">TRID Database · Deep Q-Network Traffic Signal Models</div></div></div>
+      <div class="ref-item"><div class="ref-ico">🏥</div><div><div class="ref-title">YOLOv8-Driven Emergency Vehicle Detection</div><div class="ref-src">IEEE · Computer Vision for Emergency Response Priority</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── EMPATHY MAP ─────────── -->
+<section id="empathy">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">Design Thinking</div>
+      <h2 class="sec-title">Empathy <span>Map</span></h2>
+      <p class="sec-desc">Understanding the lived experience of traffic management authorities, transportation engineers, commuters, and emergency responders who deal with the consequences of inefficient traffic systems every day.</p>
+    </div>
+    <div class="emp-outer reveal">
+      <div class="emp-header">
+        <div class="emp-avatar">👮</div>
+        <div>
+          <div class="emp-who">City Traffic Management Authority</div>
+          <div class="emp-role">Traffic Control Centre Operator · Transportation Engineer · Emergency Dispatcher</div>
+        </div>
+      </div>
+      <div class="emp-grid">
+        <div class="emp-zone ez-think">
+          <div class="emp-zone-label"><span></span>Thinks &amp; Feels</div>
+          <div class="emp-zone-title">Inner World</div>
+          <ul class="emp-points">
+            <li>Fear of gridlock paralysing the city during peak hours</li>
+            <li>Anxiety that an ambulance gets stuck and a life is lost</li>
+            <li>Pressure from city officials after traffic disruptions</li>
+            <li>Dream of a system that "thinks, not just clicks"</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-do">
+          <div class="emp-zone-label"><span></span>Does</div>
+          <div class="emp-zone-title">Observable Actions</div>
+          <ul class="emp-points">
+            <li>Manually monitors video walls to spot congestion</li>
+            <li>Reactively overrides fixed timers during incidents</li>
+            <li>Coordinates with field officers, emergency dispatch via radio</li>
+            <li>Files incident reports and manually logs anomalies</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-hear">
+          <div class="emp-zone-label"><span></span>Hears</div>
+          <div class="emp-zone-title">Information Sources</div>
+          <ul class="emp-points">
+            <li>Colleagues praising Pittsburgh's Surtrac — 25% travel time reduction</li>
+            <li>ITS World Congress talks on RL for signal control</li>
+            <li>Angry citizen complaints after severe disruptions</li>
+            <li>IEEE ITS publications on smart mobility</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-say">
+          <div class="emp-zone-label"><span></span>Says</div>
+          <div class="emp-zone-title">Expressed Frustrations</div>
+          <ul class="emp-points">
+            <li>"Outdated timer-based systems can't handle rush hour"</li>
+            <li>"Gridlock spreads like wildfire — domino effect"</li>
+            <li>"Ambulances stuck 10 minutes at red lights"</li>
+            <li>"Wasted taxpayer money on fuel burned at intersections"</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-see">
+          <div class="emp-zone-label"><span></span>Sees</div>
+          <div class="emp-zone-title">Environment</div>
+          <ul class="emp-points">
+            <li>Video walls with live camera feeds and dashboards</li>
+            <li>Aging static traffic controllers installed decades ago</li>
+            <li>Emerging AI systems like Surtrac and ATCS in other cities</li>
+            <li>Smart city IoT sensor deployments gaining traction</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-pain">
+          <div class="emp-zone-label"><span></span>Pains</div>
+          <div class="emp-zone-title">Key Frustrations</div>
+          <ul class="emp-points">
+            <li>Inflexible legacy systems that cannot adapt in real-time</li>
+            <li>No visibility into emerging congestion before it hits</li>
+            <li>Emergency vehicle delays due to inability to override cycles</li>
+            <li>Data silos between traffic, emergency, and public works</li>
+            <li>High cost of sensor infrastructure upgrades</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-gain">
+          <div class="emp-zone-label"><span></span>Gains</div>
+          <div class="emp-zone-title">Desired Outcomes</div>
+          <ul class="emp-points">
+            <li>Emergency priority systems cutting response by 40–50%</li>
+            <li>Predictive congestion prevention before gridlock forms</li>
+            <li>Reduced emissions from minimised idling</li>
+            <li>Peace of mind — reliable, intelligent, autonomous control</li>
+          </ul>
+        </div>
+        <div class="emp-zone ez-needs">
+          <div class="emp-zone-label"><span></span>Needs To Do</div>
+          <div class="emp-zone-title">Core Tasks</div>
+          <ul class="emp-points">
+            <li>Optimise traffic flow dynamically beyond static timers</li>
+            <li>Detect and respond to accidents and emergencies in real-time</li>
+            <li>Prevent cascading congestion across corridors</li>
+            <li>Reduce vehicle idle time and emissions at red lights</li>
+          </ul>
+        </div>
+        <div class="emp-zone" style="grid-column:span 1;">
+          <div class="emp-zone-label" style="color:var(--ac);">◈ Key Insight</div>
+          <div class="emp-zone-title" style="color:var(--ac);">Design Opportunity</div>
+          <ul class="emp-points">
+            <li>Operators need a system that is <em>predictive</em>, not reactive</li>
+            <li>Emergency override must be automatic — not manual</li>
+            <li>Sub-second latency is a hard safety requirement, not a preference</li>
+            <li>Trust in the AI depends on explainability and reliability</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── PERFORMANCE ─────────── -->
+<section id="performance">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="sec-tag">Expected Results</div>
+      <h2 class="sec-title">Performance <span>Outcomes</span></h2>
+      <p class="sec-desc">Projected improvements based on secondary research from comparable AI traffic deployments in Pittsburgh, Los Angeles, Istanbul, and Helsinki.</p>
+    </div>
+    <div class="perf-grid reveal">
+      <div class="perf-card">
+        <div class="perf-title">📊 System Improvements</div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar-head"><span class="perf-bar-lbl">Avg Wait Time Reduction</span><span class="perf-bar-val">40%</span></div>
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:40%;background:var(--ac);" data-w="40"></div></div>
+        </div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar-head"><span class="perf-bar-lbl">Emergency Response Improvement</span><span class="perf-bar-val">50%</span></div>
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:50%;background:var(--danger);" data-w="50"></div></div>
+        </div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar-head"><span class="perf-bar-lbl">Vehicle Throughput Gain</span><span class="perf-bar-val">41%</span></div>
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:41%;background:var(--ac2);" data-w="41"></div></div>
+        </div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar-head"><span class="perf-bar-lbl">CO₂ Emission Reduction</span><span class="perf-bar-val">28%</span></div>
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:28%;background:var(--ok);" data-w="28"></div></div>
+        </div>
+        <div class="perf-bar-wrap">
+          <div class="perf-bar-head"><span class="perf-bar-lbl">DQN Policy Accuracy</span><span class="perf-bar-val">87%</span></div>
+          <div class="perf-bar-track"><div class="perf-bar-fill" style="width:87%;background:var(--warn);" data-w="87"></div></div>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-title">⚡ Technical Benchmarks</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--ac)">&lt;10μs</div>
+            <div class="stat-box-l">Redis State Access</div>
+            <div class="stat-box-c" style="color:var(--txtd)">Edge cache latency</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--ac2)">&lt;1s</div>
+            <div class="stat-box-l">End-to-End Decision</div>
+            <div class="stat-box-c" style="color:var(--txtd)">Sensor → signal</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--ok)">99.8%</div>
+            <div class="stat-box-l">Ambulance Detection</div>
+            <div class="stat-box-c" style="color:var(--txtd)">YOLO confidence</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--warn)">5 min</div>
+            <div class="stat-box-l">Congestion Prediction</div>
+            <div class="stat-box-c" style="color:var(--txtd)">CEP lookahead</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--danger)">14K+</div>
+            <div class="stat-box-l">DQN Episodes</div>
+            <div class="stat-box-c" style="color:var(--txtd)">Training on digital twin</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-box-v" style="color:var(--ac)">2.8K</div>
+            <div class="stat-box-l">Kafka Msgs/sec</div>
+            <div class="stat-box-c" style="color:var(--txtd)">Stream throughput</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── FOOTER ─────────── -->
 <footer>
-  <div class="foot-grid">
-    <div class="foot-brand">
-      <div class="logo">MAISON <span>NOIR</span></div>
-      <p>Geneva, since 1887. Crafting the silent music of mechanical time.</p>
-      <div class="foot-socials">
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-x-twitter"></i></a>
-        <a href="#"><i class="fab fa-youtube"></i></a>
-        <a href="#"><i class="fab fa-pinterest-p"></i></a>
-      </div>
-    </div>
-    <div class="foot-col">
-      <h5>Maison</h5>
-      <ul>
-        <li><a href="#">Our Story</a></li>
-        <li><a href="#">The Atelier</a></li>
-        <li><a href="#">Sustainability</a></li>
-        <li><a href="#">Press</a></li>
-        <li><a href="#">Careers</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h5>Collections</h5>
-      <ul>
-        <li><a href="#">Édition Noire</a></li>
-        <li><a href="#">Patrimoine</a></li>
-        <li><a href="#">Or Pur</a></li>
-        <li><a href="#">Haute Joaillerie</a></li>
-        <li><a href="#">Bespoke</a></li>
-      </ul>
-    </div>
-    <div class="foot-col">
-      <h5>Services</h5>
-      <ul>
-        <li><a href="#">Client Care</a></li>
-        <li><a href="#">Watch Servicing</a></li>
-        <li><a href="#">Certificate of Origin</a></li>
-        <li><a href="#">Boutique Locator</a></li>
-        <li><a href="#">Contact Us</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="foot-bottom">
-    <p>© 2026 Maison Noir Manufacture Genève · All rights reserved</p>
-    <div style="display:flex;gap:30px;">
-      <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a><a href="#">Imprint</a>
+  <div class="footer-inner">
+    <div class="footer-title">CTMS — COGNITIVE TRAFFIC MANAGEMENT SYSTEM</div>
+    <div class="footer-sub">PBL Secondary Research · 22CSE43 · IV Semester · Section B · Department of Computer Science & Engineering</div>
+    <div class="footer-team">
+      <span>Team No. 1 · <span>Joel Ryan Bangera</span></span>
+      <span><span>Jovin Sequeira</span></span>
+      <span><span>Keshav Aditiya</span></span>
+      <span><span>Loyston Leon D Souza</span></span>
     </div>
   </div>
 </footer>
 
+<!-- Emergency overlays -->
+<div id="emg-overlay"></div>
+<div id="emg-banner">🚨 AMBULANCE DETECTED — INT-B2 — PRIORITY OVERRIDE ACTIVE — PATH CLEARING</div>
+
+<!-- ═══════════════════════════════════════
+   JAVASCRIPT
+═══════════════════════════════════════ -->
 <script>
-// Loader
-window.addEventListener('load',()=>{
-  setTimeout(()=>document.getElementById('loader').classList.add('hidden'),700);
-});
+/* ── Clock ── */
+const clockEl = document.getElementById('nav-clock');
+function updateClock(){clockEl.textContent = new Date().toLocaleTimeString('en-US',{hour12:false});}
+updateClock(); setInterval(updateClock,1000);
 
-// Nav scroll
-const nav=document.getElementById('nav');
+/* ── Scroll reveal ── */
+const revObs = new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+/* ── Active nav ── */
+const sections=['hero','problem','dashboard','architecture','research','empathy','performance'];
+const navLinks=document.querySelectorAll('.nav-links a');
 window.addEventListener('scroll',()=>{
-  nav.classList.toggle('scrolled',window.scrollY>50);
-});
-
-// Mobile menu
-const toggle=document.getElementById('navToggle');
-const links=document.getElementById('navLinks');
-toggle.addEventListener('click',()=>{
-  links.classList.toggle('open');
-  toggle.querySelector('i').classList.toggle('fa-bars');
-  toggle.querySelector('i').classList.toggle('fa-xmark');
-});
-document.querySelectorAll('.nav-links a').forEach(a=>{
-  a.addEventListener('click',()=>{
-    links.classList.remove('open');
-    toggle.querySelector('i').classList.remove('fa-xmark');
-    toggle.querySelector('i').classList.add('fa-bars');
-  });
-});
-
-// Reveal on scroll
-const io=new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}
-  });
-},{threshold:0.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-// Custom cursor
-const dot=document.querySelector('.cursor-dot');
-const ring=document.querySelector('.cursor-ring');
-let mx=0,my=0,rx=0,ry=0;
-document.addEventListener('mousemove',e=>{
-  mx=e.clientX;my=e.clientY;
-  dot.style.left=mx+'px';dot.style.top=my+'px';
-});
-function animateRing(){
-  rx+=(mx-rx)*0.18;ry+=(my-ry)*0.18;
-  ring.style.left=rx+'px';ring.style.top=ry+'px';
-  requestAnimationFrame(animateRing);
-}
-animateRing();
-document.querySelectorAll('a,button,.watch-card,.heart').forEach(el=>{
-  el.addEventListener('mouseenter',()=>{ring.style.width='60px';ring.style.height='60px';ring.style.borderColor='var(--gold-light)';});
-  el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='var(--gold)';});
-});
-
-// Heart toggle
-document.querySelectorAll('.heart').forEach(h=>{
-  h.addEventListener('click',e=>{
-    e.stopPropagation();
-    const icon=h.querySelector('i');
-    icon.classList.toggle('far');icon.classList.toggle('fas');
-    h.style.color=icon.classList.contains('fas')?'var(--gold)':'';
-  });
-});
-
-// Animate stat numbers
-const statsObs=new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      document.querySelectorAll('.heritage-stats .num').forEach(n=>{
-        const target=parseInt(n.textContent.replace(/,/g,''));
-        let cur=0;const step=Math.ceil(target/60);
-        const t=setInterval(()=>{
-          cur+=step;
-          if(cur>=target){cur=target;clearInterval(t);}
-          n.textContent=cur.toLocaleString();
-        },22);
-      });
-      statsObs.disconnect();
+  const sy=window.scrollY+80;
+  sections.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(sy>=el.offsetTop && sy<el.offsetTop+el.offsetHeight){
+      navLinks.forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+id);});
     }
   });
-},{threshold:.4});
-statsObs.observe(document.querySelector('.heritage-stats'));
+},{ passive:true });
+
+/* ── Intersection state ── */
+const NAMES=['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
+const ints = NAMES.map(id=>({
+  id, phase:Math.random()>.5?'NS':'EW',
+  timer:Math.floor(Math.random()*35)+8,
+  maxT:Math.floor(Math.random()*18)+25,
+  den:{N:Math.random()*85+5,S:Math.random()*85+5,E:Math.random()*85+5,W:Math.random()*85+5},
+  dqn:0.72+Math.random()*0.24, emg:false
+}));
+function dcls(v){return v<45?'lo':v<75?'md':'hi';}
+
+function makeRoadSVG(int){
+  const ns=int.phase==='NS';
+  const gNS=ns?'#22c55e':'#ef4444', gEW=ns?'#ef4444':'#22c55e';
+  const emgCircle=int.emg?`<circle cx="50" cy="50" r="13" fill="none" stroke="#ef4444" stroke-width="2.5" opacity=".85"/>`:''
+  const veh=['N','S','E','W'].map(d=>{
+    if(int.den[d]<55)return'';
+    if(d==='N')return`<rect x="46.5" y="6" width="4" height="7" fill="#00e5b8" rx="1" opacity=".8"/>`;
+    if(d==='S')return`<rect x="49.5" y="68" width="4" height="7" fill="#00e5b8" rx="1" opacity=".8"/>`;
+    if(d==='E')return`<rect x="67" y="46.5" width="7" height="4" fill="#1a7cff" rx="1" opacity=".8"/>`;
+    return `<rect x="18" y="49.5" width="7" height="4" fill="#1a7cff" rx="1" opacity=".8"/>`;
+  }).join('');
+  return `<svg class="isvg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#080f1c" rx="4"/>
+    <rect x="40" y="0" width="20" height="100" fill="#10192b"/>
+    <rect x="0" y="40" width="100" height="20" fill="#10192b"/>
+    <rect x="40" y="40" width="20" height="20" fill="#18273d"/>
+    <line x1="50" y1="2" x2="50" y2="37" stroke="#1c2d45" stroke-width="1.2" stroke-dasharray="4,4"/>
+    <line x1="50" y1="63" x2="50" y2="98" stroke="#1c2d45" stroke-width="1.2" stroke-dasharray="4,4"/>
+    <line x1="2" y1="50" x2="37" y2="50" stroke="#1c2d45" stroke-width="1.2" stroke-dasharray="4,4"/>
+    <line x1="63" y1="50" x2="98" y2="50" stroke="#1c2d45" stroke-width="1.2" stroke-dasharray="4,4"/>
+    <line x1="40" y1="39" x2="60" y2="39" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+    <line x1="40" y1="61" x2="60" y2="61" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+    <line x1="39" y1="40" x2="39" y2="60" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+    <line x1="61" y1="40" x2="61" y2="60" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
+    <circle cx="34" cy="34" r="4" fill="${gNS}" opacity=".95"/>
+    <circle cx="66" cy="66" r="4" fill="${gNS}" opacity=".95"/>
+    <circle cx="66" cy="34" r="4" fill="${gEW}" opacity=".95"/>
+    <circle cx="34" cy="66" r="4" fill="${gEW}" opacity=".95"/>
+    ${veh}${emgCircle}
+  </svg>`;
+}
+
+function renderGrid(){
+  document.getElementById('igrid').innerHTML = ints.map(int=>{
+    const ph = int.emg?'EMG':int.phase;
+    return`<div class="icell${int.emg?' emg':''}" onclick="selectInt('${int.id}')">
+      <div class="ihead">
+        <span class="iid">INT-${int.id}</span>
+        <span class="iphase ${ph}">${int.emg?'🚨':ph}</span>
+      </div>
+      ${makeRoadSVG(int)}
+      <div class="dbars">
+        ${['N','S','E','W'].map(d=>`<div class="dbar-item">
+          <div class="dbar-lbl">${d} ${Math.round(int.den[d])}%</div>
+          <div class="dbar-track"><div class="dbar-fill ${dcls(int.den[d])}" style="width:${int.den[d]}%"></div></div>
+        </div>`).join('')}
+      </div>
+      <div class="idqn-row">
+        <span>Q:&nbsp;<span class="idqn-score">${int.dqn.toFixed(3)}</span></span>
+        <span class="itimer">⏱${int.timer}s</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Chart ── */
+const thruHist=Array.from({length:20},()=>Math.round(4100+Math.random()*1600));
+const labels=Array.from({length:20},(_,i)=>`T-${20-i}`);
+const tChart=new Chart(document.getElementById('tchart').getContext('2d'),{
+  type:'line',
+  data:{labels,datasets:[{
+    label:'Throughput',data:[...thruHist],
+    borderColor:'#00e5b8',backgroundColor:'rgba(0,229,184,.06)',
+    fill:true,tension:.4,pointRadius:2,borderWidth:2
+  }]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{
+      backgroundColor:'#0c1626',borderColor:'#162030',borderWidth:1,
+      titleColor:'#8ba8c4',bodyColor:'#00e5b8',
+      titleFont:{family:'JetBrains Mono,monospace',size:10},
+      bodyFont:{family:'JetBrains Mono,monospace',size:10}
+    }},
+    scales:{
+      x:{grid:{color:'rgba(22,32,48,.9)'},ticks:{color:'#3d5872',font:{family:'JetBrains Mono,monospace',size:8},maxTicksLimit:5}},
+      y:{grid:{color:'rgba(22,32,48,.9)'},ticks:{color:'#00e5b8',font:{family:'JetBrains Mono,monospace',size:8}},min:2800,max:6500}
+    }
+  }
+});
+
+/* ── YOLO ── */
+const VEHICLES=[
+  {t:'Sedan',i:'🚗',bg:'#0a1826'},
+  {t:'SUV',i:'🚙',bg:'#0a1d2e'},
+  {t:'Bus',i:'🚌',bg:'#0a1621'},
+  {t:'Truck',i:'🚛',bg:'#0c1726'},
+  {t:'Motorcycle',i:'🏍',bg:'#0a1826'},
+  {t:'Bicycle',i:'🚲',bg:'#0a1826'},
+  {t:'Ambulance',i:'🚑',bg:'#1a0a0a',emg:true}
+];
+function renderYOLO(forceEmg){
+  let items=[];
+  if(forceEmg) items.push(VEHICLES[6]);
+  const reg=VEHICLES.filter(v=>!v.emg);
+  while(items.length<4){const r=reg[Math.floor(Math.random()*reg.length)];if(!items.find(x=>x.t===r.t))items.push(r);}
+  const conf=()=>(91+Math.random()*8).toFixed(1)+'%';
+  document.getElementById('yololist').innerHTML=items.slice(0,4).map(v=>`
+    <div class="det-item${v.emg?' emg':''}">
+      <div class="dico" style="background:${v.bg}">${v.i}</div>
+      <div><div class="dtype">${v.t}</div><div class="dloc">INT-${NAMES[Math.floor(Math.random()*9)]} · cam-${Math.floor(Math.random()*4)+1}</div></div>
+      <div class="dconf ${v.emg?'emg':'ok'}">${v.emg?'99.8%':conf()}</div>
+    </div>`).join('');
+}
+
+/* ── Event Feed ── */
+let evCount=0;
+const EVDB={
+  info:['DQN extended NS green phase at INT-A1 by +8s','Green wave activated: A-row corridor (A1→A2→A3)','Redis sync complete: all 9 intersections','ksqlDB pattern matched: smooth flow B2→C2','DQN policy gradient update applied successfully','Edge cache warm-up complete: <10μs confirmed','Digital twin synchronisation: 100% fidelity'],
+  warn:['High density: INT-B1 West lane (87%)','Queue spillback risk: INT-C3 East (82%)','Kafka consumer lag detected: partition-3','Congestion risk corridor: A2→B2','Density threshold approaching: INT-A3 South (79%)'],
+  danger:['🚨 EMERGENCY: Ambulance detected at INT-B2','Priority override: clearing B2→C1→C2','Floodgate protocol activated: diverting A-row','CEP gridlock alert: density >90% at 2 intersections'],
+  success:['✓ Emergency cleared: INT-B2 returning to DQN','Floodgate deactivated: congestion resolved','Green wave optimised: avg wait ↓3.1s this hour','CO₂ savings logged: 142kg avoided','Throughput milestone: 5,000 vehicles/hr achieved']
+};
+function addEvent(type,msg){
+  const feed=document.getElementById('evfeed');
+  const t=new Date().toLocaleTimeString('en-US',{hour12:false});
+  const d=document.createElement('div');
+  d.className=`evitem ${type}`;
+  d.innerHTML=`<span class="evt">${t}</span><span class="evm">${msg}</span>`;
+  feed.insertBefore(d,feed.firstChild);
+  while(feed.children.length>30)feed.removeChild(feed.lastChild);
+  evCount++;
+  document.getElementById('ev-count').textContent=`${evCount} events`;
+}
+function randEvent(){
+  const w=['info','info','info','warn','warn','success'];
+  const c=w[Math.floor(Math.random()*w.length)];
+  addEvent(c,EVDB[c][Math.floor(Math.random()*EVDB[c].length)]);
+}
+
+/* ── Emergency Simulation ── */
+let emgActive=false;
+function triggerEmergency(){
+  if(emgActive)return;
+  emgActive=true;
+  const b2=ints.find(i=>i.id==='B2');
+  if(b2)b2.emg=true;
+  renderGrid(); renderYOLO(true);
+  document.getElementById('emg-overlay').classList.add('on');
+  document.getElementById('emg-banner').classList.add('on');
+  document.getElementById('fgstatus').textContent='● OVERRIDE';
+  document.getElementById('fgstatus').style.color='var(--danger)';
+  document.getElementById('dp-badge').textContent='⚠ EMG OVERRIDE';
+  document.getElementById('dp-badge').style.color='var(--danger)';
+  document.getElementById('dp-badge').style.borderColor='rgba(239,68,68,.3)';
+  document.getElementById('m-ems').textContent='1.6';
+  addEvent('danger','🚨 AMBULANCE DETECTED: INT-B2 — YOLOv8 confidence 99.8%');
+  setTimeout(()=>addEvent('danger','Priority override engaged: standard cycle bypassed'),600);
+  setTimeout(()=>addEvent('danger','Clearing path: B2→C1→C2 corridor'),1200);
+  setTimeout(()=>addEvent('warn','Diverting non-emergency traffic to alternate route'),1900);
+  setTimeout(()=>addEvent('info','Floodgate protocol: A-row pressure relief active'),2700);
+  setTimeout(()=>addEvent('success','✓ Path cleared — estimated ambulance ETA: 38s'),4000);
+  setTimeout(()=>{
+    emgActive=false;
+    if(b2)b2.emg=false;
+    document.getElementById('emg-overlay').classList.remove('on');
+    document.getElementById('emg-banner').classList.remove('on');
+    document.getElementById('fgstatus').textContent='● READY';
+    document.getElementById('fgstatus').style.color='var(--ok)';
+    document.getElementById('dp-badge').textContent='DQN ACTIVE';
+    document.getElementById('dp-badge').style.color='';
+    document.getElementById('dp-badge').style.borderColor='';
+    renderGrid(); renderYOLO(false);
+    addEvent('success','✓ Emergency cleared — INT-B2 returned to DQN control');
+    document.getElementById('m-ems').textContent='2.4';
+  },10000);
+}
+
+function selectInt(id){
+  const int=ints.find(i=>i.id===id);
+  addEvent('info',`INT-${id} inspected — Phase: ${int.phase} | N:${Math.round(int.den.N)}% S:${Math.round(int.den.S)}% E:${Math.round(int.den.E)}% W:${Math.round(int.den.W)}% | Q:${int.dqn.toFixed(3)}`);
+}
+
+/* ── Main simulation loop ── */
+let tick=0;
+function simLoop(){
+  tick++;
+  ints.forEach(int=>{
+    if(int.emg)return;
+    int.timer=Math.max(0,int.timer-1);
+    if(int.timer<=0){
+      int.phase=int.phase==='NS'?'EW':'NS';
+      int.timer=int.maxT+Math.floor(Math.random()*8)-3;
+      if(int.timer<4)int.timer=4;
+    }
+    ['N','S','E','W'].forEach(d=>{
+      int.den[d]=Math.max(3,Math.min(95,int.den[d]+(Math.random()-.5)*13));
+    });
+    int.dqn=Math.max(.65,Math.min(.995,int.dqn+(Math.random()-.5)*.035));
+  });
+  renderGrid();
+
+  /* Metric jitter */
+  document.getElementById('m-wait').textContent=(16.5+Math.random()*4.5).toFixed(1);
+  document.getElementById('m-thru').textContent=(4600+Math.round(Math.random()*700)).toLocaleString();
+  document.getElementById('m-co2').textContent=(26.5+Math.random()*4.5).toFixed(1);
+
+  /* DQN ring */
+  const rew=(.82+Math.random()*0.11).toFixed(3);
+  document.getElementById('dqn-r').textContent='+'+rew;
+  document.getElementById('dqn-dec').textContent=Math.floor(41+Math.random()*14)+' dec/s';
+  const pct=Math.round(parseFloat(rew)*100);
+  const offset=113.1*(1-pct/100);
+  document.getElementById('rring').setAttribute('stroke-dashoffset',offset.toFixed(1));
+  document.getElementById('rrtxt').textContent=pct+'%';
+  document.getElementById('dqn-ep').textContent=`Episode ${(14390+tick).toLocaleString()} · ε=0.05`;
+
+  /* Kafka + Redis */
+  document.getElementById('kafka').textContent=(2400+Math.round(Math.random()*700)).toLocaleString()+'/s';
+  document.getElementById('redis').textContent=(3.8+Math.random()*5.6).toFixed(1)+'μs';
+
+  /* Chart update every other tick */
+  if(tick%2===0){
+    thruHist.shift();
+    thruHist.push(Math.round(4100+Math.random()*1800));
+    tChart.data.datasets[0].data=[...thruHist];
+    tChart.update('none');
+  }
+
+  if(tick%3===0) renderYOLO(false);
+  if(tick%4===0) randEvent();
+}
+
+/* ── Init ── */
+renderGrid();
+renderYOLO(false);
+addEvent('success','CTMS online — 9/9 intersections connected and active');
+addEvent('info','DQN model loaded: ResNet-18 · 14,392 training episodes');
+addEvent('info','ksqlDB stream processor: 12 CEP patterns active');
+addEvent('info','Redis edge cache initialised: latency <10μs confirmed');
+addEvent('info','YOLO v8 model ready: 8 vehicle classes loaded');
+setInterval(simLoop, 1800);
 </script>
 </body>
 </html>
