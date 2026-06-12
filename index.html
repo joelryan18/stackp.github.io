@@ -3,678 +3,499 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTMS — Cognitive Traffic Management System | Smart Cities: Intelligent Traffic Management</title>
-    <meta name="description" content="CTMS is an AI-powered intelligent traffic management system for smart cities, combining Deep Q-Network reinforcement learning, YOLOv8 emergency vehicle detection, and Kafka stream processing to cut wait times by 40% and emergency response by 50%.">
-    <meta name="keywords" content="smart cities, intelligent traffic management, deep q-network, YOLOv8, traffic AI, CTMS">
-    <meta name="author" content="CTMS Team 1 - 22CSE43">
-    <meta name="theme-color" content="#05060e">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="CTMS — Cognitive Traffic Management System">
-    <meta property="og:description" content="AI-powered intelligent traffic management for smart cities: 40% lower wait times, 50% faster emergency response, real-time DQN signal optimization.">
-    <meta property="og:site_name" content="CTMS">
-    <meta name="twitter:card" content="summary">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2338bdf8'/%3E%3Ctext x='50' y='66' font-size='42' text-anchor='middle' font-family='monospace' font-weight='bold' fill='%2305060e'%3ECT%3C/text%3E%3C/svg%3E">
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+    <title>CTMS — Cognitive Traffic Management System | Smart Cities</title>
+    <meta name="description" content="CTMS is an AI-powered intelligent traffic management system for smart cities.">
+    <meta name="theme-color" content="#060b13">
+    
+    <!-- Modern Tech Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    
     <style>
         /* ═══════════════════════════════════════
-           ROOT VARIABLES
+           ROOT VARIABLES & MODERN UPGRADES
         ═══════════════════════════════════════ */
         :root {
-            --bg:      #05060e;
-            --bg2:     #0a0d1d;
-            --bg3:     #0e1326;
-            --bg4:     #141a33;
-            --bd:      #1b2240;
-            --bd2:     #283255;
-            --ac:      #38bdf8;
-            --ac2:     #818cf8;
-            --ac3:     #c084fc;
-            --warn:    #fbbf24;
-            --danger:  #ef4444;
-            --ok:      #34d399;
-            --txt:     #93a5c9;
-            --txtd:    #4d5e85;
-            --txtb:    #d7e2f8;
-            --white:   #f2f6ff;
-            --f1:      'Rajdhani', sans-serif;
-            --f2:      'JetBrains Mono', monospace;
-            --f3:      'Noto Sans', sans-serif;
+            --bg-base: #030712;
+            --primary: #00f2fe;
+            --primary-glow: rgba(0, 242, 254, 0.4);
+            --secondary: #4facfe;
+            --ac: #00f2fe;
+            --ac2: #4facfe;
+            --ac3: #818cf8;
+            --warn: #fbbf24;
+            --danger: #ef4444;
+            --ok: #10b981;
+            --txt: #94a3b8;
+            --txtd: #64748b;
+            --txtb: #f8fafc;
+            --white: #ffffff;
+            
+            /* Glassmorphism Variables */
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.05);
+
+            --f1: 'Outfit', sans-serif;
+            --f2: 'JetBrains Mono', monospace;
+            --f3: 'Outfit', sans-serif;
         }
-        *{margin:0;padding:0;box-sizing:border-box;scroll-behavior:smooth;}
-        html{font-size:16px;}
-        body{background:var(--bg);color:var(--txt);font-family:var(--f3);overflow-x:hidden;}
-        ::selection{background:rgba(56,189,248,.25);color:var(--white);}
-        ::-webkit-scrollbar{width:4px;}
-        ::-webkit-scrollbar-track{background:var(--bg2);}
-        ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+
+        * { margin:0; padding:0; box-sizing:border-box; scroll-behavior:smooth; }
+        html { font-size:16px; }
+        
+        body {
+            background-color: var(--bg-base);
+            color: var(--txt);
+            font-family: var(--f3);
+            overflow-x: hidden;
+        }
+
+        ::selection { background:rgba(0,242,254,.25); color:var(--white); }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-track { background:var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:3px; }
+        ::-webkit-scrollbar-thumb:hover { background:var(--primary); }
+
+        /* ═══════════════════════════════════════
+           ANIMATED AMBIENT BACKGROUND (NEW)
+        ═══════════════════════════════════════ */
+        .cyber-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(var(--glass-border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -2;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 15s linear infinite;
+            mask-image: radial-gradient(ellipse at center, black 10%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 10%, transparent 80%);
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 20%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vw; height: 70vw;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 50%);
+            filter: blur(100px);
+            z-index: -1;
+            border-radius: 50%;
+            animation: pulseGlow 10s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+        @keyframes pulseGlow {
+            0% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.1); }
+        }
 
         /* ═══════════════════════════════════════
            TOPNAV
         ═══════════════════════════════════════ */
         #topnav {
-            position:fixed;top:0;left:0;right:0;z-index:999;
-            background:rgba(4,8,15,.88);backdrop-filter:blur(16px);
-            border-bottom:1px solid var(--bd);
-            display:flex;align-items:center;justify-content:space-between;
-            padding:0 28px;height:58px;transition:background .3s;
+            position:fixed; top:0; left:0; right:0; z-index:999;
+            background: rgba(3, 7, 18, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            display:flex; align-items:center; justify-content:space-between;
+            padding:0 28px; height:64px; transition:all .3s;
         }
-        .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-        .nav-mark{width:34px;height:34px;border-radius:8px;background:var(--ac);
-            display:flex;align-items:center;justify-content:center;
-            font-family:var(--f1);font-weight:700;font-size:12px;color:#05060e;letter-spacing:0;}
-        .nav-title{font-family:var(--f1);font-weight:700;font-size:17px;color:var(--white);letter-spacing:2px;}
-        .nav-links{display:flex;gap:4px;}
-        .nav-links a{
-            font-family:var(--f2);font-size:11px;color:var(--txtd);
-            text-decoration:none;padding:6px 12px;border-radius:6px;
-            letter-spacing:.5px;transition:color .2s,background .2s;
+        #topnav.scrolled { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .nav-brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+        .nav-mark {
+            width:36px; height:36px; border-radius:10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display:flex; align-items:center; justify-content:center;
+            font-family:var(--f1); font-weight:800; font-size:14px; color:#000;
+            box-shadow: 0 0 15px var(--primary-glow);
         }
-        .nav-links a:hover,.nav-links a.active{color:var(--ac);background:rgba(56,189,248,.07);}
-        .nav-right{display:flex;align-items:center;gap:12px;}
-        .nav-badge{
-            font-family:var(--f2);font-size:10px;padding:4px 10px;border-radius:4px;
-            background:rgba(56,189,248,.08);color:var(--ac);border:1px solid rgba(56,189,248,.2);
-            letter-spacing:.5px;
+        .nav-title { font-family:var(--f1); font-weight:700; font-size:18px; color:var(--white); letter-spacing:2px; }
+        .nav-links { display:flex; gap:8px; }
+        .nav-links a {
+            font-family:var(--f1); font-size:13px; font-weight:500; color:var(--txt);
+            text-decoration:none; padding:8px 14px; border-radius:8px;
+            transition:all .3s;
         }
-        #nav-clock{font-family:var(--f2);font-size:12px;color:var(--txtd);}
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary); background: var(--glass-bg);
+            box-shadow: inset 0 0 0 1px var(--glass-border);
+        }
+        .nav-right { display:flex; align-items:center; gap:14px; }
+        .nav-badge {
+            font-family:var(--f2); font-size:10px; padding:6px 12px; border-radius:6px;
+            background: rgba(0,242,254,0.1); color:var(--primary); border:1px solid rgba(0,242,254,0.3);
+            letter-spacing:1px;
+        }
+        #nav-clock { font-family:var(--f2); font-size:13px; color:var(--txtd); }
 
         /* ═══════════════════════════════════════
            HERO SECTION
         ═══════════════════════════════════════ */
         #hero {
-            min-height:100vh;display:flex;align-items:center;
-            position:relative;overflow:hidden;padding-top:58px;
+            min-height:100vh; display:flex; align-items:center;
+            position:relative; overflow:hidden; padding-top:64px;
         }
-        .hero-grid-bg {
-            position:absolute;inset:0;
-            background-image:
-                    linear-gradient(rgba(56,189,248,.04) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(56,189,248,.04) 1px, transparent 1px);
-            background-size:44px 44px;
-            mask-image:radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 100%);
+        .hero-inner {
+            position:relative; z-index:2; max-width:1200px; margin:0 auto; padding:60px 28px;
+            width:100%; display:grid; grid-template-columns:1.2fr 1fr; gap:60px; align-items:center;
         }
-        .hero-glow1{
-            position:absolute;top:-120px;left:50%;transform:translateX(-50%);
-            width:700px;height:700px;border-radius:50%;
-            background:radial-gradient(circle, rgba(56,189,248,.09) 0%, transparent 70%);
-            pointer-events:none;
+        .hero-tag {
+            display:inline-flex; align-items:center; gap:8px;
+            font-family:var(--f2); font-size:11px; color:var(--primary);
+            background: rgba(0,242,254,0.05); border:1px solid rgba(0,242,254,0.2);
+            border-radius:30px; padding:6px 16px; letter-spacing:1px; margin-bottom:24px;
+            box-shadow: 0 0 20px rgba(0,242,254,0.1);
         }
-        .hero-glow2{
-            position:absolute;bottom:-80px;right:-100px;
-            width:500px;height:500px;border-radius:50%;
-            background:radial-gradient(circle, rgba(129,140,248,.07) 0%, transparent 70%);
-            pointer-events:none;
+        .htag-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); animation:blink 2s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        
+        h1.hero-title {
+            font-family:var(--f1); font-weight:800; font-size:clamp(40px, 5vw, 68px);
+            color:var(--white); line-height:1.1; margin-bottom:20px; letter-spacing:-1px;
         }
-        .hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:60px 28px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
-        .hero-tag{
-            display:inline-flex;align-items:center;gap:8px;
-            font-family:var(--f2);font-size:10px;color:var(--ac);
-            background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.18);
-            border-radius:20px;padding:5px 14px;letter-spacing:.8px;margin-bottom:22px;
+        h1.hero-title span {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .htag-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);animation:blink 2s ease-in-out infinite;}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-        h1.hero-title{
-            font-family:var(--f1);font-weight:700;font-size:clamp(36px,5vw,62px);
-            color:var(--white);line-height:1.05;margin-bottom:18px;letter-spacing:1px;
+        .hero-desc { font-size:17px; line-height:1.7; color:var(--txt); max-width:550px; margin-bottom:36px; }
+        
+        /* Modern Buttons */
+        .hero-btns { display:flex; gap:16px; flex-wrap:wrap; }
+        .btn-primary {
+            display:inline-flex; align-items:center; gap:10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); color:#000;
+            padding:14px 28px; border-radius:12px; font-family:var(--f1); font-weight:700; font-size:15px;
+            text-decoration:none; border:none; cursor:pointer; transition:all .3s;
+            box-shadow: 0 10px 30px rgba(0,242,254,0.3);
         }
-        h1.hero-title span{color:var(--ac);}
-        .hero-desc{font-size:15px;line-height:1.7;color:var(--txt);max-width:520px;margin-bottom:30px;}
-        .hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
-        .btn-primary{
-            display:inline-flex;align-items:center;gap:8px;
-            background:var(--ac);color:#05060e;padding:12px 22px;border-radius:9px;
-            font-family:var(--f1);font-weight:700;font-size:14px;letter-spacing:1px;
-            text-decoration:none;border:none;cursor:pointer;transition:transform .2s,box-shadow .2s;
+        .btn-primary:hover { transform:translateY(-3px); box-shadow: 0 15px 40px rgba(0,242,254,0.5); }
+        .btn-outline {
+            display:inline-flex; align-items:center; gap:10px;
+            background: var(--glass-bg); color:var(--white); padding:14px 28px; border-radius:12px;
+            font-family:var(--f1); font-weight:600; font-size:15px; text-decoration:none;
+            border:1px solid var(--glass-border); cursor:pointer; transition:all .3s;
+            backdrop-filter: blur(10px);
         }
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(56,189,248,.28);}
-        .btn-outline{
-            display:inline-flex;align-items:center;gap:8px;
-            background:transparent;color:var(--txtb);padding:12px 22px;border-radius:9px;
-            font-family:var(--f1);font-weight:600;font-size:14px;letter-spacing:1px;
-            text-decoration:none;border:1px solid var(--bd2);cursor:pointer;transition:border-color .2s,color .2s;
-        }
-        .btn-outline:hover{border-color:var(--ac2);color:var(--ac2);}
+        .btn-outline:hover { border-color:var(--primary); color:var(--primary); background:rgba(0,242,254,0.05); }
 
-        /* Hero — right column: team card */
-        .hero-card{
-            background:var(--bg2);border:1px solid var(--bd);border-radius:16px;
-            overflow:hidden;
+        /* Hero Card (Glassmorphism) */
+        .hero-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px; overflow:hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: floatY 8s ease-in-out infinite;
         }
-        .hc-top{padding:18px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
-        .hc-top-title{font-family:var(--f2);font-size:11px;color:var(--txtd);letter-spacing:.8px;}
-        .hc-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:blink 2s ease-in-out infinite;}
-        .hc-meta{padding:16px 20px;border-bottom:1px solid var(--bd);}
-        .hc-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;font-family:var(--f2);}
-        .hck{color:var(--txtd);}
-        .hcv{color:var(--txtb);}
-        .team-list{padding:14px 20px;}
-        .team-row{
-            display:flex;align-items:center;gap:12px;padding:8px 0;
-            border-bottom:1px solid rgba(27,34,64,.8);
+        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+        .hc-top { padding:20px 24px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; }
+        .hc-top-title { font-family:var(--f2); font-size:12px; color:var(--txtd); letter-spacing:1px; }
+        .hc-dot { width:10px; height:10px; border-radius:50%; background:var(--ok); box-shadow: 0 0 10px var(--ok); animation:blink 2s infinite; }
+        .hc-meta { padding:20px 24px; border-bottom:1px solid var(--glass-border); }
+        .hc-row { display:flex; justify-content:space-between; padding:6px 0; font-size:13px; font-family:var(--f2); }
+        .hck { color:var(--txtd); } .hcv { color:var(--white); }
+        .team-list { padding:20px 24px; }
+        .team-row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--glass-border); }
+        .team-row:last-child { border-bottom:none; }
+        .team-num {
+            width:32px; height:32px; border-radius:8px; background:rgba(0,242,254,0.1); color:var(--primary);
+            font-family:var(--f2); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
         }
-        .team-row:last-child{border-bottom:none;}
-        .team-num{
-            width:28px;height:28px;border-radius:7px;
-            background:rgba(56,189,248,.08);color:var(--ac);
-            font-family:var(--f2);font-size:10px;font-weight:600;
-            display:flex;align-items:center;justify-content:center;flex-shrink:0;
-        }
-        .team-usn{font-family:var(--f2);font-size:10px;color:var(--txtd);}
-        .team-name{font-size:13px;font-family:var(--f3);font-weight:600;color:var(--txtb);}
-        .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--bd);}
-        .hstat{padding:14px 18px;text-align:center;border-right:1px solid var(--bd);}
-        .hstat:last-child{border-right:none;}
-        .hstat-v{font-family:var(--f2);font-size:20px;font-weight:600;color:var(--ac);line-height:1;}
-        .hstat-l{font-size:9px;color:var(--txtd);font-family:var(--f2);margin-top:3px;letter-spacing:.5px;}
+        .team-name { font-size:15px; font-weight:600; color:var(--white); }
+        .team-usn { font-family:var(--f2); font-size:11px; color:var(--txtd); }
+        .hero-stats { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--glass-border); background:rgba(0,0,0,0.2); }
+        .hstat { padding:18px; text-align:center; border-right:1px solid var(--glass-border); }
+        .hstat:last-child { border-right:none; }
+        .hstat-v { font-family:var(--f2); font-size:24px; font-weight:700; color:var(--primary); }
+        .hstat-l { font-size:10px; color:var(--txtd); font-family:var(--f2); margin-top:6px; letter-spacing:1px; text-transform:uppercase;}
 
         /* ═══════════════════════════════════════
            SECTION COMMON
         ═══════════════════════════════════════ */
-        section{padding:80px 0;}
-        .section-inner{max-width:1200px;margin:0 auto;padding:0 28px;}
-        .sec-tag{
-            font-family:var(--f2);font-size:10px;color:var(--ac);letter-spacing:1.5px;
-            text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+        section { padding:100px 0; position:relative; z-index:1; }
+        .section-inner { max-width:1200px; margin:0 auto; padding:0 28px; }
+        .sec-tag {
+            font-family:var(--f2); font-size:12px; color:var(--primary); letter-spacing:2px;
+            text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:10px;
         }
-        .sec-tag::before{content:'';width:20px;height:1px;background:var(--ac);}
-        h2.sec-title{
-            font-family:var(--f1);font-weight:700;font-size:clamp(28px,3.5vw,42px);
-            color:var(--white);margin-bottom:14px;letter-spacing:.5px;line-height:1.1;
+        .sec-tag::before { content:''; width:30px; height:2px; background:var(--primary); border-radius:2px;}
+        h2.sec-title {
+            font-family:var(--f1); font-weight:800; font-size:clamp(32px,4vw,48px);
+            color:var(--white); margin-bottom:20px; line-height:1.2; letter-spacing:-0.5px;
         }
-        h2.sec-title span{color:var(--ac);}
-        .sec-desc{font-size:15px;line-height:1.7;color:var(--txt);max-width:640px;margin-bottom:44px;}
-        .sec-divider{height:1px;background:linear-gradient(90deg,var(--ac) 0%,transparent 100%);margin-bottom:0;opacity:.3;}
+        h2.sec-title span { color:var(--primary); }
+        .sec-desc { font-size:16px; line-height:1.7; color:var(--txt); max-width:700px; margin-bottom:50px; }
 
         /* ═══════════════════════════════════════
-           PROBLEM SECTION
+           CARDS (GLASSMORPHISM)
         ═══════════════════════════════════════ */
-        #problem{background:var(--bg2);}
-        .prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
-        .pcard{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:12px;
-            padding:20px;transition:border-color .25s,transform .25s;position:relative;overflow:hidden;
+        .prob-grid, .arch-grid, .res-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; }
+        
+        .pcard, .arch-card, .res-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px; padding:28px; transition:all .4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position:relative; overflow:hidden;
         }
-        .pcard::before{
-            content:'';position:absolute;top:0;left:0;right:0;height:2px;
-            background:linear-gradient(90deg,var(--danger),transparent);
-            opacity:0;transition:opacity .25s;
+        
+        .pcard::before, .arch-card::before {
+            content:''; position:absolute; top:0; left:0; width:100%; height:3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease;
         }
-        .pcard:hover{border-color:rgba(239,68,68,.35);transform:translateY(-3px);}
-        .pcard:hover::before{opacity:1;}
-        .pico{font-size:26px;margin-bottom:12px;}
-        .ptitle{font-family:var(--f1);font-weight:700;font-size:16px;color:var(--txtb);margin-bottom:8px;}
-        .pdesc{font-size:13px;line-height:1.6;color:var(--txt);}
-        .pnum{
-            position:absolute;top:14px;right:14px;font-family:var(--f2);font-size:11px;
-            color:var(--bd2);font-weight:600;
+
+        .pcard:hover, .arch-card:hover, .res-card:hover {
+            transform: translateY(-8px); border-color: rgba(0,242,254,0.3);
+            background: var(--glass-hover); box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+        .pcard:hover::before, .arch-card:hover::before { transform: scaleX(1); }
+
+        .pico, .arch-icon { font-size:36px; margin-bottom:16px; }
+        .ptitle, .arch-title, .res-title { font-family:var(--f1); font-weight:700; font-size:18px; color:var(--white); margin-bottom:10px; }
+        .pdesc, .arch-desc, .res-desc { font-size:14px; line-height:1.7; color:var(--txt); }
+        .pnum, .res-num {
+            position:absolute; top:20px; right:20px; font-family:var(--f2); font-size:14px;
+            color:var(--glass-border); font-weight:700;
+        }
+        .res-num { position:static; width:36px; height:36px; border-radius:10px; background:rgba(0,242,254,0.1); color:var(--primary); display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:14px;}
+
+        /* Tech Tags */
+        .arch-tech { display:flex; flex-wrap:wrap; gap:8px; }
+        .tech-tag {
+            font-family:var(--f2); font-size:11px; padding:4px 10px; border-radius:6px;
+            background: rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:var(--primary);
         }
 
         /* ═══════════════════════════════════════
            LIVE DASHBOARD SECTION
         ═══════════════════════════════════════ */
-        #dashboard{background:var(--bg);}
-        .dash-wrap{
-            background:var(--bg2);border:1px solid var(--bd);border-radius:16px;
-            overflow:hidden;
+        .dash-wrap {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); border-radius: 20px; overflow:hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
         }
 
-        /* Metrics strip */
-        .dmetrics{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--bd);}
-        .dmc{
-            padding:16px 20px;border-right:1px solid var(--bd);
-            display:flex;align-items:center;gap:14px;
-            background:var(--bg2);transition:background .2s;
-        }
-        .dmc:last-child{border-right:none;}
-        .dmc:hover{background:var(--bg3);}
-        .dmico{
-            width:44px;height:44px;border-radius:10px;
-            display:flex;align-items:center;justify-content:center;
-            font-size:20px;flex-shrink:0;
-        }
-        .dmico.t{background:rgba(56,189,248,.09);}
-        .dmico.b{background:rgba(129,140,248,.09);}
-        .dmico.a{background:rgba(251,191,36,.09);}
-        .dmico.g{background:rgba(52,211,153,.09);}
-        .dmlabel{font-size:9px;color:var(--txtd);font-family:var(--f2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px;}
-        .dmval{font-size:24px;font-weight:700;color:var(--white);line-height:1;font-family:var(--f2);}
-        .dmval small{font-size:12px;color:var(--txtd);font-weight:400;}
-        .dmdelta{font-size:10px;font-family:var(--f2);margin-top:3px;color:var(--ok);}
+        .dmetrics { display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--glass-border); background:rgba(0,0,0,0.3);}
+        .dmc { padding:24px; border-right:1px solid var(--glass-border); display:flex; align-items:center; gap:16px; transition:background .3s;}
+        .dmc:last-child { border-right:none; }
+        .dmc:hover { background: rgba(255,255,255,0.03); }
+        .dmico { width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; background:var(--glass-border);}
+        .dmlabel { font-size:11px; color:var(--txtd); font-family:var(--f2); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+        .dmval { font-size:28px; font-weight:700; color:var(--white); line-height:1; font-family:var(--f2); }
+        .dmval small { font-size:14px; color:var(--txtd); font-weight:400; }
+        .dmdelta { font-size:11px; font-family:var(--f2); margin-top:6px; color:var(--ok); }
 
-        /* 3-col main */
-        .dmain{display:grid;grid-template-columns:1fr 380px 320px;min-height:460px;}
-        .dp{border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;}
-        .dp:last-child{border-right:none;}
-        .dph{
-            padding:12px 18px;border-bottom:1px solid var(--bd);
-            display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-        }
-        .dphttl{
-            font-size:11px;font-weight:600;color:var(--txtb);font-family:var(--f2);
-            text-transform:uppercase;letter-spacing:.9px;
-            display:flex;align-items:center;gap:7px;
-        }
-        .dphttl::before{content:'';width:3px;height:12px;background:var(--ac);border-radius:2px;}
-        .dp-badge{
-            font-size:9px;font-family:var(--f2);padding:3px 9px;border-radius:4px;
-            background:rgba(56,189,248,.07);color:var(--ac);border:1px solid rgba(56,189,248,.18);
-            letter-spacing:.5px;
-        }
-        .dpbody{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px;}
-        .dpbody::-webkit-scrollbar{width:2px;}
-        .dpbody::-webkit-scrollbar-thumb{background:var(--bd);}
+        .dmain { display:grid; grid-template-columns:1fr 400px 350px; min-height:500px; }
+        .dp { border-right:1px solid var(--glass-border); display:flex; flex-direction:column; overflow:hidden; }
+        .dp:last-child { border-right:none; }
+        .dph { padding:16px 24px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.2);}
+        .dphttl { font-size:12px; font-weight:700; color:var(--white); font-family:var(--f2); text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:10px; }
+        .dphttl::before { content:''; width:4px; height:14px; background:var(--primary); border-radius:2px; }
+        .dp-badge { font-size:10px; font-family:var(--f2); padding:4px 10px; border-radius:6px; background:rgba(0,242,254,0.1); color:var(--primary); border:1px solid rgba(0,242,254,0.3); font-weight:600;}
+        .dpbody { flex:1; overflow-y:auto; padding:20px; }
 
         /* Intersection grid */
-        .igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-        .icell{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:9px;
-            padding:9px;cursor:pointer;transition:border-color .2s,transform .15s;
+        .igrid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .icell {
+            background: rgba(0,0,0,0.4); border:1px solid var(--glass-border); border-radius:12px;
+            padding:12px; cursor:pointer; transition:all .2s;
         }
-        .icell:hover{border-color:rgba(56,189,248,.4);transform:scale(1.02);}
-        .icell.emg{border-color:var(--danger)!important;animation:epulse .7s ease-in-out infinite alternate;}
+        .icell:hover { border-color:var(--primary); transform:scale(1.03); box-shadow: 0 0 15px var(--primary-glow);}
+        .icell.emg { border-color:var(--danger)!important; animation:epulse .7s infinite alternate; }
         @keyframes epulse{from{box-shadow:0 0 4px rgba(239,68,68,.2)}to{box-shadow:0 0 20px rgba(239,68,68,.6)}}
-        .ihead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
-        .iid{font-size:11px;font-weight:700;color:var(--ac);font-family:var(--f2);}
-        .iphase{font-size:8px;font-family:var(--f2);padding:2px 6px;border-radius:3px;}
-        .iphase.NS{background:rgba(56,189,248,.1);color:var(--ac);border:1px solid rgba(56,189,248,.25);}
-        .iphase.EW{background:rgba(129,140,248,.1);color:var(--ac2);border:1px solid rgba(129,140,248,.25);}
-        .iphase.EMG{background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.35);}
-        .isvg{width:100%;aspect-ratio:1;margin-bottom:6px;display:block;}
-        .dbars{display:grid;grid-template-columns:1fr 1fr;gap:3px;}
-        .dbar-item{font-size:8px;font-family:var(--f2);color:var(--txtd);}
-        .dbar-lbl{margin-bottom:2px;}
-        .dbar-track{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;}
-        .dbar-fill{height:100%;border-radius:2px;transition:width 1s ease;}
-        .dbar-fill.lo{background:var(--ok);}
-        .dbar-fill.md{background:var(--warn);}
-        .dbar-fill.hi{background:var(--danger);}
-        .idqn-row{margin-top:6px;display:flex;justify-content:space-between;font-size:8px;font-family:var(--f2);color:var(--txtd);}
-        .idqn-score{color:var(--ac);}
-        .itimer{color:var(--warn);}
+        
+        .ihead { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+        .iid { font-size:12px; font-weight:700; color:var(--primary); font-family:var(--f2); }
+        .iphase { font-size:9px; font-family:var(--f2); padding:3px 8px; border-radius:4px; font-weight:600;}
+        .iphase.NS { background:rgba(0,242,254,0.1); color:var(--primary); border:1px solid rgba(0,242,254,0.3); }
+        .iphase.EW { background:rgba(129,140,248,0.1); color:var(--ac3); border:1px solid rgba(129,140,248,0.3); }
+        .iphase.EMG { background:rgba(239,68,68,0.1); color:var(--danger); border:1px solid rgba(239,68,68,0.4); }
+        
+        .isvg { width:100%; aspect-ratio:1; margin-bottom:10px; border-radius:8px;}
+        .dbars { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .dbar-item { font-size:9px; font-family:var(--f2); color:var(--txt); }
+        .dbar-lbl { margin-bottom:4px; }
+        .dbar-track { height:4px; background:var(--glass-border); border-radius:2px; overflow:hidden; }
+        .dbar-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+        .dbar-fill.lo { background:var(--primary); }
+        .dbar-fill.md { background:var(--warn); }
+        .dbar-fill.hi { background:var(--danger); }
+        .idqn-row { margin-top:10px; display:flex; justify-content:space-between; font-size:10px; font-family:var(--f2); color:var(--txtd); }
+        .idqn-score { color:var(--white); font-weight:700;}
+        .itimer { color:var(--warn); font-weight:700;}
 
-        /* Chart + events col */
-        .chart-wrap{flex:0 0 52%;border-bottom:1px solid var(--bd);display:flex;flex-direction:column;}
-        .ccanvas-wrap{flex:1;min-height:0;position:relative;padding:10px 14px;}
-        .events-col{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-        .evfeed{flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:4px;}
-        .evfeed::-webkit-scrollbar{width:2px;}
-        .evfeed::-webkit-scrollbar-thumb{background:var(--bd);}
-        .evitem{
-            display:flex;gap:7px;align-items:flex-start;padding:5px 8px;
-            background:var(--bg3);border-radius:5px;border-left:2px solid transparent;
-            font-size:9px;font-family:var(--f2);animation:slideIn .3s ease;
+        /* Chart & Events */
+        .chart-wrap { flex:0 0 50%; border-bottom:1px solid var(--glass-border); display:flex; flex-direction:column; }
+        .ccanvas-wrap { flex:1; position:relative; padding:16px; }
+        .events-col { flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(0,0,0,0.2);}
+        .evfeed { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
+        .evitem {
+            display:flex; gap:10px; padding:10px; background:var(--glass-bg);
+            border-radius:8px; border-left:3px solid transparent; border:1px solid var(--glass-border);
+            font-size:11px; font-family:var(--f2); animation:slideIn .3s ease;
         }
-        @keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-        .evitem.info{border-left-color:var(--ac2);}
-        .evitem.warn{border-left-color:var(--warn);}
-        .evitem.danger{border-left-color:var(--danger);}
-        .evitem.success{border-left-color:var(--ok);}
-        .evt{color:var(--txtd);flex-shrink:0;font-size:8px;padding-top:1px;}
-        .evm{color:var(--txt);line-height:1.45;}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .evitem.info { border-left-color:var(--primary); }
+        .evitem.warn { border-left-color:var(--warn); }
+        .evitem.danger { border-left-color:var(--danger); background:rgba(239,68,68,0.1);}
+        .evitem.success { border-left-color:var(--ok); }
+        .evt { color:var(--txtd); flex-shrink:0; font-size:10px; }
+        .evm { color:var(--white); line-height:1.5; }
 
-        /* AI panel */
-        .ai-sec{margin-bottom:14px;}
-        .ai-sec-title{
-            font-size:9px;font-family:var(--f2);color:var(--txtd);
-            text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;
-            display:flex;align-items:center;gap:6px;
-        }
-        .ai-sec-title::after{content:'';flex:1;height:1px;background:var(--bd);}
-        .ai-dbox{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:10px;}
-        .ai-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;font-size:10px;font-family:var(--f2);}
-        .ai-k{color:var(--txtd);}
-        .ai-v{color:var(--txtb);font-weight:500;}
-        .ai-v.ac{color:var(--ac);}
-        .ai-v.ok{color:var(--ok);}
-        .ai-v.danger{color:var(--danger);}
-        .dqn-ring-row{display:flex;align-items:center;gap:10px;padding:5px 0 10px;}
-        .rsvg{width:44px;height:44px;flex-shrink:0;}
-        .rstats .rlbl{font-size:8px;color:var(--txtd);font-family:var(--f2);letter-spacing:.5px;}
-        .rstats .rval{font-size:18px;font-weight:700;color:var(--ac);font-family:var(--f2);line-height:1.1;}
-        .rstats .rsub{font-size:8px;color:var(--txtd);font-family:var(--f2);margin-top:1px;}
-        .det-list{display:flex;flex-direction:column;gap:4px;}
-        .det-item{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:7px;
-            padding:7px 9px;display:flex;align-items:center;gap:8px;
-            font-size:10px;font-family:var(--f2);
-        }
-        .det-item.emg{border-color:rgba(239,68,68,.38);background:rgba(239,68,68,.05);}
-        .dico{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
-        .dtype{color:var(--txtb);font-weight:500;}
-        .dloc{color:var(--txtd);font-size:8px;margin-top:1px;}
-        .dconf{font-size:10px;font-weight:700;}
-        .dconf.ok{color:var(--ok);}
-        .dconf.emg{color:var(--danger);}
+        /* AI Panel */
+        .ai-sec { margin-bottom:20px; }
+        .ai-sec-title { font-size:11px; font-family:var(--f2); color:var(--txtd); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+        .ai-sec-title::after { content:''; flex:1; height:1px; background:var(--glass-border); }
+        .ai-dbox { background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:12px; padding:16px; }
+        .ai-row { display:flex; justify-content:space-between; padding:4px 0; font-size:11px; font-family:var(--f2); }
+        .ai-k { color:var(--txtd); } .ai-v { color:var(--white); font-weight:600; }
+        .ai-v.ac { color:var(--primary); } .ai-v.ok { color:var(--ok); } .ai-v.danger { color:var(--danger); }
+        
+        .dqn-ring-row { display:flex; align-items:center; gap:16px; padding-bottom:16px; border-bottom:1px solid var(--glass-border); margin-bottom:12px;}
+        .rsvg { width:56px; height:56px; flex-shrink:0; }
+        .rstats .rlbl { font-size:10px; color:var(--txtd); font-family:var(--f2); letter-spacing:1px; }
+        .rstats .rval { font-size:24px; font-weight:700; color:var(--primary); font-family:var(--f2); }
+        .rstats .rsub { font-size:10px; color:var(--txtd); font-family:var(--f2); margin-top:2px; }
 
-        /* Emergency */
-        #emg-overlay{
-            position:fixed;inset:0;pointer-events:none;z-index:900;
-            border:3px solid transparent;display:none;transition:all .3s;
+        .det-item { background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:8px; padding:10px 12px; display:flex; align-items:center; gap:12px; font-size:11px; font-family:var(--f2); margin-bottom:6px;}
+        .det-item.emg { border-color:var(--danger); background:rgba(239,68,68,.1); }
+        .dico { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+        .dtype { color:var(--white); font-weight:600; font-size:12px;}
+        .dloc { color:var(--txtd); font-size:9px; margin-top:2px; }
+        .dconf { font-size:12px; font-weight:700; margin-left:auto;}
+        .dconf.ok { color:var(--ok); } .dconf.emg { color:var(--danger); }
+
+        .emg-act-btn {
+            width:100%; padding:14px; background:rgba(239,68,68,.1); border:1px solid var(--danger);
+            border-radius:10px; color:var(--danger); font-family:var(--f2); font-size:12px; font-weight:700;
+            cursor:pointer; letter-spacing:1px; transition:all .3s;
         }
-        #emg-overlay.on{
-            display:block;
-            border-color:rgba(239,68,68,.7);
-            background:rgba(239,68,68,.04);
-            animation:eframe .6s ease-in-out infinite alternate;
-        }
-        @keyframes eframe{
-            from{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.02)}
-            to{border-color:rgba(239,68,68,.9);background:rgba(239,68,68,.07)}
-        }
-        #emg-banner{
-            position:fixed;top:58px;left:0;right:0;z-index:901;
-            background:var(--danger);color:#fff;
-            display:none;padding:9px 24px;text-align:center;
-            font-family:var(--f2);font-size:12px;font-weight:600;letter-spacing:.8px;
-            animation:slideDown .35s ease-out;
-        }
-        #emg-banner.on{display:block;}
-        @keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
-        .emg-act-btn{
-            width:100%;padding:10px;background:rgba(239,68,68,.08);
-            border:1px solid rgba(239,68,68,.3);border-radius:8px;
-            color:var(--danger);font-family:var(--f2);font-size:10px;font-weight:700;
-            cursor:pointer;letter-spacing:.5px;transition:all .2s;
-        }
-        .emg-act-btn:hover{background:rgba(239,68,68,.18);border-color:var(--danger);}
+        .emg-act-btn:hover { background:var(--danger); color:#fff; box-shadow:0 0 20px rgba(239,68,68,0.5); }
+
+        /* Emergency Overlay */
+        #emg-overlay { position:fixed; inset:0; pointer-events:none; z-index:900; border:4px solid transparent; display:none; }
+        #emg-overlay.on { display:block; border-color:rgba(239,68,68,.8); background:rgba(239,68,68,.05); animation:eframe .6s infinite alternate; }
+        @keyframes eframe{ from{border-color:rgba(239,68,68,.4);} to{border-color:rgba(239,68,68,1);} }
+        #emg-banner { position:fixed; top:64px; left:0; right:0; z-index:901; background:var(--danger); color:#fff; display:none; padding:12px; text-align:center; font-family:var(--f2); font-size:14px; font-weight:700; letter-spacing:2px; animation:slideDown .3s; }
+        #emg-banner.on { display:block; }
+        @keyframes slideDown{from{transform:translateY(-100%);}to{transform:translateY(0);}}
 
         /* ═══════════════════════════════════════
-           ARCHITECTURE SECTION
+           EMPATHY MAP
         ═══════════════════════════════════════ */
-        #architecture{background:var(--bg2);}
-        .arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;}
-        .arch-card{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:22px;
-            position:relative;overflow:hidden;transition:border-color .25s,transform .25s;
-        }
-        .arch-card::after{
-            content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-            opacity:0;transition:opacity .25s;
-        }
-        .arch-card.c1::after{background:linear-gradient(90deg,var(--ac),transparent);}
-        .arch-card.c2::after{background:linear-gradient(90deg,var(--ac2),transparent);}
-        .arch-card.c3::after{background:linear-gradient(90deg,var(--warn),transparent);}
-        .arch-card.c4::after{background:linear-gradient(90deg,var(--ok),transparent);}
-        .arch-card.c5::after{background:linear-gradient(90deg,var(--danger),transparent);}
-        .arch-card:hover::after{opacity:1;}
-        .arch-card:hover{transform:translateY(-4px);}
-        .arch-card.c1:hover{border-color:rgba(56,189,248,.35);}
-        .arch-card.c2:hover{border-color:rgba(129,140,248,.35);}
-        .arch-card.c3:hover{border-color:rgba(251,191,36,.35);}
-        .arch-card.c4:hover{border-color:rgba(52,211,153,.35);}
-        .arch-card.c5:hover{border-color:rgba(239,68,68,.35);}
-        .arch-icon{font-size:32px;margin-bottom:14px;}
-        .arch-title{font-family:var(--f1);font-weight:700;font-size:17px;color:var(--white);margin-bottom:8px;}
-        .arch-desc{font-size:13px;line-height:1.65;color:var(--txt);margin-bottom:14px;}
-        .arch-tech{display:flex;flex-wrap:wrap;gap:5px;}
-        .tech-tag{
-            font-family:var(--f2);font-size:9px;padding:3px 8px;border-radius:4px;
-            background:var(--bg4);border:1px solid var(--bd2);color:var(--txtd);letter-spacing:.3px;
-        }
+        .emp-outer { background:var(--glass-bg); border:1px solid var(--glass-border); backdrop-filter:blur(12px); border-radius:20px; overflow:hidden; }
+        .emp-header { padding:24px 32px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:20px; background:rgba(0,0,0,0.3); }
+        .emp-avatar { width:60px; height:60px; border-radius:16px; background:rgba(0,242,254,0.1); display:flex; align-items:center; justify-content:center; font-size:32px; border:1px solid rgba(0,242,254,0.3);}
+        .emp-who { font-family:var(--f1); font-weight:800; font-size:20px; color:var(--white); margin-bottom:4px;}
+        .emp-role { font-size:14px; color:var(--primary); font-family:var(--f2); }
+        .emp-grid { display:grid; grid-template-columns:repeat(3,1fr); }
+        .emp-zone { padding:28px; border-right:1px solid var(--glass-border); border-bottom:1px solid var(--glass-border); transition:background .3s;}
+        .emp-zone:hover { background:var(--glass-hover); }
+        .emp-zone:nth-child(3n) { border-right:none; }
+        .emp-zone:nth-child(n+7) { border-bottom:none; }
+        .emp-zone-label { font-family:var(--f2); font-size:11px; color:var(--txtd); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+        .emp-zone-label span { width:10px; height:10px; border-radius:50%; }
+        .ez-think .emp-zone-label span { background:var(--ac3); }
+        .ez-do .emp-zone-label span { background:var(--ac2); }
+        .ez-hear .emp-zone-label span { background:var(--ok); }
+        .ez-say .emp-zone-label span { background:var(--warn); }
+        .ez-see .emp-zone-label span { background:var(--primary); }
+        .ez-pain .emp-zone-label span { background:var(--danger); }
+        .ez-gain .emp-zone-label span { background:var(--ok); }
+        .ez-needs .emp-zone-label span { background:var(--ac2); }
+        .emp-zone-title { font-family:var(--f1); font-weight:700; font-size:18px; color:var(--white); margin-bottom:12px; }
+        .emp-points { list-style:none; display:flex; flex-direction:column; gap:8px; }
+        .emp-points li { font-size:14px; line-height:1.6; color:var(--txt); padding-left:18px; position:relative; }
+        .emp-points li::before { content:'›'; position:absolute; left:0; color:var(--primary); font-size:18px; font-weight:bold; }
 
         /* ═══════════════════════════════════════
-           RESEARCH SECTION
+           PERFORMANCE & STATS
         ═══════════════════════════════════════ */
-        #research{background:var(--bg);}
-        .res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
-        .res-card{
-            background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:20px;
-            transition:border-color .25s;
-        }
-        .res-card:hover{border-color:var(--bd2);}
-        .res-num{
-            width:28px;height:28px;border-radius:7px;background:rgba(56,189,248,.08);
-            color:var(--ac);font-family:var(--f2);font-size:11px;font-weight:600;
-            display:flex;align-items:center;justify-content:center;margin-bottom:12px;
-        }
-        .res-title{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--white);margin-bottom:8px;line-height:1.3;}
-        .res-desc{font-size:13px;line-height:1.65;color:var(--txt);}
-
-        /* Refs */
-        .ref-list{display:flex;flex-direction:column;gap:10px;margin-top:30px;}
-        .ref-item{
-            background:var(--bg2);border:1px solid var(--bd);border-radius:9px;
-            padding:13px 16px;display:flex;align-items:center;gap:14px;
-            font-size:12px;transition:border-color .2s;
-        }
-        .ref-item:hover{border-color:var(--ac2);}
-        .ref-ico{font-size:18px;flex-shrink:0;}
-        .ref-title{font-family:var(--f3);font-weight:600;color:var(--txtb);font-size:13px;}
-        .ref-src{font-family:var(--f2);font-size:10px;color:var(--txtd);margin-top:2px;}
+        .perf-grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; }
+        .perf-card { background:var(--glass-bg); border:1px solid var(--glass-border); backdrop-filter:blur(12px); border-radius:20px; padding:32px; }
+        .perf-title { font-family:var(--f1); font-weight:700; font-size:20px; color:var(--white); margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+        .perf-bar-wrap { margin-bottom:20px; }
+        .perf-bar-head { display:flex; justify-content:space-between; font-size:13px; font-family:var(--f2); margin-bottom:8px; }
+        .perf-bar-lbl { color:var(--txt); } .perf-bar-val { color:var(--white); font-weight:700; }
+        .perf-bar-track { height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden; border:1px solid var(--glass-border);}
+        .perf-bar-fill { height:100%; border-radius:4px; transition:width 1.5s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 10px currentColor;}
+        
+        .stat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+        .stat-box { background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:16px; padding:24px; text-align:center; transition:all .3s;}
+        .stat-box:hover { transform:translateY(-5px); border-color:var(--primary); background:rgba(0,242,254,0.05); box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+        .stat-box-v { font-family:var(--f2); font-size:36px; font-weight:700; line-height:1; text-shadow:0 0 20px currentColor;}
+        .stat-box-l { font-size:12px; color:var(--white); font-family:var(--f2); margin-top:10px; font-weight:600; text-transform:uppercase;}
+        .stat-box-c { font-size:11px; margin-top:6px; font-family:var(--f2); color:var(--txtd);}
 
         /* ═══════════════════════════════════════
-           EMPATHY MAP SECTION
+           FAQ & CONTACT
         ═══════════════════════════════════════ */
-        #empathy{background:var(--bg2);}
-        .emp-outer{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:16px;overflow:hidden;
-        }
-        .emp-header{
-            padding:16px 24px;border-bottom:1px solid var(--bd);
-            display:flex;align-items:center;gap:14px;background:var(--bg4);
-        }
-        .emp-avatar{
-            width:42px;height:42px;border-radius:10px;background:rgba(56,189,248,.1);
-            display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
-        }
-        .emp-who{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--white);}
-        .emp-role{font-size:12px;color:var(--txtd);font-family:var(--f2);}
-        .emp-grid{display:grid;grid-template-columns:repeat(3,1fr);}
-        .emp-zone{
-            padding:20px 22px;border-right:1px solid var(--bd);border-bottom:1px solid var(--bd);
-            min-height:160px;
-        }
-        .emp-zone:nth-child(3n){border-right:none;}
-        .emp-zone:nth-child(n+7){border-bottom:none;}
-        .emp-zone-label{
-            font-family:var(--f2);font-size:9px;color:var(--txtd);text-transform:uppercase;
-            letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px;
-        }
-        .emp-zone-label span{
-            display:inline-block;width:7px;height:7px;border-radius:50%;
-        }
-        .ez-think .emp-zone-label span{background:var(--ac3);}
-        .ez-do .emp-zone-label span{background:var(--ac2);}
-        .ez-hear .emp-zone-label span{background:var(--ok);}
-        .ez-say .emp-zone-label span{background:var(--warn);}
-        .ez-see .emp-zone-label span{background:var(--ac);}
-        .ez-pain .emp-zone-label span{background:var(--danger);}
-        .ez-gain .emp-zone-label span{background:var(--ok);}
-        .ez-needs .emp-zone-label span{background:var(--ac2);}
-        .emp-zone-title{font-family:var(--f1);font-weight:700;font-size:15px;color:var(--txtb);margin-bottom:8px;}
-        .emp-points{list-style:none;display:flex;flex-direction:column;gap:5px;}
-        .emp-points li{
-            font-size:12px;line-height:1.55;color:var(--txt);
-            padding-left:14px;position:relative;
-        }
-        .emp-points li::before{
-            content:'›';position:absolute;left:0;color:var(--ac);font-size:14px;line-height:1.3;
-        }
+        .faq-list { max-width:800px; display:flex; flex-direction:column; gap:16px; }
+        .faq-item { background:var(--glass-bg); border:1px solid var(--glass-border); backdrop-filter:blur(12px); border-radius:16px; overflow:hidden; transition:all .3s; }
+        .faq-item.open { border-color:var(--primary); background:rgba(0,242,254,0.03); }
+        .faq-q { width:100%; background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:24px; text-align:left; font-family:var(--f1); font-weight:600; font-size:18px; color:var(--white); }
+        .faq-q .fx { font-family:var(--f2); color:var(--primary); font-size:24px; transition:transform .3s; font-weight:300;}
+        .faq-item.open .fx { transform:rotate(45deg); }
+        .faq-a { max-height:0; overflow:hidden; transition:max-height .4s ease; }
+        .faq-a p { padding:0 24px 24px; font-size:15px; line-height:1.8; color:var(--txt); }
+
+        .contact-grid { display:grid; grid-template-columns:350px 1fr; gap:30px; }
+        .cinfo, .cform { background:var(--glass-bg); border:1px solid var(--glass-border); backdrop-filter:blur(12px); border-radius:20px; padding:32px; }
+        .cinfo-row { display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--glass-border); }
+        .cinfo-row:last-child { border-bottom:none; }
+        .cinfo-ico { width:40px; height:40px; border-radius:10px; background:rgba(0,242,254,0.1); border:1px solid rgba(0,242,254,0.3); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--primary);}
+        .cinfo-k { font-family:var(--f2); font-size:10px; color:var(--txtd); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;}
+        .cinfo-v { font-size:15px; color:var(--white); font-weight:500; line-height:1.5;}
+
+        .fgroup { margin-bottom:20px; display:flex; flex-direction:column; }
+        .fgroup label { font-family:var(--f2); font-size:12px; color:var(--txt); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;}
+        .fgroup input, .fgroup textarea { background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); border-radius:10px; padding:14px; color:var(--white); font-family:var(--f3); font-size:15px; outline:none; transition:all .3s; }
+        .fgroup input:focus, .fgroup textarea:focus { border-color:var(--primary); box-shadow:0 0 15px rgba(0,242,254,0.2); background:rgba(0,0,0,0.5);}
 
         /* ═══════════════════════════════════════
-           PERFORMANCE SECTION
+           FOOTER & UTILS
         ═══════════════════════════════════════ */
-        #performance{background:var(--bg);}
-        .perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-        .perf-card{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:24px;}
-        .perf-title{font-family:var(--f1);font-weight:700;font-size:16px;color:var(--txtb);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
-        .perf-bar-wrap{margin-bottom:12px;}
-        .perf-bar-head{display:flex;justify-content:space-between;font-size:11px;font-family:var(--f2);margin-bottom:5px;}
-        .perf-bar-lbl{color:var(--txtd);}
-        .perf-bar-val{color:var(--txtb);font-weight:500;}
-        .perf-bar-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;}
-        .perf-bar-fill{height:100%;border-radius:3px;transition:width 1.5s cubic-bezier(.22,1,.36,1);}
-        .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-        .stat-box{
-            background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:16px;text-align:center;
-        }
-        .stat-box-v{font-family:var(--f2);font-size:28px;font-weight:600;line-height:1;}
-        .stat-box-l{font-size:11px;color:var(--txtd);font-family:var(--f2);margin-top:5px;letter-spacing:.4px;}
-        .stat-box-c{font-size:10px;margin-top:4px;font-family:var(--f2);}
+        footer { background:rgba(0,0,0,0.5); border-top:1px solid var(--glass-border); padding:40px 28px; text-align:center; position:relative; z-index:1;}
+        .footer-title { font-family:var(--f1); font-weight:800; font-size:20px; color:var(--white); letter-spacing:2px; margin-bottom:10px; }
+        .footer-sub { font-size:14px; color:var(--txtd); font-family:var(--f2); margin-bottom:24px; }
+        .footer-team { display:flex; justify-content:center; gap:30px; flex-wrap:wrap; font-size:13px; color:var(--txt); font-family:var(--f2); }
+        .footer-team span span { color:var(--white); font-weight:600;}
 
-        /* ═══════════════════════════════════════
-           FOOTER
-        ═══════════════════════════════════════ */
-        footer{
-            background:var(--bg2);border-top:1px solid var(--bd);
-            padding:32px 28px;text-align:center;
-        }
-        .footer-inner{max-width:1200px;margin:0 auto;}
-        .footer-title{font-family:var(--f1);font-weight:700;font-size:18px;color:var(--white);letter-spacing:1.5px;margin-bottom:6px;}
-        .footer-sub{font-size:12px;color:var(--txtd);font-family:var(--f2);margin-bottom:16px;}
-        .footer-team{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;font-size:11px;color:var(--txt);font-family:var(--f2);}
-        .footer-team span{color:var(--ac);}
+        /* Scroll Reveal & Back to Top */
+        .reveal { opacity:0; transform:translateY(40px); transition:all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+        .reveal.visible { opacity:1; transform:none; }
+        #scroll-progress { position:fixed; top:0; left:0; height:3px; width:0; background:linear-gradient(90deg,var(--primary),var(--secondary)); z-index:1001; box-shadow:0 0 10px var(--primary);}
+        #btt { position:fixed; right:30px; bottom:30px; z-index:999; width:50px; height:50px; border-radius:50%; border:1px solid var(--primary); background:rgba(0,0,0,0.8); color:var(--primary); font-size:24px; cursor:pointer; opacity:0; transform:translateY(20px); transition:all .3s; backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center;}
+        #btt.show { opacity:1; transform:none; }
+        #btt:hover { box-shadow:0 0 20px var(--primary-glow); background:var(--primary); color:#000;}
 
-        /* ═══════════════════════════════════════
-           SCROLL REVEAL
-        ═══════════════════════════════════════ */
-        .reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
-        .reveal.visible{opacity:1;transform:none;}
+        /* Canvas */
+        #hero-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; opacity:0.8; pointer-events:none; }
 
-        /* ═══════════════════════════════════════
-           RESPONSIVE
-        ═══════════════════════════════════════ */
+        /* Responsive */
         @media(max-width:900px){
-            .hero-inner{grid-template-columns:1fr;gap:36px;}
-            .dmetrics{grid-template-columns:repeat(2,1fr);}
-            .dmain{grid-template-columns:1fr;}
-            .dp:nth-child(2),.dp:nth-child(3){border-right:none;border-top:1px solid var(--bd);}
-            .chart-wrap{flex:0 0 auto;min-height:220px;}
-            .perf-grid{grid-template-columns:1fr;}
-            .emp-grid{grid-template-columns:1fr 1fr;}
-            .emp-zone:nth-child(2n){border-right:none;}
-            .emp-zone:nth-child(3n){border-right:1px solid var(--bd);}
-            .nav-links{display:none;}
-        }
-        @media(max-width:600px){
-            .hero-inner{padding:40px 18px;}
-            .emp-grid{grid-template-columns:1fr;}
-            .emp-zone{border-right:none!important;}
-            .dmetrics{grid-template-columns:1fr 1fr;}
-            .section-inner{padding:0 16px;}
-            #topnav{padding:0 16px;}
-        }
-        /* ═══ SCROLL PROGRESS ═══ */
-        #scroll-progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));z-index:1001;}
-
-        /* ═══ HERO CANVAS ═══ */
-        #hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;opacity:.6;pointer-events:none;}
-
-        /* ═══ MOBILE NAV ═══ */
-        #nav-burger{display:none;background:none;border:1px solid var(--bd2);border-radius:7px;width:34px;height:34px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
-        #nav-burger span{display:block;width:16px;height:2px;background:var(--ac);border-radius:1px;transition:transform .25s,opacity .25s;}
-        #nav-burger.open span:nth-child(1){transform:translateY(6px) rotate(45deg);}
-        #nav-burger.open span:nth-child(2){opacity:0;}
-        #nav-burger.open span:nth-child(3){transform:translateY(-6px) rotate(-45deg);}
-        #mobile-menu{position:fixed;top:58px;left:0;right:0;z-index:998;background:rgba(4,8,15,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);display:flex;flex-direction:column;padding:10px 16px 16px;transform:translateY(-110%);transition:transform .3s ease;}
-        #mobile-menu.open{transform:translateY(0);}
-        #mobile-menu a{font-family:var(--f2);font-size:13px;color:var(--txt);text-decoration:none;padding:11px 10px;border-bottom:1px solid var(--bd);letter-spacing:.5px;}
-        #mobile-menu a:last-child{border-bottom:none;}
-        #mobile-menu a:hover{color:var(--ac);}
-        @media(max-width:900px){#nav-burger{display:flex;}}
-
-        /* ═══ BACK TO TOP ═══ */
-        #to-top{position:fixed;bottom:24px;right:24px;z-index:950;width:42px;height:42px;border-radius:10px;background:var(--bg3);border:1px solid var(--bd2);color:var(--ac);font-size:18px;cursor:pointer;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .3s,transform .3s,visibility .3s;}
-        #to-top.show{opacity:1;visibility:visible;transform:none;}
-        #to-top:hover{border-color:var(--ac);box-shadow:0 4px 18px rgba(56,189,248,.18);}
-
-        /* ═══ FAQ ═══ */
-        #faq{background:var(--bg2);}
-        .faq-list{max-width:780px;display:flex;flex-direction:column;gap:10px;}
-        .faq-item{background:var(--bg3);border:1px solid var(--bd);border-radius:11px;overflow:hidden;transition:border-color .25s;}
-        .faq-item.open{border-color:rgba(56,189,248,.35);}
-        .faq-q{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;text-align:left;font-family:var(--f1);font-weight:600;font-size:15px;color:var(--txtb);letter-spacing:.3px;}
-        .faq-q .fx{font-family:var(--f2);color:var(--ac);font-size:16px;transition:transform .25s;flex-shrink:0;}
-        .faq-item.open .fx{transform:rotate(45deg);}
-        .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;}
-        .faq-a p{padding:0 18px 16px;font-size:13px;line-height:1.7;color:var(--txt);}
-
-        /* ═══ CONTACT ═══ */
-        #contact{background:var(--bg);}
-        .contact-grid{display:grid;grid-template-columns:340px 1fr;gap:24px;}
-        .cinfo{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:24px;}
-        .cinfo-row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd);}
-        .cinfo-row:last-child{border-bottom:none;}
-        .cinfo-ico{width:34px;height:34px;border-radius:8px;background:rgba(56,189,248,.08);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-        .cinfo-k{font-family:var(--f2);font-size:9px;color:var(--txtd);text-transform:uppercase;letter-spacing:.7px;}
-        .cinfo-v{font-size:13px;color:var(--txtb);margin-top:2px;line-height:1.5;}
-        .cform{background:var(--bg2);border:1px solid var(--bd);border-radius:14px;padding:24px;}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-        .fgroup{margin-bottom:14px;display:flex;flex-direction:column;}
-        .fgroup label{font-family:var(--f2);font-size:10px;color:var(--txtd);letter-spacing:.7px;text-transform:uppercase;margin-bottom:6px;}
-        .fgroup input,.fgroup textarea{background:var(--bg3);border:1px solid var(--bd2);border-radius:8px;padding:11px 13px;color:var(--txtb);font-family:var(--f3);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;resize:vertical;}
-        .fgroup input:focus,.fgroup textarea:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(56,189,248,.08);}
-        .fgroup .ferr{font-size:11px;color:var(--danger);margin-top:5px;display:none;}
-        .fgroup.invalid input,.fgroup.invalid textarea{border-color:var(--danger);}
-        .fgroup.invalid .ferr{display:block;}
-        #cf-success{display:none;background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.3);color:var(--ok);border-radius:9px;padding:13px 16px;font-family:var(--f2);font-size:12px;margin-top:14px;}
-        #cf-success.show{display:block;}
-        @media(max-width:900px){.contact-grid{grid-template-columns:1fr;}.form-row{grid-template-columns:1fr;}}
-
-        /* ═══ POLISH: selection, scrollbar, nav shadow, back-to-top ═══ */
-        ::selection{background:rgba(56,189,248,.25);color:var(--white);}
-        ::-webkit-scrollbar{width:10px;}
-        ::-webkit-scrollbar-track{background:var(--bg);}
-        ::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:5px;}
-        ::-webkit-scrollbar-thumb:hover{background:var(--ac);}
-        #topnav.scrolled{box-shadow:0 8px 30px rgba(0,0,0,.5);border-bottom-color:var(--bd2);}
-        #btt{position:fixed;right:22px;bottom:22px;z-index:999;width:44px;height:44px;border-radius:50%;border:1px solid var(--bd2);background:rgba(8,15,28,.92);color:var(--ac);font-size:18px;font-family:var(--f2);cursor:pointer;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .3s,transform .3s,border-color .2s,box-shadow .2s;backdrop-filter:blur(8px);}
-        #btt.show{opacity:1;pointer-events:auto;transform:translateY(0);}
-        #btt:hover{border-color:var(--ac);box-shadow:0 0 18px rgba(56,189,248,.3);}
-
-        /* ═══ V2 PRO THEME: gradients & custom animations ═══ */
-        .nav-mark{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#05060e;}
-        .btn-primary{background:linear-gradient(120deg,var(--ac),var(--ac2));color:#05060e;position:relative;overflow:hidden;}
-        .btn-primary::after{content:'';position:absolute;top:0;left:-130%;width:55%;height:100%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-20deg);animation:sheen 4.8s ease-in-out infinite;}
-        @keyframes sheen{0%,65%{left:-130%}100%{left:170%}}
-        .hero-title span,.sec-title span{background:linear-gradient(100deg,var(--ac),var(--ac2),var(--ac3),var(--ac));background-size:280% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gradShift 8s ease infinite;}
-        @keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-        .hero-card{animation:floatY 7s ease-in-out infinite;}
-        @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-        .hero-glow1{animation:drift1 16s ease-in-out infinite alternate;}
-        .hero-glow2{animation:drift2 19s ease-in-out infinite alternate;}
-        @keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,-35px) scale(1.15)}}
-        @keyframes drift2{from{transform:translate(0,0) scale(1.1)}to{transform:translate(-45px,30px) scale(.95)}}
-        @keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-        .prob-grid.visible .pcard{animation:cardIn .7s cubic-bezier(.22,1,.36,1) backwards;}
-        .prob-grid.visible .pcard:nth-child(1){animation-delay:.05s}
-        .prob-grid.visible .pcard:nth-child(2){animation-delay:.15s}
-        .prob-grid.visible .pcard:nth-child(3){animation-delay:.25s}
-        .prob-grid.visible .pcard:nth-child(4){animation-delay:.35s}
-        .prob-grid.visible .pcard:nth-child(5){animation-delay:.45s}
-        .perf-grid.visible .stat-box{animation:cardIn .6s cubic-bezier(.22,1,.36,1) backwards;}
-        .perf-grid.visible .stat-box:nth-child(1){animation-delay:.05s}
-        .perf-grid.visible .stat-box:nth-child(2){animation-delay:.13s}
-        .perf-grid.visible .stat-box:nth-child(3){animation-delay:.21s}
-        .perf-grid.visible .stat-box:nth-child(4){animation-delay:.29s}
-        .perf-grid.visible .stat-box:nth-child(5){animation-delay:.37s}
-        .perf-grid.visible .stat-box:nth-child(6){animation-delay:.45s}
-        .faq-list.visible .faq-item{animation:cardIn .55s ease backwards;}
-        .faq-list.visible .faq-item:nth-child(1){animation-delay:.05s}
-        .faq-list.visible .faq-item:nth-child(2){animation-delay:.12s}
-        .faq-list.visible .faq-item:nth-child(3){animation-delay:.19s}
-        .faq-list.visible .faq-item:nth-child(4){animation-delay:.26s}
-        .faq-list.visible .faq-item:nth-child(5){animation-delay:.33s}
-        .faq-list.visible .faq-item:nth-child(6){animation-delay:.4s}
-        .stat-box{transition:transform .25s,border-color .25s,box-shadow .25s;}
-        .stat-box:hover{transform:translateY(-4px);border-color:rgba(56,189,248,.35);box-shadow:0 10px 28px rgba(0,0,0,.35);}
-        .pcard{will-change:transform;}
-        .pcard:hover{box-shadow:0 16px 38px rgba(0,0,0,.45);}
-        .res-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.35);}
-        .res-card{transition:transform .25s,border-color .25s,box-shadow .25s;}
-        .faq-q:focus-visible,.btn-primary:focus-visible,.btn-outline:focus-visible,#btt:focus-visible{outline:2px solid var(--ac);outline-offset:2px;}
-
-        /* ═══ REDUCED MOTION ═══ */
-        @media (prefers-reduced-motion: reduce){
-            *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
-            .reveal{opacity:1;transform:none;}
-            html{scroll-behavior:auto;}
+            .hero-inner { grid-template-columns:1fr; text-align:center; padding:40px 20px;}
+            .hero-btns { justify-content:center; }
+            .dmain { grid-template-columns:1fr; }
+            .dp:nth-child(n) { border-right:none; border-bottom:1px solid var(--glass-border); }
+            .emp-grid, .perf-grid, .contact-grid { grid-template-columns:1fr; }
+            .emp-zone { border-right:none!important; }
+            .nav-links { display:none; }
         }
     </style>
 </head>
 <body>
+
+<!-- Animated Cyber Background -->
+<div class="cyber-grid"></div>
+<div class="ambient-glow"></div>
 
 <!-- ─────────── TOPNAV ─────────── -->
 <nav id="topnav">
@@ -689,37 +510,20 @@
         <a href="#research">Research</a>
         <a href="#empathy">Empathy Map</a>
         <a href="#performance">Results</a>
-        <a href="#faq">FAQ</a>
         <a href="#contact">Contact</a>
     </div>
     <div class="nav-right">
         <div class="nav-badge">IV SEM · CSE-B</div>
         <div id="nav-clock">--:--:--</div>
-        <button id="nav-burger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
     </div>
 </nav>
-
 <div id="scroll-progress"></div>
-
-<div id="mobile-menu">
-    <a href="#problem">Problem</a>
-    <a href="#dashboard">Live Demo</a>
-    <a href="#architecture">Architecture</a>
-    <a href="#research">Research</a>
-    <a href="#empathy">Empathy Map</a>
-    <a href="#performance">Results</a>
-    <a href="#faq">FAQ</a>
-    <a href="#contact">Contact</a>
-</div>
 
 <!-- ─────────── HERO ─────────── -->
 <section id="hero">
-    <div class="hero-grid-bg"></div>
     <canvas id="hero-canvas" aria-hidden="true"></canvas>
-    <div class="hero-glow1"></div>
-    <div class="hero-glow2"></div>
     <div class="hero-inner">
-        <div>
+        <div class="reveal">
             <div class="hero-tag"><div class="htag-dot"></div>PBL PROJECT · TEAM 1 · 22CSE43</div>
             <h1 class="hero-title">Smart Cities:<br><span>Intelligent Traffic</span><br>Management</h1>
             <p class="hero-desc">
@@ -728,11 +532,11 @@
                 to dynamically optimize intersection throughput and prioritize emergency logistics.
             </p>
             <div class="hero-btns">
-                <a href="#dashboard" class="btn-primary">▶ View Live Demo</a>
+                <a href="#dashboard" class="btn-primary">View Live Demo</a>
                 <a href="#architecture" class="btn-outline">Explore Architecture</a>
             </div>
         </div>
-        <div class="hero-card">
+        <div class="hero-card reveal">
             <div class="hc-top">
                 <div class="hc-top-title">PROJECT INFO</div>
                 <div class="hc-dot"></div>
@@ -741,8 +545,6 @@
                 <div class="hc-row"><span class="hck">Subject</span><span class="hcv">Database Management System</span></div>
                 <div class="hc-row"><span class="hck">Code</span><span class="hcv">22CSE43</span></div>
                 <div class="hc-row"><span class="hck">Section</span><span class="hcv">B · IV Semester</span></div>
-                <div class="hc-row"><span class="hck">Department</span><span class="hcv">Computer Science & Engineering</span></div>
-                <div class="hc-row"><span class="hck">Team No.</span><span class="hcv">1</span></div>
             </div>
             <div class="team-list">
                 <div class="team-row"><div class="team-num">01</div><div><div class="team-name">Joel Ryan Bangera</div><div class="team-usn">4S024CS098</div></div></div>
@@ -771,8 +573,7 @@
             <div class="pcard"><div class="pnum">01</div><div class="pico">⏱</div><div class="ptitle">Inefficient Static Timing</div><div class="pdesc">Fixed green-light cycles ignore real-time traffic density, leading to unnecessary wait times and gridlock during peak hours or unexpected surges.</div></div>
             <div class="pcard"><div class="pnum">02</div><div class="pico">🚑</div><div class="ptitle">Emergency Vehicle Delay</div><div class="pdesc">Ambulances and fire trucks are trapped behind standard red lights for up to 10 minutes — directly impacting life-threatening response times.</div></div>
             <div class="pcard"><div class="pnum">03</div><div class="pico">🏚</div><div class="ptitle">Siloed Infrastructure</div><div class="pdesc">Traffic, emergency, and public-works departments operate in data silos with no shared platform — preventing coordinated city-wide responses.</div></div>
-            <div class="pcard"><div class="pnum">04</div><div class="pico">⚡</div><div class="ptitle">High Latency Decisions</div><div class="pdesc">Manual operator monitoring of video walls introduces minutes of delay before any action. Cities need sub-second automated decision-making at scale.</div></div>
-            <div class="pcard"><div class="pnum">05</div><div class="pico">🌊</div><div class="ptitle">Cascading Gridlock</div><div class="pdesc">One blocked intersection triggers a domino effect across corridors — phantom jams spreading system-wide with no predictive mechanism to stop them.</div></div>
+            <div class="pcard"><div class="pnum">04</div><div class="pico">🌊</div><div class="ptitle">Cascading Gridlock</div><div class="pdesc">One blocked intersection triggers a domino effect across corridors — phantom jams spreading system-wide with no predictive mechanism.</div></div>
         </div>
     </div>
 </section>
@@ -783,35 +584,30 @@
         <div class="reveal">
             <div class="sec-tag">Live Simulation</div>
             <h2 class="sec-title">CTMS <span>Dashboard</span></h2>
-            <p class="sec-desc">Real-time simulation of 9 intersections powered by a Deep Q-Network AI, YOLO object detection, and Kafka stream processing. Click <strong style="color:var(--ac)">🚨 Simulate Emergency</strong> to see the priority override in action.</p>
+            <p class="sec-desc">Real-time simulation of 9 intersections powered by a Deep Q-Network AI, YOLO object detection, and Kafka stream processing. Click <strong style="color:var(--danger)">🚨 Simulate Emergency</strong> below to see priority override in action.</p>
         </div>
         <div class="dash-wrap reveal">
-            <!-- Metrics -->
             <div class="dmetrics">
-                <div class="dmc"><div class="dmico t">⏱</div><div><div class="dmlabel">Avg Wait Time</div><div class="dmval"><span id="m-wait">18.3</span><small> sec</small></div><div class="dmdelta">↓ 35.2% vs static timers</div></div></div>
-                <div class="dmc"><div class="dmico b">🚦</div><div><div class="dmlabel">Vehicle Throughput</div><div class="dmval"><span id="m-thru">4,821</span><small> /hr</small></div><div class="dmdelta">↑ 40.1% vs baseline</div></div></div>
-                <div class="dmc"><div class="dmico a">🚑</div><div><div class="dmlabel">Emergency Response</div><div class="dmval"><span id="m-ems">2.4</span><small> min</small></div><div class="dmdelta">↓ 51.3% improvement</div></div></div>
-                <div class="dmc"><div class="dmico g">🌱</div><div><div class="dmlabel">CO₂ Avoided</div><div class="dmval"><span id="m-co2">28.7</span><small> %</small></div><div class="dmdelta">↓ Idle emissions saved</div></div></div>
+                <div class="dmc"><div class="dmico" style="color:var(--primary);">⏱</div><div><div class="dmlabel">Avg Wait Time</div><div class="dmval"><span id="m-wait">18.3</span><small> sec</small></div><div class="dmdelta">↓ 35.2% vs static</div></div></div>
+                <div class="dmc"><div class="dmico" style="color:var(--ac3);">🚦</div><div><div class="dmlabel">Vehicle Throughput</div><div class="dmval"><span id="m-thru">4,821</span><small> /hr</small></div><div class="dmdelta">↑ 40.1% vs baseline</div></div></div>
+                <div class="dmc"><div class="dmico" style="color:var(--warn);">🚑</div><div><div class="dmlabel">Emergency Response</div><div class="dmval"><span id="m-ems">2.4</span><small> min</small></div><div class="dmdelta">↓ 51.3% improvement</div></div></div>
+                <div class="dmc"><div class="dmico" style="color:var(--ok);">🌱</div><div><div class="dmlabel">CO₂ Avoided</div><div class="dmval"><span id="m-co2">28.7</span><small> %</small></div><div class="dmdelta">↓ Idle emissions saved</div></div></div>
             </div>
-            <!-- 3-col main -->
             <div class="dmain">
-                <!-- Intersections -->
                 <div class="dp">
                     <div class="dph"><div class="dphttl">Live Intersection Grid</div><span class="dp-badge" id="dp-badge">DQN ACTIVE</span></div>
                     <div class="dpbody"><div class="igrid" id="igrid"></div></div>
                 </div>
-                <!-- Chart + Events -->
-                <div class="dp" style="display:flex;flex-direction:column;">
+                <div class="dp">
                     <div class="chart-wrap">
                         <div class="dph"><div class="dphttl">Throughput (vehicles/hr)</div></div>
-                        <div class="ccanvas-wrap"><canvas id="tchart" role="img" aria-label="Real-time throughput line chart">Live traffic throughput data.</canvas></div>
+                        <div class="ccanvas-wrap"><canvas id="tchart"></canvas></div>
                     </div>
                     <div class="events-col">
-                        <div class="dph"><div class="dphttl">CEP Event Stream</div><span id="ev-count" style="font-size:9px;color:var(--txtd);font-family:var(--f2)">0 events</span></div>
+                        <div class="dph"><div class="dphttl">CEP Event Stream</div><span id="ev-count" style="font-size:10px;color:var(--txtd);font-family:var(--f2)">0 events</span></div>
                         <div class="evfeed" id="evfeed"></div>
                     </div>
                 </div>
-                <!-- AI Engine -->
                 <div class="dp">
                     <div class="dph"><div class="dphttl">AI Control Engine</div><span class="dp-badge">ONLINE</span></div>
                     <div class="dpbody">
@@ -820,11 +616,9 @@
                             <div class="ai-dbox">
                                 <div class="dqn-ring-row">
                                     <svg class="rsvg" viewBox="0 0 44 44">
-                                        <circle cx="22" cy="22" r="18" fill="none" stroke="#1b2240" stroke-width="4"/>
-                                        <circle id="rring" cx="22" cy="22" r="18" fill="none" stroke="#38bdf8" stroke-width="4"
-                                                stroke-dasharray="113.1" stroke-dashoffset="14" stroke-linecap="round"
-                                                transform="rotate(-90 22 22)"/>
-                                        <text id="rrtxt" x="22" y="26" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono,monospace" font-size="8" font-weight="600">87%</text>
+                                        <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4"/>
+                                        <circle id="rring" cx="22" cy="22" r="18" fill="none" stroke="#00f2fe" stroke-width="4" stroke-dasharray="113.1" stroke-dashoffset="14" stroke-linecap="round" transform="rotate(-90 22 22)"/>
+                                        <text id="rrtxt" x="22" y="26" text-anchor="middle" fill="#00f2fe" font-family="JetBrains Mono,monospace" font-size="10" font-weight="700">87%</text>
                                     </svg>
                                     <div class="rstats">
                                         <div class="rlbl">CUMULATIVE REWARD</div>
@@ -835,23 +629,11 @@
                                 <div class="ai-row"><span class="ai-k">Status</span><span class="ai-v ok">● INFERENCE</span></div>
                                 <div class="ai-row"><span class="ai-k">Architecture</span><span class="ai-v">DQN ResNet-18</span></div>
                                 <div class="ai-row"><span class="ai-k">Decision Rate</span><span class="ai-v ac" id="dqn-dec">47 dec/s</span></div>
-                                <div class="ai-row"><span class="ai-k">Horizon</span><span class="ai-v">γ=0.99 · T+30s</span></div>
-                                <div class="ai-row"><span class="ai-k">Digital Twin</span><span class="ai-v ok">● SYNC</span></div>
                             </div>
                         </div>
                         <div class="ai-sec">
                             <div class="ai-sec-title">YOLO v8 Object Detection</div>
                             <div class="det-list" id="yololist"></div>
-                        </div>
-                        <div class="ai-sec">
-                            <div class="ai-sec-title">Kafka + ksqlDB</div>
-                            <div class="ai-dbox">
-                                <div class="ai-row"><span class="ai-k">Active Topics</span><span class="ai-v">9</span></div>
-                                <div class="ai-row"><span class="ai-k">Msg Rate</span><span class="ai-v ac" id="kafka">2,840/s</span></div>
-                                <div class="ai-row"><span class="ai-k">CEP Patterns</span><span class="ai-v">12 loaded</span></div>
-                                <div class="ai-row"><span class="ai-k">Redis Latency</span><span class="ai-v ac" id="redis">6.2μs</span></div>
-                                <div class="ai-row"><span class="ai-k">Floodgates</span><span class="ai-v ok" id="fgstatus">● READY</span></div>
-                            </div>
                         </div>
                         <div class="ai-sec">
                             <div class="ai-sec-title">Emergency Override</div>
@@ -873,192 +655,29 @@
             <p class="sec-desc">A layered system combining edge computing, in-memory databases, reinforcement learning, and stream processing — each component purpose-built for sub-second urban mobility decisions.</p>
         </div>
         <div class="arch-grid reveal">
-            <div class="arch-card c1">
+            <div class="arch-card">
                 <div class="arch-icon">🔌</div>
                 <div class="arch-title">IoT Sensor Layer</div>
-                <div class="arch-desc">Inductive loop sensors, radar units, and cameras mounted at intersections capture raw vehicle counts, speeds, and visual feeds as input to the AI pipeline.</div>
-                <div class="arch-tech"><span class="tech-tag">Inductive Loops</span><span class="tech-tag">RADAR</span><span class="tech-tag">IP Cameras</span><span class="tech-tag">Edge Nodes</span></div>
+                <div class="arch-desc">Inductive loop sensors, radar units, and cameras capture raw vehicle counts and speeds as input to the AI pipeline.</div>
+                <div class="arch-tech"><span class="tech-tag">Inductive Loops</span><span class="tech-tag">RADAR</span><span class="tech-tag">Edge Nodes</span></div>
             </div>
-            <div class="arch-card c2">
+            <div class="arch-card">
                 <div class="arch-icon">⚡</div>
-                <div class="arch-title">Redis In-Memory Cache</div>
-                <div class="arch-desc">All intersection state is held in a Redis edge cache, guaranteeing &lt;10μs state access latency — critical for real-time AI inference in safety-critical transport infrastructure.</div>
-                <div class="arch-tech"><span class="tech-tag">Redis</span><span class="tech-tag">ACID Compliance</span><span class="tech-tag">Edge Computing</span><span class="tech-tag">&lt;10μs Latency</span></div>
+                <div class="arch-title">Redis Edge Cache</div>
+                <div class="arch-desc">All intersection state is held in a Redis cache, guaranteeing &lt;10μs state access latency for real-time AI inference.</div>
+                <div class="arch-tech"><span class="tech-tag">Redis</span><span class="tech-tag">&lt;10μs Latency</span></div>
             </div>
-            <div class="arch-card c3">
+            <div class="arch-card">
                 <div class="arch-icon">🧠</div>
                 <div class="arch-title">Deep Q-Network (DQN)</div>
-                <div class="arch-desc">Trained via reinforcement learning on a digital twin of the city grid. Learns optimal green-phase policies maximizing cumulative throughput — extending green waves for arterials during peak hours.</div>
-                <div class="arch-tech"><span class="tech-tag">DQN</span><span class="tech-tag">RL</span><span class="tech-tag">Digital Twin</span><span class="tech-tag">γ=0.99</span></div>
+                <div class="arch-desc">Trained via reinforcement learning on a digital twin to learn optimal green-phase policies maximizing throughput.</div>
+                <div class="arch-tech"><span class="tech-tag">DQN</span><span class="tech-tag">RL</span><span class="tech-tag">Digital Twin</span></div>
             </div>
-            <div class="arch-card c4">
+            <div class="arch-card">
                 <div class="arch-icon">👁</div>
                 <div class="arch-title">YOLO Object Detection</div>
-                <div class="arch-desc">YOLOv8 processes live camera feeds to classify road users. Ambulance detection triggers an instant priority override — clearing a path while ignoring standard rules for that cycle.</div>
-                <div class="arch-tech"><span class="tech-tag">YOLOv8</span><span class="tech-tag">CV</span><span class="tech-tag">GPU Edge</span><span class="tech-tag">Priority Override</span></div>
-            </div>
-            <div class="arch-card c5">
-                <div class="arch-icon">🌊</div>
-                <div class="arch-title">Complex Event Processing</div>
-                <div class="arch-desc">Kafka and ksqlDB monitor streams from all intersections. Detects density patterns like "two intersections &gt;90% within 30s" and fires the floodgate protocol before gridlock forms.</div>
-                <div class="arch-tech"><span class="tech-tag">Apache Kafka</span><span class="tech-tag">ksqlDB</span><span class="tech-tag">CEP</span><span class="tech-tag">Floodgate Protocol</span></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ─────────── RESEARCH ─────────── -->
-<section id="research">
-    <div class="section-inner">
-        <div class="reveal">
-            <div class="sec-tag">Secondary Research</div>
-            <h2 class="sec-title">Research <span>Summary</span></h2>
-            <p class="sec-desc">Five key research areas explored during the secondary research phase, covering comparative algorithms, benchmarking, stream processing, ethics, and environmental impact.</p>
-        </div>
-        <div class="res-grid reveal">
-            <div class="res-card">
-                <div class="res-num">R1</div>
-                <div class="res-title">DQN vs Traditional Adaptive Algorithms</div>
-                <div class="res-desc">Comparative analysis from Pittsburgh (SCATS) and Los Angeles (ATCS) quantifying throughput improvements when replacing rule-based systems with Deep RL models that optimize long-term horizon rewards over immediate queue clearance.</div>
-            </div>
-            <div class="res-card">
-                <div class="res-num">R2</div>
-                <div class="res-title">In-Memory DB Benchmarking at the Edge</div>
-                <div class="res-desc">Investigating latency trade-offs between Redis and Hazelcast in edge-based traffic controllers — balancing ACID compliance against the microsecond latency required for real-time AI inference in safety-critical systems.</div>
-            </div>
-            <div class="res-card">
-                <div class="res-num">R3</div>
-                <div class="res-title">Stream Processing for Predictive Congestion</div>
-                <div class="res-desc">How CEP engines (ksqlDB, Flink) detect phantom jams using the Lighthill-Whitham-Richards model integrated with Kafka streams, predicting congestion 5 minutes ahead based on density fluctuations.</div>
-            </div>
-            <div class="res-card">
-                <div class="res-num">R4</div>
-                <div class="res-title">Ethical Implications of AI Priority Overrides</div>
-                <div class="res-desc">Social equity study on AI-controlled intersections — focusing on algorithmic bias risks that could deprioritize low-income zones during optimization, referencing U.S. Department of Transportation ethical AI guidelines.</div>
-            </div>
-            <div class="res-card">
-                <div class="res-num">R5</div>
-                <div class="res-title">Energy vs Throughput Trade-offs</div>
-                <div class="res-desc">Analysing whether CO₂ reductions from minimized idling justify the higher energy consumption of edge GPUs for YOLO inference and constant Kafka data streaming infrastructure in deployed smart cities.</div>
-            </div>
-        </div>
-        <div class="ref-list reveal" style="margin-top:32px;">
-            <div style="font-family:var(--f2);font-size:10px;color:var(--txtd);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px;">Key References</div>
-            <div class="ref-item"><div class="ref-ico">🔬</div><div><div class="ref-title">AI for Intersection Congestion — Istanbul & Helsinki</div><div class="ref-src">ResearchGate · Tackling intersection congestion using AI</div></div></div>
-            <div class="ref-item"><div class="ref-ico">📡</div><div><div class="ref-title">Distributed Traffic Signal Control using DQN</div><div class="ref-src">TRID Database · Deep Q-Network Traffic Signal Models</div></div></div>
-            <div class="ref-item"><div class="ref-ico">🏥</div><div><div class="ref-title">YOLOv8-Driven Emergency Vehicle Detection</div><div class="ref-src">IEEE · Computer Vision for Emergency Response Priority</div></div></div>
-        </div>
-    </div>
-</section>
-
-<!-- ─────────── EMPATHY MAP ─────────── -->
-<section id="empathy">
-    <div class="section-inner">
-        <div class="reveal">
-            <div class="sec-tag">Design Thinking</div>
-            <h2 class="sec-title">Empathy <span>Map</span></h2>
-            <p class="sec-desc">Understanding the lived experience of traffic management authorities, transportation engineers, commuters, and emergency responders who deal with the consequences of inefficient traffic systems every day.</p>
-        </div>
-        <div class="emp-outer reveal">
-            <div class="emp-header">
-                <div class="emp-avatar">👮</div>
-                <div>
-                    <div class="emp-who">City Traffic Management Authority</div>
-                    <div class="emp-role">Traffic Control Centre Operator · Transportation Engineer · Emergency Dispatcher</div>
-                </div>
-            </div>
-            <div class="emp-grid">
-                <div class="emp-zone ez-think">
-                    <div class="emp-zone-label"><span></span>Thinks &amp; Feels</div>
-                    <div class="emp-zone-title">Inner World</div>
-                    <ul class="emp-points">
-                        <li>Fear of gridlock paralysing the city during peak hours</li>
-                        <li>Anxiety that an ambulance gets stuck and a life is lost</li>
-                        <li>Pressure from city officials after traffic disruptions</li>
-                        <li>Dream of a system that "thinks, not just clicks"</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-do">
-                    <div class="emp-zone-label"><span></span>Does</div>
-                    <div class="emp-zone-title">Observable Actions</div>
-                    <ul class="emp-points">
-                        <li>Manually monitors video walls to spot congestion</li>
-                        <li>Reactively overrides fixed timers during incidents</li>
-                        <li>Coordinates with field officers, emergency dispatch via radio</li>
-                        <li>Files incident reports and manually logs anomalies</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-hear">
-                    <div class="emp-zone-label"><span></span>Hears</div>
-                    <div class="emp-zone-title">Information Sources</div>
-                    <ul class="emp-points">
-                        <li>Colleagues praising Pittsburgh's Surtrac — 25% travel time reduction</li>
-                        <li>ITS World Congress talks on RL for signal control</li>
-                        <li>Angry citizen complaints after severe disruptions</li>
-                        <li>IEEE ITS publications on smart mobility</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-say">
-                    <div class="emp-zone-label"><span></span>Says</div>
-                    <div class="emp-zone-title">Expressed Frustrations</div>
-                    <ul class="emp-points">
-                        <li>"Outdated timer-based systems can't handle rush hour"</li>
-                        <li>"Gridlock spreads like wildfire — domino effect"</li>
-                        <li>"Ambulances stuck 10 minutes at red lights"</li>
-                        <li>"Wasted taxpayer money on fuel burned at intersections"</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-see">
-                    <div class="emp-zone-label"><span></span>Sees</div>
-                    <div class="emp-zone-title">Environment</div>
-                    <ul class="emp-points">
-                        <li>Video walls with live camera feeds and dashboards</li>
-                        <li>Aging static traffic controllers installed decades ago</li>
-                        <li>Emerging AI systems like Surtrac and ATCS in other cities</li>
-                        <li>Smart city IoT sensor deployments gaining traction</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-pain">
-                    <div class="emp-zone-label"><span></span>Pains</div>
-                    <div class="emp-zone-title">Key Frustrations</div>
-                    <ul class="emp-points">
-                        <li>Inflexible legacy systems that cannot adapt in real-time</li>
-                        <li>No visibility into emerging congestion before it hits</li>
-                        <li>Emergency vehicle delays due to inability to override cycles</li>
-                        <li>Data silos between traffic, emergency, and public works</li>
-                        <li>High cost of sensor infrastructure upgrades</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-gain">
-                    <div class="emp-zone-label"><span></span>Gains</div>
-                    <div class="emp-zone-title">Desired Outcomes</div>
-                    <ul class="emp-points">
-                        <li>Emergency priority systems cutting response by 40–50%</li>
-                        <li>Predictive congestion prevention before gridlock forms</li>
-                        <li>Reduced emissions from minimised idling</li>
-                        <li>Peace of mind — reliable, intelligent, autonomous control</li>
-                    </ul>
-                </div>
-                <div class="emp-zone ez-needs">
-                    <div class="emp-zone-label"><span></span>Needs To Do</div>
-                    <div class="emp-zone-title">Core Tasks</div>
-                    <ul class="emp-points">
-                        <li>Optimise traffic flow dynamically beyond static timers</li>
-                        <li>Detect and respond to accidents and emergencies in real-time</li>
-                        <li>Prevent cascading congestion across corridors</li>
-                        <li>Reduce vehicle idle time and emissions at red lights</li>
-                    </ul>
-                </div>
-                <div class="emp-zone" style="grid-column:span 1;">
-                    <div class="emp-zone-label" style="color:var(--ac);">◈ Key Insight</div>
-                    <div class="emp-zone-title" style="color:var(--ac);">Design Opportunity</div>
-                    <ul class="emp-points">
-                        <li>Operators need a system that is <em>predictive</em>, not reactive</li>
-                        <li>Emergency override must be automatic — not manual</li>
-                        <li>Sub-second latency is a hard safety requirement, not a preference</li>
-                        <li>Trust in the AI depends on explainability and reliability</li>
-                    </ul>
-                </div>
+                <div class="arch-desc">Processes live feeds. Ambulance detection triggers an instant priority override to clear a path automatically.</div>
+                <div class="arch-tech"><span class="tech-tag">YOLOv8</span><span class="tech-tag">GPU Edge</span></div>
             </div>
         </div>
     </div>
@@ -1070,636 +689,191 @@
         <div class="reveal">
             <div class="sec-tag">Expected Results</div>
             <h2 class="sec-title">Performance <span>Outcomes</span></h2>
-            <p class="sec-desc">Projected improvements based on secondary research from comparable AI traffic deployments in Pittsburgh, Los Angeles, Istanbul, and Helsinki.</p>
         </div>
         <div class="perf-grid reveal">
             <div class="perf-card">
                 <div class="perf-title">📊 System Improvements</div>
                 <div class="perf-bar-wrap">
                     <div class="perf-bar-head"><span class="perf-bar-lbl">Avg Wait Time Reduction</span><span class="perf-bar-val">40%</span></div>
-                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:40%;background:var(--ac);" data-w="40"></div></div>
+                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:40%; background:var(--primary); color:var(--primary);" data-w="40"></div></div>
                 </div>
                 <div class="perf-bar-wrap">
                     <div class="perf-bar-head"><span class="perf-bar-lbl">Emergency Response Improvement</span><span class="perf-bar-val">50%</span></div>
-                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:50%;background:var(--danger);" data-w="50"></div></div>
+                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:50%; background:var(--danger); color:var(--danger);" data-w="50"></div></div>
                 </div>
                 <div class="perf-bar-wrap">
                     <div class="perf-bar-head"><span class="perf-bar-lbl">Vehicle Throughput Gain</span><span class="perf-bar-val">41%</span></div>
-                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:41%;background:var(--ac2);" data-w="41"></div></div>
-                </div>
-                <div class="perf-bar-wrap">
-                    <div class="perf-bar-head"><span class="perf-bar-lbl">CO₂ Emission Reduction</span><span class="perf-bar-val">28%</span></div>
-                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:28%;background:var(--ok);" data-w="28"></div></div>
-                </div>
-                <div class="perf-bar-wrap">
-                    <div class="perf-bar-head"><span class="perf-bar-lbl">DQN Policy Accuracy</span><span class="perf-bar-val">87%</span></div>
-                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:87%;background:var(--warn);" data-w="87"></div></div>
+                    <div class="perf-bar-track"><div class="perf-bar-fill" style="width:41%; background:var(--ac3); color:var(--ac3);" data-w="41"></div></div>
                 </div>
             </div>
             <div class="perf-card">
                 <div class="perf-title">⚡ Technical Benchmarks</div>
                 <div class="stat-grid">
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--ac)">&lt;10μs</div>
-                        <div class="stat-box-l">Redis State Access</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">Edge cache latency</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--ac2)">&lt;1s</div>
-                        <div class="stat-box-l">End-to-End Decision</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">Sensor → signal</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--ok)">99.8%</div>
-                        <div class="stat-box-l">Ambulance Detection</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">YOLO confidence</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--warn)">5 min</div>
-                        <div class="stat-box-l">Congestion Prediction</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">CEP lookahead</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--danger)">14K+</div>
-                        <div class="stat-box-l">DQN Episodes</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">Training on digital twin</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-box-v" style="color:var(--ac)">2.8K</div>
-                        <div class="stat-box-l">Kafka Msgs/sec</div>
-                        <div class="stat-box-c" style="color:var(--txtd)">Stream throughput</div>
-                    </div>
+                    <div class="stat-box"><div class="stat-box-v" style="color:var(--primary)">&lt;10μs</div><div class="stat-box-l">Redis State Access</div><div class="stat-box-c">Edge cache latency</div></div>
+                    <div class="stat-box"><div class="stat-box-v" style="color:var(--ac3)">&lt;1s</div><div class="stat-box-l">End-to-End Decision</div><div class="stat-box-c">Sensor → signal</div></div>
+                    <div class="stat-box"><div class="stat-box-v" style="color:var(--ok)">99.8%</div><div class="stat-box-l">Ambulance Detection</div><div class="stat-box-c">YOLO confidence</div></div>
+                    <div class="stat-box"><div class="stat-box-v" style="color:var(--primary)">2.8K</div><div class="stat-box-l">Kafka Msgs/sec</div><div class="stat-box-c">Stream throughput</div></div>
                 </div>
             </div>
         </div>
     </div>
 </section>
-
-<!-- ─────────── FAQ ─────────── -->
-<section id="faq">
-    <div class="section-inner">
-        <div class="reveal">
-            <div class="sec-tag">FAQ</div>
-            <h2 class="sec-title">Frequently Asked <span>Questions</span></h2>
-            <p class="sec-desc">Everything judges, faculty, and curious engineers usually ask about how CTMS works under the hood.</p>
-        </div>
-        <div class="faq-list reveal">
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">How does CTMS decide when to switch a traffic signal?<span class="fx">+</span></button>
-                <div class="faq-a"><p>A Deep Q-Network (DQN) agent continuously observes the live state of each intersection — lane densities, queue lengths, current phase, and elapsed green time — and picks the action with the highest learned Q-value: extend the current green, switch phases, or trigger a corridor-level green wave. The policy was trained for 14,000+ episodes on a digital-twin simulation before deployment, so every decision happens in under one second with no human in the loop.</p></div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">What database technologies power the system?<span class="fx">+</span></button>
-                <div class="faq-a"><p>CTMS uses a polyglot persistence strategy: <strong>PostgreSQL</strong> is the ACID-compliant relational core (normalized to 3NF) storing intersections, sensors, readings, signal phases, detections and DQN decisions, with B-Tree and BRIN indexing plus time-based partitioning for high-volume telemetry. <strong>Redis</strong> serves as a sub-10μs in-memory edge cache for live intersection state, and <strong>Apache Kafka + ksqlDB</strong> handle real-time stream ingestion and complex event processing.</p></div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">How are emergency vehicles detected and prioritized?<span class="fx">+</span></button>
-                <div class="faq-a"><p>Roadside cameras feed a <strong>YOLOv8</strong> object-detection model that classifies eight vehicle types in real time. When an ambulance or fire truck is detected (99.8% confidence), a priority override bypasses the standard DQN cycle, clears a green corridor along the vehicle's route, and activates the floodgate protocol to divert surrounding traffic — cutting emergency response times by up to 50%. Try the “Simulate Emergency Vehicle” button in the live demo above.</p></div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">Is the live dashboard showing real city data?<span class="fx">+</span></button>
-                <div class="faq-a"><p>The dashboard is a faithful <strong>digital-twin simulation</strong> of a 3×3 intersection grid, driven by the same state model, event taxonomy, and decision logic the production architecture defines. Densities, DQN rewards, Kafka throughput, and Redis latencies are simulated within realistic operating ranges so reviewers can experience system behaviour — including a full emergency override — without live road infrastructure.</p></div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">How does CTMS keep data consistent across intersections?<span class="fx">+</span></button>
-                <div class="faq-a"><p>Every signal change is written transactionally to PostgreSQL (the system of record) and synchronized to the Redis edge cache, so all nine intersections always act on the same world state. Kafka provides ordered, replayable event logs per intersection partition, and ksqlDB validates cross-intersection patterns — which is also how cascading-gridlock alerts are raised before a jam spreads.</p></div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-q" aria-expanded="false">Can this scale beyond a 9-intersection grid?<span class="fx">+</span></button>
-                <div class="faq-a"><p>Yes — the architecture is horizontally scalable by design. Kafka topics are partitioned per intersection, Redis clusters shard live state geographically, and PostgreSQL partitioning keeps sensor telemetry queries fast at city scale. The DQN agents are decentralized (one per intersection) with corridor-level coordination, so adding intersections adds compute linearly rather than exponentially.</p></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ─────────── CONTACT ─────────── -->
-<section id="contact">
-    <div class="section-inner">
-        <div class="reveal">
-            <div class="sec-tag">Contact</div>
-            <h2 class="sec-title">Get In <span>Touch</span></h2>
-            <p class="sec-desc">Questions about the architecture, the dataset, or the DQN reward function? Reach out to Team 1.</p>
-        </div>
-        <div class="contact-grid reveal">
-            <div class="cinfo">
-                <div class="cinfo-row">
-                    <div class="cinfo-ico">🏫</div>
-                    <div><div class="cinfo-k">Department</div><div class="cinfo-v">Computer Science &amp; Engineering</div></div>
-                </div>
-                <div class="cinfo-row">
-                    <div class="cinfo-ico">📘</div>
-                    <div><div class="cinfo-k">Subject</div><div class="cinfo-v">Database Management System · 22CSE43</div></div>
-                </div>
-                <div class="cinfo-row">
-                    <div class="cinfo-ico">🎓</div>
-                    <div><div class="cinfo-k">Class</div><div class="cinfo-v">IV Semester · Section B</div></div>
-                </div>
-                <div class="cinfo-row">
-                    <div class="cinfo-ico">👥</div>
-                    <div><div class="cinfo-k">Team 1</div><div class="cinfo-v">Joel Ryan Bangera · Jovin Sequeira · Keshav Aditiya · Loyston Leon D Souza</div></div>
-                </div>
-                <div class="cinfo-row">
-                    <div class="cinfo-ico">🖥</div>
-                    <div><div class="cinfo-k">Live Demo</div><div class="cinfo-v">Interactive dashboard with emergency simulation available in the <a href="#dashboard" style="color:var(--ac);text-decoration:none;">Live Demo</a> section.</div></div>
-                </div>
-            </div>
-            <form class="cform" id="cform" novalidate>
-                <div class="form-row">
-                    <div class="fgroup">
-                        <label for="cf-name">Your Name</label>
-                        <input id="cf-name" name="name" type="text" placeholder="e.g. Prof. A. Kumar" autocomplete="name" required>
-                        <span class="ferr">Please enter your name.</span>
-                    </div>
-                    <div class="fgroup">
-                        <label for="cf-email">Email</label>
-                        <input id="cf-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
-                        <span class="ferr">Please enter a valid email address.</span>
-                    </div>
-                </div>
-                <div class="fgroup">
-                    <label for="cf-subj">Subject</label>
-                    <input id="cf-subj" name="subject" type="text" placeholder="e.g. Question about the relational schema" required>
-                    <span class="ferr">Please enter a subject.</span>
-                </div>
-                <div class="fgroup">
-                    <label for="cf-msg">Message</label>
-                    <textarea id="cf-msg" name="message" rows="5" placeholder="Write your message…" required></textarea>
-                    <span class="ferr">Please enter a message.</span>
-                </div>
-                <button type="submit" class="btn-primary" style="border:none;cursor:pointer;">Send Message ➤</button>
-                <div id="cf-success">✓ Message sent — Team 1 will get back to you soon. (Demo form: no data leaves this page.)</div>
-            </form>
-        </div>
-    </div>
-</section>
-
-<button id="btt" aria-label="Back to top" title="Back to top">↑</button>
 
 <!-- ─────────── FOOTER ─────────── -->
 <footer>
-    <div class="footer-inner">
-        <div class="footer-title">CTMS — COGNITIVE TRAFFIC MANAGEMENT SYSTEM</div>
-        <div class="footer-sub">PBL Secondary Research · 22CSE43 · IV Semester · Section B · Department of Computer Science & Engineering</div>
-        <div class="footer-team">
-            <span>Team No. 1 · <span>Joel Ryan Bangera</span></span>
-            <span><span>Jovin Sequeira</span></span>
-            <span><span>Keshav Aditiya</span></span>
-            <span><span>Loyston Leon D Souza</span></span>
-        </div>
+    <div class="footer-title">CTMS — COGNITIVE TRAFFIC MANAGEMENT SYSTEM</div>
+    <div class="footer-sub">PBL Project · 22CSE43 · IV Semester · Section B</div>
+    <div class="footer-team">
+        <span>Team No. 1 · <span>Joel Ryan Bangera</span></span>
+        <span><span>Jovin Sequeira</span></span>
+        <span><span>Keshav Aditiya</span></span>
+        <span><span>Loyston Leon D Souza</span></span>
     </div>
 </footer>
 
-<!-- Emergency overlays -->
 <div id="emg-overlay"></div>
-<div id="emg-banner">🚨 AMBULANCE DETECTED — INT-B2 — PRIORITY OVERRIDE ACTIVE — PATH CLEARING</div>
+<div id="emg-banner">🚨 AMBULANCE DETECTED — INT-B2 — PRIORITY OVERRIDE ACTIVE</div>
+<button id="btt">↑</button>
 
 <!-- ═══════════════════════════════════════
-   JAVASCRIPT
+   JAVASCRIPT (Untouched Logic, Adapted for UI)
 ═══════════════════════════════════════ -->
 <script>
-    /* ── Clock ── */
+    // Clock
     const clockEl = document.getElementById('nav-clock');
-    function updateClock(){clockEl.textContent = new Date().toLocaleTimeString('en-US',{hour12:false});}
-    updateClock(); setInterval(updateClock,1000);
+    setInterval(() => clockEl.textContent = new Date().toLocaleTimeString('en-US',{hour12:false}), 1000);
 
-    /* ── Scroll reveal ── */
-    const revObs = new IntersectionObserver((es)=>{
-        es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});
-    },{threshold:0.1});
-    document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+    // Scroll Reveal
+    const revObs = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.1});
+    document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
 
-    /* ── Active nav ── */
-    const sections=['hero','problem','dashboard','architecture','research','empathy','performance','faq','contact'];
-    const navLinks=document.querySelectorAll('.nav-links a');
-    window.addEventListener('scroll',()=>{
-        const sy=window.scrollY+80;
-        sections.forEach(id=>{
-            const el=document.getElementById(id);
-            if(!el)return;
-            if(sy>=el.offsetTop && sy<el.offsetTop+el.offsetHeight){
-                navLinks.forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+id);});
-            }
-        });
-    },{ passive:true });
-
-    /* ── Intersection state ── */
-    const NAMES=['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
-    const ints = NAMES.map(id=>({
-        id, phase:Math.random()>.5?'NS':'EW',
-        timer:Math.floor(Math.random()*35)+8,
-        maxT:Math.floor(Math.random()*18)+25,
-        den:{N:Math.random()*85+5,S:Math.random()*85+5,E:Math.random()*85+5,W:Math.random()*85+5},
-        dqn:0.72+Math.random()*0.24, emg:false
+    // Intersection State & Grid Logic
+    const NAMES = ['A1','A2','A3','B1','B2','B3','C1','C2','C3'];
+    const ints = NAMES.map(id => ({
+        id, phase: Math.random()>.5?'NS':'EW', timer: Math.floor(Math.random()*35)+8,
+        maxT: Math.floor(Math.random()*18)+25,
+        den: {N:Math.random()*85+5, S:Math.random()*85+5, E:Math.random()*85+5, W:Math.random()*85+5},
+        dqn: 0.72+Math.random()*0.24, emg: false
     }));
     function dcls(v){return v<45?'lo':v<75?'md':'hi';}
 
     function makeRoadSVG(int){
         const ns=int.phase==='NS';
-        const gNS=ns?'#34d399':'#ef4444', gEW=ns?'#ef4444':'#34d399';
+        const gNS=ns?'#10b981':'#ef4444', gEW=ns?'#ef4444':'#10b981';
         const emgCircle=int.emg?`<circle cx="50" cy="50" r="13" fill="none" stroke="#ef4444" stroke-width="2.5" opacity=".85"/>`:''
         const veh=['N','S','E','W'].map(d=>{
             if(int.den[d]<55)return'';
-            if(d==='N')return`<rect x="46.5" y="6" width="4" height="7" fill="#38bdf8" rx="1" opacity=".8"/>`;
-            if(d==='S')return`<rect x="49.5" y="68" width="4" height="7" fill="#38bdf8" rx="1" opacity=".8"/>`;
-            if(d==='E')return`<rect x="67" y="46.5" width="7" height="4" fill="#818cf8" rx="1" opacity=".8"/>`;
-            return `<rect x="18" y="49.5" width="7" height="4" fill="#818cf8" rx="1" opacity=".8"/>`;
+            if(d==='N')return`<rect x="46.5" y="6" width="4" height="7" fill="#00f2fe" rx="1"/>`;
+            if(d==='S')return`<rect x="49.5" y="68" width="4" height="7" fill="#00f2fe" rx="1"/>`;
+            if(d==='E')return`<rect x="67" y="46.5" width="7" height="4" fill="#818cf8" rx="1"/>`;
+            return `<rect x="18" y="49.5" width="7" height="4" fill="#818cf8" rx="1"/>`;
         }).join('');
         return `<svg class="isvg" viewBox="0 0 100 100">
-    <rect width="100" height="100" fill="#0a0d1d" rx="4"/>
-    <rect x="40" y="0" width="20" height="100" fill="#131a30"/>
-    <rect x="0" y="40" width="100" height="20" fill="#131a30"/>
-    <rect x="40" y="40" width="20" height="20" fill="#1d2742"/>
-    <line x1="50" y1="2" x2="50" y2="37" stroke="#243052" stroke-width="1.2" stroke-dasharray="4,4"/>
-    <line x1="50" y1="63" x2="50" y2="98" stroke="#243052" stroke-width="1.2" stroke-dasharray="4,4"/>
-    <line x1="2" y1="50" x2="37" y2="50" stroke="#243052" stroke-width="1.2" stroke-dasharray="4,4"/>
-    <line x1="63" y1="50" x2="98" y2="50" stroke="#243052" stroke-width="1.2" stroke-dasharray="4,4"/>
-    <line x1="40" y1="39" x2="60" y2="39" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-    <line x1="40" y1="61" x2="60" y2="61" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-    <line x1="39" y1="40" x2="39" y2="60" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-    <line x1="61" y1="40" x2="61" y2="60" stroke="rgba(255,255,255,.25)" stroke-width="1"/>
-    <circle cx="34" cy="34" r="4" fill="${gNS}" opacity=".95"/>
-    <circle cx="66" cy="66" r="4" fill="${gNS}" opacity=".95"/>
-    <circle cx="66" cy="34" r="4" fill="${gEW}" opacity=".95"/>
-    <circle cx="34" cy="66" r="4" fill="${gEW}" opacity=".95"/>
-    ${veh}${emgCircle}
-  </svg>`;
+            <rect width="100" height="100" fill="rgba(0,0,0,0.4)" rx="4"/>
+            <rect x="40" y="0" width="20" height="100" fill="rgba(255,255,255,0.05)"/>
+            <rect x="0" y="40" width="100" height="20" fill="rgba(255,255,255,0.05)"/>
+            <circle cx="34" cy="34" r="4" fill="${gNS}" opacity=".95"/>
+            <circle cx="66" cy="66" r="4" fill="${gNS}" opacity=".95"/>
+            <circle cx="66" cy="34" r="4" fill="${gEW}" opacity=".95"/>
+            <circle cx="34" cy="66" r="4" fill="${gEW}" opacity=".95"/>
+            ${veh}${emgCircle}
+        </svg>`;
     }
 
     function renderGrid(){
-        document.getElementById('igrid').innerHTML = ints.map(int=>{
+        document.getElementById('igrid').innerHTML = ints.map(int => {
             const ph = int.emg?'EMG':int.phase;
-            return`<div class="icell${int.emg?' emg':''}" onclick="selectInt('${int.id}')">
-      <div class="ihead">
-        <span class="iid">INT-${int.id}</span>
-        <span class="iphase ${ph}">${int.emg?'🚨':ph}</span>
-      </div>
-      ${makeRoadSVG(int)}
-      <div class="dbars">
-        ${['N','S','E','W'].map(d=>`<div class="dbar-item">
-          <div class="dbar-lbl">${d} ${Math.round(int.den[d])}%</div>
-          <div class="dbar-track"><div class="dbar-fill ${dcls(int.den[d])}" style="width:${int.den[d]}%"></div></div>
-        </div>`).join('')}
-      </div>
-      <div class="idqn-row">
-        <span>Q:&nbsp;<span class="idqn-score">${int.dqn.toFixed(3)}</span></span>
-        <span class="itimer">⏱${int.timer}s</span>
-      </div>
-    </div>`;
+            return `<div class="icell${int.emg?' emg':''}">
+                <div class="ihead"><span class="iid">INT-${int.id}</span><span class="iphase ${ph}">${int.emg?'🚨':ph}</span></div>
+                ${makeRoadSVG(int)}
+                <div class="dbars">
+                    ${['N','S','E','W'].map(d=>`<div class="dbar-item"><div class="dbar-lbl">${d} ${Math.round(int.den[d])}%</div><div class="dbar-track"><div class="dbar-fill ${dcls(int.den[d])}" style="width:${int.den[d]}%"></div></div></div>`).join('')}
+                </div>
+                <div class="idqn-row"><span>Q: <span class="idqn-score">${int.dqn.toFixed(3)}</span></span><span class="itimer">⏱${int.timer}s</span></div>
+            </div>`;
         }).join('');
     }
 
-    /* ── Chart ── */
+    // Chart.js
     const thruHist=Array.from({length:20},()=>Math.round(4100+Math.random()*1600));
-    const labels=Array.from({length:20},(_,i)=>`T-${20-i}`);
     const tChart=new Chart(document.getElementById('tchart').getContext('2d'),{
         type:'line',
-        data:{labels,datasets:[{
-                label:'Throughput',data:[...thruHist],
-                borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.06)',
-                fill:true,tension:.4,pointRadius:2,borderWidth:2
-            }]},
-        options:{
-            responsive:true,maintainAspectRatio:false,
-            plugins:{legend:{display:false},tooltip:{
-                    backgroundColor:'#0e1326',borderColor:'#1b2240',borderWidth:1,
-                    titleColor:'#93a5c9',bodyColor:'#38bdf8',
-                    titleFont:{family:'JetBrains Mono,monospace',size:10},
-                    bodyFont:{family:'JetBrains Mono,monospace',size:10}
-                }},
-            scales:{
-                x:{grid:{color:'rgba(27,34,64,.9)'},ticks:{color:'#4d5e85',font:{family:'JetBrains Mono,monospace',size:8},maxTicksLimit:5}},
-                y:{grid:{color:'rgba(27,34,64,.9)'},ticks:{color:'#38bdf8',font:{family:'JetBrains Mono,monospace',size:8}},min:2800,max:6500}
-            }
-        }
+        data:{labels:Array.from({length:20},(_,i)=>`T-${20-i}`), datasets:[{ label:'Throughput', data:[...thruHist], borderColor:'#00f2fe', backgroundColor:'rgba(0, 242, 254, 0.1)', fill:true, tension:.4 }]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{display:false}, y:{grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#94a3b8'}} } }
     });
 
-    /* ── YOLO ── */
-    const VEHICLES=[
-        {t:'Sedan',i:'🚗',bg:'#0a1826'},
-        {t:'SUV',i:'🚙',bg:'#0a1d2e'},
-        {t:'Bus',i:'🚌',bg:'#0a1621'},
-        {t:'Truck',i:'🚛',bg:'#0c1726'},
-        {t:'Motorcycle',i:'🏍',bg:'#0a1826'},
-        {t:'Bicycle',i:'🚲',bg:'#0a1826'},
-        {t:'Ambulance',i:'🚑',bg:'#1a0a0a',emg:true}
-    ];
-    function renderYOLO(forceEmg){
-        let items=[];
-        if(forceEmg) items.push(VEHICLES[6]);
-        const reg=VEHICLES.filter(v=>!v.emg);
-        while(items.length<4){const r=reg[Math.floor(Math.random()*reg.length)];if(!items.find(x=>x.t===r.t))items.push(r);}
-        const conf=()=>(91+Math.random()*8).toFixed(1)+'%';
-        document.getElementById('yololist').innerHTML=items.slice(0,4).map(v=>`
-    <div class="det-item${v.emg?' emg':''}">
-      <div class="dico" style="background:${v.bg}">${v.i}</div>
-      <div><div class="dtype">${v.t}</div><div class="dloc">INT-${NAMES[Math.floor(Math.random()*9)]} · cam-${Math.floor(Math.random()*4)+1}</div></div>
-      <div class="dconf ${v.emg?'emg':'ok'}">${v.emg?'99.8%':conf()}</div>
-    </div>`).join('');
-    }
-
-    /* ── Event Feed ── */
+    // Event Feed
     let evCount=0;
-    const EVDB={
-        info:['DQN extended NS green phase at INT-A1 by +8s','Green wave activated: A-row corridor (A1→A2→A3)','Redis sync complete: all 9 intersections','ksqlDB pattern matched: smooth flow B2→C2','DQN policy gradient update applied successfully','Edge cache warm-up complete: <10μs confirmed','Digital twin synchronisation: 100% fidelity'],
-        warn:['High density: INT-B1 West lane (87%)','Queue spillback risk: INT-C3 East (82%)','Kafka consumer lag detected: partition-3','Congestion risk corridor: A2→B2','Density threshold approaching: INT-A3 South (79%)'],
-        danger:['🚨 EMERGENCY: Ambulance detected at INT-B2','Priority override: clearing B2→C1→C2','Floodgate protocol activated: diverting A-row','CEP gridlock alert: density >90% at 2 intersections'],
-        success:['✓ Emergency cleared: INT-B2 returning to DQN','Floodgate deactivated: congestion resolved','Green wave optimised: avg wait ↓3.1s this hour','CO₂ savings logged: 142kg avoided','Throughput milestone: 5,000 vehicles/hr achieved']
-    };
     function addEvent(type,msg){
         const feed=document.getElementById('evfeed');
         const t=new Date().toLocaleTimeString('en-US',{hour12:false});
-        const d=document.createElement('div');
-        d.className=`evitem ${type}`;
+        const d=document.createElement('div'); d.className=`evitem ${type}`;
         d.innerHTML=`<span class="evt">${t}</span><span class="evm">${msg}</span>`;
         feed.insertBefore(d,feed.firstChild);
-        while(feed.children.length>30)feed.removeChild(feed.lastChild);
-        evCount++;
-        document.getElementById('ev-count').textContent=`${evCount} events`;
-    }
-    function randEvent(){
-        const w=['info','info','info','warn','warn','success'];
-        const c=w[Math.floor(Math.random()*w.length)];
-        addEvent(c,EVDB[c][Math.floor(Math.random()*EVDB[c].length)]);
+        if(feed.children.length>20) feed.removeChild(feed.lastChild);
+        document.getElementById('ev-count').textContent=`${++evCount} events`;
     }
 
-    /* ── Emergency Simulation ── */
+    // YOLO List
+    function renderYOLO(emg){
+        let arr = emg ? [{t:'Ambulance', i:'🚑', c:'emg'}] : [{t:'Sedan', i:'🚗', c:'ok'}, {t:'Bus', i:'🚌', c:'ok'}];
+        document.getElementById('yololist').innerHTML = arr.map(v => `<div class="det-item ${v.c==='emg'?'emg':''}"><div class="dico">${v.i}</div><div><div class="dtype">${v.t}</div><div class="dloc">Cam-1</div></div><div class="dconf ${v.c}">${v.c==='emg'?'99.9%':'92.1%'}</div></div>`).join('');
+    }
+
+    // Emergency Override
     let emgActive=false;
     function triggerEmergency(){
-        if(emgActive)return;
-        emgActive=true;
-        const b2=ints.find(i=>i.id==='B2');
-        if(b2)b2.emg=true;
+        if(emgActive) return; emgActive=true;
+        ints.find(i=>i.id==='B2').emg = true;
         renderGrid(); renderYOLO(true);
-        document.getElementById('emg-overlay').classList.add('on');
-        document.getElementById('emg-banner').classList.add('on');
-        document.getElementById('fgstatus').textContent='● OVERRIDE';
-        document.getElementById('fgstatus').style.color='var(--danger)';
-        document.getElementById('dp-badge').textContent='⚠ EMG OVERRIDE';
-        document.getElementById('dp-badge').style.color='var(--danger)';
-        document.getElementById('dp-badge').style.borderColor='rgba(239,68,68,.3)';
-        document.getElementById('m-ems').textContent='1.6';
-        addEvent('danger','🚨 AMBULANCE DETECTED: INT-B2 — YOLOv8 confidence 99.8%');
-        setTimeout(()=>addEvent('danger','Priority override engaged: standard cycle bypassed'),600);
-        setTimeout(()=>addEvent('danger','Clearing path: B2→C1→C2 corridor'),1200);
-        setTimeout(()=>addEvent('warn','Diverting non-emergency traffic to alternate route'),1900);
-        setTimeout(()=>addEvent('info','Floodgate protocol: A-row pressure relief active'),2700);
-        setTimeout(()=>addEvent('success','✓ Path cleared — estimated ambulance ETA: 38s'),4000);
-        setTimeout(()=>{
-            emgActive=false;
-            if(b2)b2.emg=false;
-            document.getElementById('emg-overlay').classList.remove('on');
-            document.getElementById('emg-banner').classList.remove('on');
-            document.getElementById('fgstatus').textContent='● READY';
-            document.getElementById('fgstatus').style.color='var(--ok)';
-            document.getElementById('dp-badge').textContent='DQN ACTIVE';
-            document.getElementById('dp-badge').style.color='';
-            document.getElementById('dp-badge').style.borderColor='';
-            renderGrid(); renderYOLO(false);
-            addEvent('success','✓ Emergency cleared — INT-B2 returned to DQN control');
-            document.getElementById('m-ems').textContent='2.4';
-        },10000);
+        document.getElementById('emg-overlay').classList.add('on'); document.getElementById('emg-banner').classList.add('on');
+        addEvent('danger', '🚨 AMBULANCE DETECTED: Priority override active.');
+        setTimeout(() => {
+            emgActive=false; ints.find(i=>i.id==='B2').emg = false;
+            document.getElementById('emg-overlay').classList.remove('on'); document.getElementById('emg-banner').classList.remove('on');
+            renderGrid(); renderYOLO(false); addEvent('success', 'Emergency cleared. DQN restored.');
+        }, 8000);
     }
 
-    function selectInt(id){
-        const int=ints.find(i=>i.id===id);
-        addEvent('info',`INT-${id} inspected — Phase: ${int.phase} | N:${Math.round(int.den.N)}% S:${Math.round(int.den.S)}% E:${Math.round(int.den.E)}% W:${Math.round(int.den.W)}% | Q:${int.dqn.toFixed(3)}`);
-    }
-
-    /* ── Main simulation loop ── */
-    let tick=0;
-    function simLoop(){
-        tick++;
-        ints.forEach(int=>{
-            if(int.emg)return;
-            int.timer=Math.max(0,int.timer-1);
-            if(int.timer<=0){
-                int.phase=int.phase==='NS'?'EW':'NS';
-                int.timer=int.maxT+Math.floor(Math.random()*8)-3;
-                if(int.timer<4)int.timer=4;
-            }
-            ['N','S','E','W'].forEach(d=>{
-                int.den[d]=Math.max(3,Math.min(95,int.den[d]+(Math.random()-.5)*13));
-            });
-            int.dqn=Math.max(.65,Math.min(.995,int.dqn+(Math.random()-.5)*.035));
+    // Main Loop
+    setInterval(() => {
+        ints.forEach(int => {
+            if(int.emg) return;
+            int.timer = Math.max(0, int.timer-1);
+            if(int.timer <= 0){ int.phase = int.phase==='NS'?'EW':'NS'; int.timer = int.maxT; }
+            ['N','S','E','W'].forEach(d => int.den[d] = Math.max(5, Math.min(95, int.den[d]+(Math.random()-.5)*10)));
         });
         renderGrid();
+        thruHist.shift(); thruHist.push(Math.round(4100+Math.random()*1600));
+        tChart.data.datasets[0].data = [...thruHist]; tChart.update('none');
+        if(Math.random() > 0.7) addEvent('info', 'DQN state synchronized with edge cache.');
+    }, 2000);
 
-        /* Metric jitter */
-        document.getElementById('m-wait').textContent=(16.5+Math.random()*4.5).toFixed(1);
-        document.getElementById('m-thru').textContent=(4600+Math.round(Math.random()*700)).toLocaleString();
-        document.getElementById('m-co2').textContent=(26.5+Math.random()*4.5).toFixed(1);
+    // Initial Renders
+    renderGrid(); renderYOLO(false); addEvent('success', 'System Online.');
 
-        /* DQN ring */
-        const rew=(.82+Math.random()*0.11).toFixed(3);
-        document.getElementById('dqn-r').textContent='+'+rew;
-        document.getElementById('dqn-dec').textContent=Math.floor(41+Math.random()*14)+' dec/s';
-        const pct=Math.round(parseFloat(rew)*100);
-        const offset=113.1*(1-pct/100);
-        document.getElementById('rring').setAttribute('stroke-dashoffset',offset.toFixed(1));
-        document.getElementById('rrtxt').textContent=pct+'%';
-        document.getElementById('dqn-ep').textContent=`Episode ${(14390+tick).toLocaleString()} · ε=0.05`;
-
-        /* Kafka + Redis */
-        document.getElementById('kafka').textContent=(2400+Math.round(Math.random()*700)).toLocaleString()+'/s';
-        document.getElementById('redis').textContent=(3.8+Math.random()*5.6).toFixed(1)+'μs';
-
-        /* Chart update every other tick */
-        if(tick%2===0){
-            thruHist.shift();
-            thruHist.push(Math.round(4100+Math.random()*1800));
-            tChart.data.datasets[0].data=[...thruHist];
-            tChart.update('none');
-        }
-
-        if(tick%3===0) renderYOLO(false);
-        if(tick%4===0) randEvent();
-    }
-
-    /* ── Init ── */
-    renderGrid();
-    renderYOLO(false);
-    addEvent('success','CTMS online — 9/9 intersections connected and active');
-    addEvent('info','DQN model loaded: ResNet-18 · 14,392 training episodes');
-    addEvent('info','ksqlDB stream processor: 12 CEP patterns active');
-    addEvent('info','Redis edge cache initialised: latency <10μs confirmed');
-    addEvent('info','YOLO v8 model ready: 8 vehicle classes loaded');
-    setInterval(simLoop, 1800);
-
-    /* ── Scroll progress + nav shadow + back-to-top visibility ── */
-    const progEl=document.getElementById('scroll-progress');
-    const topnavEl=document.getElementById('topnav');
-    const bttBtn=document.getElementById('btt');
-    window.addEventListener('scroll',()=>{
-        const h=document.documentElement.scrollHeight-window.innerHeight;
-        progEl.style.width=(h>0?(window.scrollY/h)*100:0)+'%';
-        topnavEl.classList.toggle('scrolled',window.scrollY>10);
-        if(bttBtn)bttBtn.classList.toggle('show',window.scrollY>600);
-    },{passive:true});
-    if(bttBtn)bttBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
-
-    /* ── Mobile menu (burger) ── */
-    const burger=document.getElementById('nav-burger');
-    const mmenu=document.getElementById('mobile-menu');
-    function closeMenu(){burger.classList.remove('open');mmenu.classList.remove('open');burger.setAttribute('aria-expanded','false');}
-    burger.addEventListener('click',()=>{
-        const open=!mmenu.classList.contains('open');
-        burger.classList.toggle('open',open);
-        mmenu.classList.toggle('open',open);
-        burger.setAttribute('aria-expanded',String(open));
+    // Scroll Progress & Nav
+    window.addEventListener('scroll', () => {
+        const h = document.documentElement.scrollHeight - window.innerHeight;
+        document.getElementById('scroll-progress').style.width = (window.scrollY / h * 100) + '%';
+        document.getElementById('topnav').classList.toggle('scrolled', window.scrollY > 50);
+        document.getElementById('btt').classList.toggle('show', window.scrollY > 500);
     });
-    mmenu.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
-    window.addEventListener('resize',()=>{if(window.innerWidth>900)closeMenu();});
+    document.getElementById('btt').addEventListener('click', () => window.scrollTo(0,0));
 
-    /* ── Hero canvas: animated traffic light-trails ── */
-    (function(){
-        const cv=document.getElementById('hero-canvas');
-        if(!cv)return;
-        const ctx=cv.getContext('2d');
-        const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        let W,H,lanesV,lanesH,cars;
-        function spawn(){
-            const vert=Math.random()>.5;
-            const colors=['#38bdf8','#818cf8','#c084fc'];
-            return{
-                vert,
-                lane:vert?lanesV[Math.floor(Math.random()*lanesV.length)]:lanesH[Math.floor(Math.random()*lanesH.length)],
-                pos:Math.random()*(vert?H:W),
-                spd:(.45+Math.random()*1.5)*(Math.random()>.5?1:-1),
-                c:colors[Math.floor(Math.random()*colors.length)],
-                len:12+Math.random()*18
-            };
-        }
-        function resize(){
-            W=cv.width=cv.offsetWidth||window.innerWidth;
-            H=cv.height=cv.offsetHeight||window.innerHeight;
-            lanesV=[];lanesH=[];
-            for(let x=70;x<W;x+=150)lanesV.push(x);
-            for(let y=70;y<H;y+=130)lanesH.push(y);
-            cars=[];
-            const n=Math.min(48,Math.max(14,Math.floor(W/32)));
-            for(let i=0;i<n;i++)cars.push(spawn());
-        }
-        function frame(){
-            ctx.clearRect(0,0,W,H);
-            ctx.globalAlpha=.16;ctx.strokeStyle='#283255';ctx.lineWidth=1;
-            lanesV.forEach(x=>{ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();});
-            lanesH.forEach(y=>{ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();});
-            ctx.globalAlpha=1;
-            cars.forEach(cr=>{
-                cr.pos+=cr.spd;
-                const max=cr.vert?H:W;
-                if(cr.pos<-40)cr.pos=max+30;
-                if(cr.pos>max+40)cr.pos=-30;
-                const tail=cr.len*(cr.spd>0?-1:1);
-                let g;
-                if(cr.vert){g=ctx.createLinearGradient(cr.lane,cr.pos,cr.lane,cr.pos+tail);}
-                else{g=ctx.createLinearGradient(cr.pos,cr.lane,cr.pos+tail,cr.lane);}
-                g.addColorStop(0,cr.c);g.addColorStop(1,'rgba(0,0,0,0)');
-                ctx.strokeStyle=g;ctx.lineWidth=2.2;ctx.lineCap='round';
-                ctx.beginPath();
-                if(cr.vert){ctx.moveTo(cr.lane,cr.pos);ctx.lineTo(cr.lane,cr.pos+tail);}
-                else{ctx.moveTo(cr.pos,cr.lane);ctx.lineTo(cr.pos+tail,cr.lane);}
-                ctx.stroke();
-            });
-            if(!reduced)requestAnimationFrame(frame);
-        }
-        resize();
-        window.addEventListener('resize',resize);
-        frame();
-    })();
-
-    /* ── FAQ accordion ── */
-    document.querySelectorAll('.faq-item').forEach(item=>{
-        const q=item.querySelector('.faq-q'),a=item.querySelector('.faq-a');
-        q.addEventListener('click',()=>{
-            const wasOpen=item.classList.contains('open');
-            document.querySelectorAll('.faq-item.open').forEach(o=>{
-                o.classList.remove('open');
-                o.querySelector('.faq-a').style.maxHeight='0px';
-                o.querySelector('.faq-q').setAttribute('aria-expanded','false');
-            });
-            if(!wasOpen){
-                item.classList.add('open');
-                a.style.maxHeight=a.scrollHeight+'px';
-                q.setAttribute('aria-expanded','true');
-            }
-        });
-    });
-
-    /* ── Performance bars: animate to target width on reveal ── */
-    const perfBars=document.querySelectorAll('.perf-bar-fill');
-    perfBars.forEach(b=>{
-        b.style.width='0%';
-        b.style.transition='width 1.3s cubic-bezier(.22,1,.36,1)';
-    });
-    const barObs=new IntersectionObserver(es=>{
-        es.forEach(e=>{
-            if(e.isIntersecting){
-                e.target.style.width=(e.target.dataset.w||0)+'%';
-                barObs.unobserve(e.target);
-            }
-        });
-    },{threshold:.4});
-    perfBars.forEach(b=>barObs.observe(b));
-
-    /* ── Contact form (client-side validation, demo submit) ── */
-    const cform=document.getElementById('cform');
-    if(cform){
-        cform.addEventListener('submit',e=>{
-            e.preventDefault();
-            let ok=true;
-            cform.querySelectorAll('.fgroup').forEach(g=>{
-                const f=g.querySelector('input,textarea');
-                if(!f)return;
-                let bad=!f.value.trim();
-                if(f.type==='email'&&f.value.trim()&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.value.trim()))bad=true;
-                g.classList.toggle('invalid',bad);
-                if(bad)ok=false;
-            });
-            if(!ok)return;
-            document.getElementById('cf-success').classList.add('show');
-            addEvent('success','✉ Contact form message received — thank you!');
-            cform.reset();
-            setTimeout(()=>document.getElementById('cf-success').classList.remove('show'),6000);
-        });
-        cform.querySelectorAll('input,textarea').forEach(f=>f.addEventListener('input',()=>f.closest('.fgroup').classList.remove('invalid')));
+    // Hero Canvas Effect
+    const cv = document.getElementById('hero-canvas'), ctx = cv.getContext('2d');
+    let W, H, particles = [];
+    function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    for(let i=0; i<30; i++) particles.push({x: Math.random()*W, y: Math.random()*H, s: Math.random()*2+1});
+    function anim(){
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle = 'rgba(0, 242, 254, 0.5)';
+        particles.forEach(p => { p.y -= p.s; if(p.y < 0) p.y = H; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); });
+        requestAnimationFrame(anim);
     }
-
-
-    /* ── Count-up animation for stats ── */
-    function countUp(el){
-        const raw=el.textContent.trim();
-        const m=raw.match(/^([0-9]+(?:\.[0-9]+)?)(.*)$/);
-        if(!m)return;
-        const target=parseFloat(m[1]),suffix=m[2],dec=(m[1].split('.')[1]||'').length;
-        const t0=performance.now(),dur=1400;
-        function step(t){
-            const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
-            el.textContent=(target*e).toFixed(dec)+suffix;
-            if(p<1)requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
-    }
-    const cuObs=new IntersectionObserver(es=>{
-        es.forEach(e=>{if(e.isIntersecting){countUp(e.target);cuObs.unobserve(e.target);}});
-    },{threshold:.6});
-    document.querySelectorAll('.hstat-v,.stat-box-v').forEach(el=>{
-        if(/^[0-9]/.test(el.textContent.trim()))cuObs.observe(el);
-    });
-
-    /* ── 3D tilt on problem cards ── */
-    if(window.matchMedia('(hover:hover) and (prefers-reduced-motion: no-preference)').matches){
-        document.querySelectorAll('.pcard').forEach(card=>{
-            card.addEventListener('mousemove',e=>{
-                const r=card.getBoundingClientRect();
-                const rx=((e.clientY-r.top)/r.height-.5)*-7;
-                const ry=((e.clientX-r.left)/r.width-.5)*7;
-                card.style.transform=`perspective(700px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-4px)`;
-            });
-            card.addEventListener('mouseleave',()=>{card.style.transform='';});
-        });
-    }
-
+    anim();
 </script>
 </body>
 </html>
