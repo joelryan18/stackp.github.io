@@ -1,1 +1,133 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SocialPlatform {
+  instagram
+  twitter
+  tiktok
+  gmail
+  custom
+}
+
+enum ThreadStatus {
+  active
+  waiting_payment
+  paid_pending_reply
+  resolved
+  ignored
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+model User {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String          @unique
+  passwordHash String          @map("password_hash")
+  isVerified   Boolean         @default(false) @map("is_verified")
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  profile      CreatorProfile?
+
+  @@map("users")
+}
+
+model CreatorProfile {
+  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String               @unique @map("user_id") @db.Uuid
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username       String               @unique
+  displayName    String               @map("display_name")
+  bio            String?
+  avatarUrl      String?              @map("avatar_url")
+  minUnlockFee   Decimal              @default(5.00) @map("min_unlock_fee") @db.Decimal(10, 2)
+  currency       String               @default("USD")
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  socialAccounts SocialAccount[]
+  threads        ConversationThread[]
+
+  @@map("creator_profiles")
+}
+
+model SocialAccount {
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorId String         @map("creator_id") @db.Uuid
+  creator   CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform  SocialPlatform
+  handle    String
+  isActive  Boolean        @default(true) @map("is_active")
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  @@unique([creatorId, platform, handle])
+  @@map("social_accounts")
+}
+
+model ConversationThread {
+  id                     String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creatorId              String         @map("creator_id") @db.Uuid
+  creator                CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform               SocialPlatform
+  externalThreadId       String?        @map("external_thread_id")
+  externalSenderUsername String         @map("external_sender_username")
+  externalSenderName     String?        @map("external_sender_name")
+  status                 ThreadStatus   @default(waiting_payment)
+  paymentLinkToken       String         @unique @default(dbgenerated("gen_random_uuid()")) @map("payment_link_token") @db.Uuid
+  createdAt              DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  messages               Message[]
+  payment                Payment?
+  answer                 Answer?
+
+  @@index([creatorId, status], name: "idx_threads_lookup")
+  @@index([platform, externalThreadId], name: "idx_threads_external")
+  @@map("conversation_threads")
+}
+
+model Message {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId    String             @map("thread_id") @db.Uuid
+  thread      ConversationThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderType  String             @map("sender_type")
+  messageText String             @map("message_text")
+  isImported  Boolean            @default(false) @map("is_imported")
+  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("messages")
+}
+
+model Answer {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId String             @unique @map("question_id") @db.Uuid
+  thread     ConversationThread @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answerBody String             @map("answer_body")
+  mediaType  String             @default("text") @map("media_type")
+  mediaUrl   String?            @map("media_url")
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("answers")
+}
+
+model Payment {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId           String             @unique @map("thread_id") @db.Uuid
+  thread             ConversationThread @relation(fields: [threadId], references: [id], onDelete: Restrict)
+  stripeSessionId    String             @unique @map("stripe_session_id")
+  amount             Decimal            @db.Decimal(10, 2)
+  platformFeePercent Decimal            @default(10.00) @map("platform_fee_percent") @db.Decimal(5, 2)
+  creatorShare       Decimal            @default(dbgenerated()) @map("creator_share") @db.Decimal(10, 2)
+  status             PaymentStatus      @default(pending)
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("payments")
+}
