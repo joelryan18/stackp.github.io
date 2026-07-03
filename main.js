@@ -48,14 +48,20 @@
   /* ---------------------------------------------------------
      2 · BOOT — two-beat power-on
   --------------------------------------------------------- */
+  let booted = false;
   function boot() {
+    if (booted) return; booted = true;
     document.body.classList.remove("booting");
-    if (!reduced) decode($(".hero__title"), 240);
+    if (!reduced) decode($(".hero__title"), 200);
   }
+  // fire on load, but don't wait forever for heavy 3D/CDN — DOMContentLoaded + a beat, or a hard cap
   if (document.readyState === "complete") boot();
-  else window.addEventListener("load", boot);
-  // safety: never leave the veil up
-  setTimeout(() => document.body.classList.remove("booting"), 1600);
+  else {
+    window.addEventListener("load", boot);
+    if (document.readyState === "interactive") setTimeout(boot, 400);
+    else document.addEventListener("DOMContentLoaded", () => setTimeout(boot, 400));
+  }
+  setTimeout(boot, 1800); // hard fallback — never leave the veil up
 
   /* ---------------------------------------------------------
      3 · NAV + mobile menu
@@ -207,28 +213,41 @@
     el.innerHTML = "";
     const glyphs = [];
     lines.forEach((line, li) => {
-      [...line].forEach((ch) => {
-        if (ch === " ") { el.appendChild(document.createTextNode(" ")); return; }
-        const s = document.createElement("span");
-        s.className = "glyph"; s.textContent = ch; s.style.color = "var(--signal)";
-        el.appendChild(s); glyphs.push({ node: s, final: ch, done: false });
+      // group glyphs into non-breaking words so long titles never wrap mid-word
+      line.split(" ").forEach((word, wi, arr) => {
+        if (word.length) {
+          const w = document.createElement("span");
+          w.className = "word";
+          [...word].forEach((ch) => {
+            const s = document.createElement("span");
+            s.className = "glyph"; s.textContent = ch; s.style.color = "var(--signal)";
+            w.appendChild(s); glyphs.push({ node: s, final: ch, done: false });
+          });
+          el.appendChild(w);
+        }
+        if (wi < arr.length - 1) el.appendChild(document.createTextNode(" "));
       });
       if (li < lines.length - 1) el.appendChild(document.createElement("br"));
     });
-    const per = 2;
-    glyphs.forEach((g, i) => (g.revealAt = i * per + 6));
-    let f = 0; const total = glyphs.length * per + 24;
-    const tick = () => {
-      f++;
+    // wall-clock driven (robust to rAF throttling / slow devices), not frame-counted
+    const per = 34;                                   // ms of stagger per glyph
+    glyphs.forEach((g, i) => (g.revealAt = i * per + 90));
+    const totalMs = glyphs.length * per + 420;
+    const finishAll = () => glyphs.forEach((g) => { if (!g.done) { g.node.textContent = g.final; g.node.style.color = ""; g.done = true; } });
+    let start = null;
+    const tick = (now) => {
+      if (start === null) start = now;
+      const t = now - start;
       for (const g of glyphs) {
         if (g.done) continue;
-        if (f >= g.revealAt) { g.node.textContent = g.final; g.node.style.color = ""; g.done = true; }
-        else if (f % 2 === 0) g.node.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        if (t >= g.revealAt) { g.node.textContent = g.final; g.node.style.color = ""; g.done = true; }
+        else g.node.textContent = GLYPHS[(Math.random() * GLYPHS.length) | 0];
       }
-      if (f < total) requestAnimationFrame(tick);
-      else glyphs.forEach((g) => { g.node.textContent = g.final; g.node.style.color = ""; });
+      if (t < totalMs) requestAnimationFrame(tick); else finishAll();
     };
     setTimeout(() => requestAnimationFrame(tick), startDelay || 0);
+    // hard guarantee: fully resolved by wall clock even if rAF never runs
+    setTimeout(finishAll, (startDelay || 0) + totalMs + 500);
   }
   // engage title decodes on scroll-in
   const engageTitle = $(".engage__title");
@@ -476,7 +495,24 @@
   }
 
   /* ---------------------------------------------------------
-     15 · refresh ScrollTrigger once fonts settle (pin accuracy)
+     15 · access form — inline success state
+  --------------------------------------------------------- */
+  const form = $(".engage__form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = form.querySelector("input");
+      if (input && !input.checkValidity()) { input.reportValidity(); return; }
+      const email = input ? input.value : "";
+      form.innerHTML =
+        '<p class="engage__ok" role="status">' +
+        '<span class="live-dot"></span> Signal received — access request queued for <b>' +
+        (email.replace(/[<>&"]/g, "") || "you") + "</b>. Check your inbox.</p>";
+    });
+  }
+
+  /* ---------------------------------------------------------
+     16 · refresh ScrollTrigger once fonts settle (pin accuracy)
   --------------------------------------------------------- */
   if (hasGSAP && document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => ScrollTrigger.refresh());
@@ -485,4 +521,3 @@
 
   console.log("%cAXON", "font:700 20px 'JetBrains Mono',monospace;color:#B8FF3C", "· signal instrument online.");
 })();
-
