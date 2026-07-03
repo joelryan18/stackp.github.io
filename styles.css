@@ -53,13 +53,19 @@
 
 /* ---------- reset ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; }
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; scroll-behavior: smooth; background: var(--bg); }
 body {
-  background: var(--bg); color: var(--text); font-family: var(--body);
+  color: var(--text); font-family: var(--body);
   font-size: 17px; line-height: 1.55; overflow-x: hidden; position: relative;
   font-feature-settings: "ss01" 1;
+  /* graded carbon: subtle cool lift up top, deep at the base (shows during boot + as 3D fallback) */
+  background:
+    radial-gradient(120% 80% at 50% -10%, #0C1016 0%, rgba(12,16,22,0) 55%),
+    linear-gradient(180deg, #090B0F 0%, var(--bg) 42%, #050608 100%);
+  background-attachment: fixed;
 }
-@media (hover: hover) and (pointer: fine) { body { cursor: none; } }
+/* hide the OS cursor only once the custom probe is actually active (JS on) */
+@media (hover: hover) and (pointer: fine) { body.has-probe { cursor: none; } }
 
 img, svg, canvas { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -78,7 +84,9 @@ ul { list-style: none; }
 .nerve { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .nerve-scrim {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, rgba(7,8,10,0.32) 32%, rgba(7,8,10,0.32) 80%, transparent 100%);
+  background:
+    radial-gradient(90% 60% at 50% 32%, rgba(24,40,44,0.10) 0%, rgba(7,8,10,0) 60%),
+    linear-gradient(180deg, rgba(7,8,10,0.18) 0%, rgba(7,8,10,0.30) 34%, rgba(7,8,10,0.30) 78%, rgba(5,6,8,0.55) 100%);
 }
 body.no3d .nerve {
   background:
@@ -128,6 +136,7 @@ body:not(.booting)::before { opacity: 0; }
 .probe.is-hot .probe__ring { width: 54px; height: 54px; background: rgba(184,255,60,0.10); }
 .probe.is-locked .probe__ring { width: 44px; height: 44px; border-color: var(--teal); background: rgba(60,224,200,0.10); }
 body:not(.has-probe) .probe { display: none; }
+@media (max-width: 900px) { .probe { display: none !important; } }
 
 /* ============================================================
    RAIL — signal index + scroll-progress nerve
@@ -263,7 +272,8 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
   font-family: var(--display); font-weight: 500; letter-spacing: -0.035em; line-height: 0.98;
   font-size: clamp(2.9rem, 8.5vw, 6.6rem); margin-bottom: 1.8rem; font-synthesis: none;
 }
-.hero__title .glyph { display: inline-block; }
+.hero__title .glyph, .engage__title .glyph { display: inline-block; }
+.word { display: inline-block; white-space: nowrap; }   /* keep decoded words unbreakable */
 .hero__sub { color: var(--text-dim); font-size: clamp(1.02rem, 2vw, 1.28rem); max-width: 48ch; margin-bottom: 2.4rem; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: .9rem; margin-bottom: 3rem; }
 .hero__readout { display: flex; flex-wrap: wrap; gap: 2.4rem; border-top: 1px solid var(--line); padding-top: 1.4rem; max-width: 560px; }
@@ -412,6 +422,8 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .engage__form { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; max-width: 480px; margin: 0 auto; }
 .engage__form input { flex: 1; min-width: 220px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 4px; padding: .85rem 1.2rem; color: var(--text); font-family: var(--mono); font-size: .9rem; }
 .engage__form input:focus { outline: none; border-color: var(--signal); }
+.engage__ok { font-family: var(--mono); font-size: .92rem; color: var(--text-dim); display: inline-flex; align-items: center; gap: .6rem; padding: .9rem 1.2rem; border: 1px solid rgba(184,255,60,.35); border-radius: 6px; background: rgba(184,255,60,.05); }
+.engage__ok b { color: var(--signal); font-weight: 500; }
 
 /* ============================================================
    FOOTER
