@@ -1,38 +1,42 @@
-# AXON — "Signal Instrument" landing page
+# AXON — "Signal Instrument"
 
-An award-caliber, non-templated marketing site for a fictional autonomous-agent
-platform, art-directed as a **lab oscilloscope**: a carbon canvas, one rationed
-electric **signal-green**, and a **3D nerve you fly through as you scroll**.
+An award-caliber, non-templated landing page for a fictional autonomous-agent
+platform, art-directed as a **lab oscilloscope**: carbon canvas, one rationed
+electric **signal-green**, and a **modern WebGL nerve you fly through as you scroll**.
 
-Still **zero build step** — plain HTML/CSS/JS. Animation + 3D libraries load from
-CDN (GSAP, ScrollTrigger, Lenis, and Three.js via import-map).
+**Zero build step** — plain HTML/CSS/JS. Libraries load from CDN (GSAP, ScrollTrigger,
+Lenis, and Three.js r160 + addons via import-map).
 
 ```
 axon-site/
-├── index.html    # structure + copy + all sections
-├── styles.css    # instrument design system, layout, responsive, reduced-motion
-├── main.js       # boot, smooth scroll, probe cursor, scroll story, trace, counters
-├── neural3d.js   # Three.js scroll-driven nerve flythrough (ES module)
-└── README.md
+├── index.html      # structure, copy, meta/OG/JSON-LD, import-map, noscript
+├── styles.css      # instrument design system, layout, responsive, reduced-motion
+├── main.js         # boot, smooth scroll, probe cursor, reveals, trace, counters, form
+├── neural3d.js     # Three.js HDR nerve flythrough (ES module)
+├── og.png          # 1200×630 social card (rendered)
+├── robots.txt · sitemap.xml
+└── scripts/        # dev-only: og-card.html + qa-shots.mjs (CDP screenshot harness)
 ```
 
 ## The craft
 
-- **3D nerve flythrough** — a branching WebGL axon descends the whole page; the
-  camera rides alongside a glowing signal impulse racing ahead, and synapse nodes
-  fire signal-green as the pulse passes. Driven by scroll progress.
-- **Two-beat power-on** boot + **decode** headline (scramble → resolve).
-- **Probe cursor** — a drawn crosshair with a live x/y + state HUD, magnetic to buttons.
-- **SIG margin rail** with a scroll-progress "nerve" line and live section index.
+- **Modern WebGL nerve** — an `EffectComposer` HDR pipeline: 24k vertex-shader-animated
+  particles form a flowing sheath, a glowing filament of current carries a travelling
+  signal band, synapse nodes fire as the impulse passes → **UnrealBloom → ACES tone-map
+  → filmic grade (chromatic aberration + vignette + grain) → SMAA**, crisp at capped DPR.
+  The camera rides down the nerve on scroll.
+- **Two-beat power-on** boot + **decode** headline (scramble → resolve, non-breaking words).
+- **Probe cursor** — drawn crosshair with a live x/y + state HUD, magnetic to buttons.
+- **SIG margin rail** with a scroll-progress "nerve" line + live section index.
 - **Pinned horizontal** CONNECT → REASON → ACT → OBSERVE section.
-- **Sticky-stacking** instrument slabs, a **monospace datasheet**, **weight-breathe**
-  headings, line-mask reveals, tabular counters, velocity marquee, live reasoning trace.
-- Fully **responsive**, honors **`prefers-reduced-motion`**, and degrades gracefully:
-  no WebGL / small screen / reduced-motion → a static gradient stands in for the 3D.
+- **Sticky-stacking** slabs, **monospace datasheet**, line-mask title reveals, weight-breathe
+  headings, tabular counters, velocity marquee, live reasoning trace, inline form success.
+- Fully **responsive**; honors **`prefers-reduced-motion`**; degrades gracefully —
+  no-WebGL / < 680px / reduced-motion → a static gradient replaces the 3D; no-JS shows content.
 
 ## Preview locally  (a server is required)
 
-The 3D uses ES modules + an import-map, so **open it over http, not `file://`**:
+The 3D uses ES modules + an import-map, so **open over http, not `file://`**:
 
 ```bash
 cd axon-site
@@ -42,40 +46,33 @@ python3 -m http.server 8080      # → http://localhost:8080
 
 ## Deploy — pick one (all free, all work as-is)
 
-### Netlify (drag & drop — easiest)
-1. Go to <https://app.netlify.com/drop>
-2. Drag the whole `axon-site` folder on. Instant live URL.
+**Netlify (easiest):** drag the `axon-site` folder onto <https://app.netlify.com/drop>.
 
 ```bash
-# or CLI:
-npm i -g netlify-cli && cd axon-site && netlify deploy --prod
-```
-
-### Cloudflare Pages
-```bash
-npm i -g wrangler && cd axon-site && wrangler pages deploy . --project-name axon-site
-```
-
-### Vercel
-```bash
-npm i -g vercel && cd axon-site && vercel --prod
-```
-
-### GitHub Pages
-```bash
-cd axon-site && git init && git add . && git commit -m "AXON"
-gh repo create axon-site --public --source=. --push
-# repo → Settings → Pages → Deploy from branch → main / root
+# CLI equivalents:
+npx netlify-cli deploy --prod          # Netlify
+npx vercel --prod                      # Vercel
+npx wrangler pages deploy .            # Cloudflare Pages
+# GitHub Pages: push repo → Settings → Pages → deploy from main / root
 ```
 
 ## Customize
 
 - **Palette / type / spacing:** the `:root` block in `styles.css` (all design tokens).
-- **Copy:** all text is in `index.html`.
-- **3D nerve:** tune `SPAN`, `BRANCHES`, particle count, fog density, and the
-  camera offset in `neural3d.js`. Swap the Three.js version in the import-map in `<head>`.
-- **Reasoning trace / datasheet rows:** edit the arrays/markup in `main.js` / `index.html`.
-- **Social preview:** drop an `og.png` (1200×630) in the folder — it's already referenced.
+- **Page color:** `html`/`body` gradient + `.nerve-scrim` in `styles.css`; 3D clear color in `neural3d.js`.
+- **3D nerve:** tune `N_POINTS`, bloom (`0.5, 0.7, 0.9`), exposure, fade `uNear/uFar`, grain in `neural3d.js`.
+- **Copy:** all text is in `index.html`. **Trace / datasheet:** arrays/markup in `main.js` / `index.html`.
+- **Regenerate OG:** `scripts/og-card.html` → screenshot at 1200×630 (see commit history / qa harness).
+
+## Dev tooling (optional, not needed to run the site)
+
+`scripts/qa-shots.mjs` drives headless Chrome over the DevTools Protocol to screenshot
+every section at any viewport — handy for visual regression:
+
+```bash
+node scripts/qa-shots.mjs 1440 900   # desktop → /tmp/axon-qa/
+node scripts/qa-shots.mjs 390 844    # mobile
+```
 
 ---
 Made with intent.
