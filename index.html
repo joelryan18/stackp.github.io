@@ -24,6 +24,11 @@
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="./styles.css" />
+  <noscript><style>
+    body::before { display: none !important; }        /* never trap behind the boot veil */
+    body.anim [data-reveal] { opacity: 1 !important; transform: none !important; }
+    .nerve, .nerve-scrim, .probe { display: none !important; }
+  </style></noscript>
 
   <!-- Three.js (no build) -->
   <script type="importmap">
@@ -374,7 +379,7 @@
       <p class="eyebrow" data-reveal>[ SIG.08 · START ]</p>
       <h2 class="engage__title" data-decode data-weight>Give your software<br>a mind of its own.</h2>
       <p class="engage__sub" data-reveal>Deploy your first agent in under five minutes. No credit card.</p>
-      <form class="engage__form" data-reveal onsubmit="return false;">
+      <form class="engage__form" data-reveal>
         <input type="email" placeholder="you@company.com" aria-label="Email address" required />
         <button type="submit" class="btn btn--signal" data-magnet data-probe="DEPLOY">Request access</button>
       </form>
@@ -420,4 +425,3 @@
   <script type="module" src="./neural3d.js"></script>
 </body>
 </html>
-
