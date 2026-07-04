@@ -226,9 +226,19 @@ body:not(.has-probe) .probe { display: none; }
   color: var(--text); position: relative; will-change: transform;
   transition: transform .5s var(--ease), border-color .35s var(--ease), background .35s var(--ease), color .35s var(--ease);
 }
+.btn::after { /* click pulse ring */
+  content: ""; position: absolute; inset: -3px; border-radius: 6px;
+  border: 1px solid var(--signal); opacity: 0; pointer-events: none;
+}
+.btn.is-pulse::after { animation: btnpulse .45s var(--ease); }
+@keyframes btnpulse { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.14); } }
+.btn:active { transform: translateY(1px) scale(.985); transition-duration: .08s; }
+.btn[aria-busy="true"], .btn:disabled { opacity: .65; pointer-events: none; }
+.btn[aria-busy="true"] { position: relative; }
 .btn--signal { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); font-weight: 700; }
 .btn--signal:hover { box-shadow: var(--signal-glow); }
-.btn--ghost:hover { border-color: var(--signal); color: var(--signal); }
+.btn--signal:active { filter: brightness(.9); }
+.btn--ghost:hover { border-color: var(--signal); color: var(--signal); background: rgba(184,255,60,.05); }
 
 /* ============================================================
    SHARED SECTION
@@ -439,6 +449,39 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .footer__ping { font-family: var(--mono); font-size: .74rem; color: var(--faint); }
 .footer__word { font-family: var(--display); font-weight: 600; font-size: clamp(4.5rem, 26vw, 20rem); letter-spacing: -0.04em; line-height: .82; color: transparent; -webkit-text-stroke: 1px var(--line-strong); margin: 2.5rem 0 1.5rem; user-select: none; }
 .footer__base { border-top: 1px solid var(--line); padding-top: 1.4rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; font-size: .74rem; letter-spacing: .06em; color: var(--faint); }
+
+/* ============================================================
+   SUBPAGES (about / privacy / terms / contact)
+   ============================================================ */
+.page main { padding-left: 0; max-width: 860px; margin: 0 auto; padding: 8.5rem var(--pad) 4rem; }
+.doc h1 { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(2.2rem, 6vw, 3.8rem); margin: 0.6rem 0 1rem; }
+.doc .updated { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; color: var(--faint); text-transform: uppercase; }
+.doc h2 { font-family: var(--display); font-weight: 600; font-size: 1.35rem; letter-spacing: -0.01em; margin: 2.4rem 0 .7rem; }
+.doc p, .doc li { color: var(--text-dim); max-width: 68ch; }
+.doc p + p { margin-top: .8rem; }
+.doc ul { list-style: none; margin: .6rem 0 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.doc li { padding-left: 1.3rem; position: relative; }
+.doc li::before { content: "▸"; position: absolute; left: 0; color: var(--signal); font-size: .8rem; }
+.doc a { color: var(--signal); border-bottom: 1px solid rgba(184,255,60,.3); }
+.doc a:hover { border-bottom-color: var(--signal); }
+.doc .doc__card { border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); padding: 1.4rem 1.6rem; margin: 1.2rem 0; }
+.page .footer { padding-left: var(--pad); }
+
+/* ============================================================
+   COOKIE CONSENT
+   ============================================================ */
+.consent {
+  position: fixed; left: 50%; bottom: 1.2rem; translate: -50% 0; z-index: 450;
+  width: min(720px, calc(100vw - 2rem));
+  display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+  background: var(--surface-glass); backdrop-filter: blur(14px);
+  border: 1px solid var(--line-strong); border-radius: 12px; padding: 1rem 1.2rem;
+  box-shadow: 0 30px 60px -30px #000;
+}
+.consent p { font-family: var(--mono); font-size: .76rem; line-height: 1.6; color: var(--text-dim); flex: 1; min-width: 240px; }
+.consent p a { color: var(--signal); }
+.consent__acts { display: flex; gap: .6rem; }
+.consent .btn { padding: .6rem 1rem; font-size: .74rem; }
 
 /* ============================================================
    RESPONSIVE

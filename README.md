@@ -10,13 +10,28 @@ Lenis, and Three.js r160 + addons via import-map).
 ```
 axon-site/
 ├── index.html      # structure, copy, meta/OG/JSON-LD, import-map, noscript
+├── about.html · contact.html · privacy.html · terms.html   # content/legal pages
 ├── styles.css      # instrument design system, layout, responsive, reduced-motion
 ├── main.js         # boot, smooth scroll, probe cursor, reveals, trace, counters, form
+├── consent.js      # cookie-consent banner (GDPR/CCPA, required for ads)
 ├── neural3d.js     # Three.js HDR nerve flythrough (ES module)
 ├── og.png          # 1200×630 social card (rendered)
 ├── robots.txt · sitemap.xml
 └── scripts/        # dev-only: og-card.html + qa-shots.mjs (CDP screenshot harness)
 ```
+
+## Google AdSense readiness
+
+The site ships with everything reviewers check: **Privacy Policy** (with AdSense/DoubleClick
+cookie disclosures + opt-out links), **Terms**, **About**, **Contact**, a **cookie-consent
+banner**, zero dead links, canonical + og:url, robots.txt and a 5-page sitemap.
+
+To activate ads after approval:
+1. Replace every `stackwith.me` URL with your real domain (index + 4 pages + sitemap + robots).
+2. Paste your AdSense `<script async …adsbygoogle.js?client=ca-pub-…>` snippet where the
+   comment in `index.html`'s `<head>` marks it.
+3. Add your `ads.txt` (e.g. `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`)
+   at the site root.
 
 ## The craft
 

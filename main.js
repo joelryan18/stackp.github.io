@@ -499,17 +499,37 @@
   --------------------------------------------------------- */
   const form = $(".engage__form");
   if (form) {
+    let sending = false;
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+      if (sending) return;
       const input = form.querySelector("input");
       if (input && !input.checkValidity()) { input.reportValidity(); return; }
-      const email = input ? input.value : "";
-      form.innerHTML =
-        '<p class="engage__ok" role="status">' +
-        '<span class="live-dot"></span> Signal received — access request queued for <b>' +
-        (email.replace(/[<>&"]/g, "") || "you") + "</b>. Check your inbox.</p>";
+      sending = true;
+      const btn = form.querySelector("button");
+      if (btn) { btn.setAttribute("aria-busy", "true"); btn.textContent = "TRANSMITTING…"; }
+      const email = input ? input.value.trim() : "";
+      setTimeout(() => {
+        // success node built via DOM APIs — email rendered as textContent (no injection path)
+        const p = document.createElement("p");
+        p.className = "engage__ok"; p.setAttribute("role", "status");
+        const dot = document.createElement("span"); dot.className = "live-dot";
+        const b = document.createElement("b"); b.textContent = email || "you";
+        p.append(dot, " Signal received — access queued for ", b, ". Check your inbox.");
+        form.replaceChildren(p);
+      }, 650);
     });
   }
+
+  // click pulse ring on every button (CSS-driven, reduced-motion safe)
+  $$(".btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      b.classList.remove("is-pulse");
+      void b.offsetWidth;               // restart the animation
+      b.classList.add("is-pulse");
+    });
+    b.addEventListener("animationend", () => b.classList.remove("is-pulse"));
+  });
 
   /* ---------------------------------------------------------
      16 · refresh ScrollTrigger once fonts settle (pin accuracy)
