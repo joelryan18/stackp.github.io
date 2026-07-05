@@ -29,7 +29,7 @@ Captures the pre-migration look so later tasks can prove pixel-identity.
 
 **Files:** none created in repo (screenshots land in `/tmp`).
 
-- [ ] **Step 1: Serve the current (unmigrated) site**
+- [x] **Step 1: Serve the current (unmigrated) site**
 
 ```bash
 cd /Users/joel/Projects/axon-site
@@ -39,7 +39,7 @@ sleep 1 && curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/
 ```
 Expected: `200`
 
-- [ ] **Step 2: Capture desktop + mobile baselines**
+- [x] **Step 2: Capture desktop + mobile baselines**
 
 ```bash
 node scripts/qa-shots.mjs 1440 900
@@ -61,7 +61,7 @@ No commit (nothing changed).
 - Create: `package.json`, `.gitignore`
 - Produces: `npm ci`-able project; scripts `build`, `dev`, `smoke`, `qa` (wired in later tasks).
 
-- [ ] **Step 1: Write `package.json`**
+- [x] **Step 1: Write `package.json`**
 
 ```json
 {
@@ -89,7 +89,7 @@ No commit (nothing changed).
 }
 ```
 
-- [ ] **Step 2: Write `.gitignore`**
+- [x] **Step 2: Write `.gitignore`**
 
 ```
 node_modules/
@@ -98,14 +98,14 @@ dist-assets/
 .DS_Store
 ```
 
-- [ ] **Step 3: Install and verify**
+- [x] **Step 3: Install and verify**
 
 ```bash
 cd /Users/joel/Projects/axon-site && npm install && npx @11ty/eleventy --version
 ```
 Expected: prints a `3.x` version; `package-lock.json` created.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add package.json package-lock.json .gitignore

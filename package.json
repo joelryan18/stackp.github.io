@@ -1,0 +1,23 @@
+{
+  "name": "axon-site",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build-assets.mjs && eleventy",
+    "dev": "node scripts/build-assets.mjs && eleventy --serve",
+    "watch:assets": "node scripts/build-assets.mjs --watch",
+    "smoke": "node scripts/smoke.mjs",
+    "qa": "node scripts/qa-shots.mjs"
+  },
+  "dependencies": {
+    "@studio-freight/lenis": "1.0.42",
+    "gsap": "3.12.5",
+    "three": "0.160.0"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "esbuild": "^0.21.5",
+    "html-minifier-terser": "^7.2.0"
+  }
+}
