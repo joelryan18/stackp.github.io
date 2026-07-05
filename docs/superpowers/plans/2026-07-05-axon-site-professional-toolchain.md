@@ -421,7 +421,7 @@ git commit -m "feat: self-host Inter, JetBrains Mono, Clash Display (woff2 + lic
 - Consumes: `assets.*` manifest (Task 4), font files (Task 5).
 - Produces: page front matter contract: `layout`, `title`, `description`, `permalink`, `navCurrent` (subpages only). `site.url`/`site.name` from `src/_data/site.js`.
 
-- [ ] **Step 1: Write `src/_data/site.js`**
+- [x] **Step 1: Write `src/_data/site.js`**
 
 ```js
 export default {
@@ -431,7 +431,7 @@ export default {
 };
 ```
 
-- [ ] **Step 2: Write `src/_includes/layouts/base.njk`**
+- [x] **Step 2: Write `src/_includes/layouts/base.njk`**
 
 ```njk
 <!DOCTYPE html>
@@ -477,7 +477,7 @@ export default {
 ```
 NOTE: `page.url` for `permalink: "about.html"` renders `/about.html` — exactly the live canonical. For index it is `/`.
 
-- [ ] **Step 3: Write `src/_includes/layouts/home.njk`**
+- [x] **Step 3: Write `src/_includes/layouts/home.njk`**
 
 Front matter chains to base; body is everything from current `src/index.html` between `<body class="booting">` and `</body>` EXCEPT the `<main id="main">…</main>` inner content (replaced by `{{ content | safe }}`) and the `<!-- Libraries -->` script block (replaced by bundle references). Copy the markup verbatim from the current file — skip link, `canvas.nerve`, `.nerve-scrim`, `.probe`, `.rail`, `header.nav` (with Platform/Process/Pricing links, readout, burger), `.menu`, footer. End with:
 
@@ -512,7 +512,7 @@ IMPORTANT: Eleventy layout chaining does not support njk `{% block %}` across la
 
 DELETED for good in this step (do not carry into layouts): the Google Fonts / Fontshare `<link>`s and their 4 preconnects, the three.js import-map `<script>`, the GSAP/ScrollTrigger/Lenis CDN `<script>`s, and the static `adsbygoogle.js` `<script>` (consent.js takes over in Task 8; ads are OFF between Task 6 and Task 8 — fail-closed is intended).
 
-- [ ] **Step 4: Write `src/_includes/layouts/page.njk`**
+- [x] **Step 4: Write `src/_includes/layouts/page.njk`**
 
 ```njk
 ---
@@ -554,7 +554,7 @@ bodyClass: no3d page
 ```
 (Relative `./x.html` links become root-absolute `/x.html` — same URLs on this single-level site, and they now also work if a page is ever served from a subpath context like the blog.)
 
-- [ ] **Step 5: Convert the five pages**
+- [x] **Step 5: Convert the five pages**
 
 For each page: front matter gains `layout`, `title`, `description`, `navCurrent` (subpages); everything outside the `<main>` inner content is deleted (the layout now provides it). The `<main>` inner content is preserved BYTE-FOR-BYTE. Example `src/about.html` front matter (YAML — quote strings containing `:` or `—`):
 
@@ -586,9 +586,9 @@ Titles/descriptions for the other pages — copy exactly from each current file'
 - privacy: `Privacy Policy — AXON` (verify against file) / current description / no navCurrent
 - terms: `Terms of Service — AXON` (verify against file) / current description / no navCurrent
 
-- [ ] **Step 6: Remove the TEMPORARY passthroughs from `eleventy.config.js`** (the four lines marked TEMPORARY in Task 3).
+- [x] **Step 6: Remove the TEMPORARY passthroughs from `eleventy.config.js`** (the four lines marked TEMPORARY in Task 3).
 
-- [ ] **Step 7: Build and verify**
+- [x] **Step 7: Build and verify**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy
@@ -604,7 +604,7 @@ grep -c "The nervous system" _site/index.html && grep -c "stage__no" _site/index
 ```
 Expected: forbidden-origin grep exits `1` (no matches outside blog/ and 404.html, which are out of scope and keep their original heads); og:image is `https://stackwith.me/og.png` on all 5; 4 hashed asset refs on index; content greps ≥ 1.
 
-- [ ] **Step 8: Visual check against baseline**
+- [x] **Step 8: Visual check against baseline**
 
 ```bash
 python3 -m http.server 8080 -d _site & echo $! > /tmp/axon-serve.pid
@@ -612,7 +612,7 @@ node scripts/qa-shots.mjs 1440 900 && kill $(cat /tmp/axon-serve.pid)
 ```
 Expected: screenshots match `/tmp/axon-qa-baseline-desktop`. Fonts must render identically (self-hosted now). `ERRORS` may list `gsap is not defined`-style failures — main.js still expects CDN globals until Task 9; if 3D/animations are broken in shots, that's the known intermediate state ONLY IF errors reference gsap/Lenis. Note it and proceed (Task 9 fixes); anything else, stop and fix.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add -A

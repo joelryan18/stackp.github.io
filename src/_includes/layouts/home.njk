@@ -1,0 +1,103 @@
+---
+layout: layouts/base.njk
+bodyClass: booting
+---
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ░░ 3D NERVE — scroll-driven flythrough ░░ -->
+  <canvas class="nerve" id="nerve" aria-hidden="true"></canvas>
+  <div class="nerve-scrim" aria-hidden="true"></div>
+
+  <!-- ░░ PROBE (custom crosshair cursor) ░░ -->
+  <div class="probe" aria-hidden="true">
+    <span class="probe__ring"></span>
+    <span class="probe__x"></span>
+    <span class="probe__y"></span>
+    <span class="probe__hud"><em class="probe__coord">x000 y000</em><em class="probe__state">IDLE</em></span>
+  </div>
+
+  <!-- ░░ MARGIN RAIL — signal index + scroll-progress nerve ░░ -->
+  <aside class="rail" aria-hidden="true">
+    <svg class="rail__nerve" viewBox="0 0 4 100" preserveAspectRatio="none">
+      <line x1="2" y1="0" x2="2" y2="100" class="rail__track" />
+      <line x1="2" y1="0" x2="2" y2="100" class="rail__pulse" id="railPulse" />
+    </svg>
+    <ol class="rail__marks" id="railMarks">
+      <li class="rail__mark is-active" data-target="hero"><b>SIG.00</b><span>HERO</span></li>
+      <li class="rail__mark" data-target="datasheet"><b>SIG.01</b><span>SPEC</span></li>
+      <li class="rail__mark" data-target="pipeline"><b>SIG.02</b><span>PROC</span></li>
+      <li class="rail__mark" data-target="slabs"><b>SIG.03</b><span>CORE</span></li>
+      <li class="rail__mark" data-target="readouts"><b>SIG.04</b><span>STAT</span></li>
+      <li class="rail__mark" data-target="trace"><b>SIG.05</b><span>TRACE</span></li>
+      <li class="rail__mark" data-target="voices"><b>SIG.06</b><span>TRUST</span></li>
+      <li class="rail__mark" data-target="plans"><b>SIG.07</b><span>PLANS</span></li>
+      <li class="rail__mark" data-target="engage"><b>SIG.08</b><span>START</span></li>
+    </ol>
+  </aside>
+
+  <!-- ░░ NAV ░░ -->
+  <header class="nav" id="nav">
+    <a href="#hero" class="nav__brand" data-magnet aria-label="AXON home">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <span class="nav__word">AXON</span>
+      <span class="nav__dot"></span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#datasheet" data-index="01">Platform</a>
+      <a href="#pipeline" data-index="02">Process</a>
+      <a href="#plans" data-index="03">Pricing</a>
+    </nav>
+    <div class="nav__right">
+      <span class="nav__readout" aria-hidden="true">[ <b id="throughput">3.61k</b> RUNS/MIN ]</span>
+      <a href="#engage" class="btn btn--signal" data-magnet data-probe="DEPLOY">Get access</a>
+    </div>
+    <button class="nav__burger" id="burger" aria-label="Open menu" aria-expanded="false"><span></span><span></span></button>
+  </header>
+
+  <div class="menu" id="menu" aria-hidden="true">
+    <a href="#datasheet"><i>01</i> Platform</a>
+    <a href="#pipeline"><i>02</i> Process</a>
+    <a href="#plans"><i>03</i> Pricing</a>
+    <a href="#engage" class="menu__cta">Get access →</a>
+  </div>
+
+  <main id="main">
+{{ content | safe }}
+  </main>
+
+  <!-- ░░ FOOTER ░░ -->
+  <footer class="footer">
+    <div class="footer__top">
+      <div class="footer__cols">
+        <div>
+          <h4>[ PRODUCT ]</h4>
+          <a href="#datasheet">Platform</a><a href="#plans">Pricing</a><a href="#pipeline">Process</a>
+        </div>
+        <div>
+          <h4>[ COMPANY ]</h4>
+          <a href="./about.html">About</a><a href="./contact.html">Contact</a>
+        </div>
+        <div>
+          <h4>[ LEGAL ]</h4>
+          <a href="./privacy.html">Privacy Policy</a><a href="./terms.html">Terms of Service</a>
+        </div>
+        <div class="footer__status">
+          <h4>[ STATUS ]</h4>
+          <span class="footer__live"><i></i> All systems firing</span>
+          <span class="footer__ping">99.98% · 38ms</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer__word" data-marquee-word aria-hidden="true">AXON</div>
+    <div class="footer__base">
+      <span>© <span id="year"></span> AXON</span>
+      <span>The nervous system for your software.</span>
+      <span>MADE&nbsp;WITH&nbsp;INTENT</span>
+    </div>
+  </footer>
+
+  <script src="{{ assets.main }}" defer></script>
+  <script src="{{ assets.consent }}" defer></script>
+  <script type="module" src="{{ assets.neural3d }}"></script>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+
+  <link rel="canonical" href="{{ site.url }}{{ page.url }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="{{ site.url }}{{ page.url }}" />
+  <meta property="og:title" content="{{ ogTitle or title }}" />
+  <meta property="og:description" content="{{ description }}" />
+  <meta property="og:image" content="{{ site.url }}{{ site.ogImage }}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#07080A" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2307080A'/%3E%3Cpath d='M4 16h6l3-8 6 16 3-8h6' fill='none' stroke='%23B8FF3C' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <link rel="preload" href="/assets/fonts/ClashDisplay-500.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/Inter-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/JetBrainsMono-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="{{ assets.styles }}" />
+  <noscript><style>
+    body::before { display: none !important; }        /* never trap behind the boot veil */
+    body.anim [data-reveal] { opacity: 1 !important; transform: none !important; }
+    .nerve, .nerve-scrim, .probe { display: none !important; }
+  </style></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "AXON",
+    "url": "{{ site.url }}",
+    "description": "Autonomous AI agent instrument for software teams.",
+    "logo": "{{ site.url }}{{ site.ogImage }}"
+  }
+  </script>
+</head>
+<body class="{{ bodyClass }}">
+{{ content | safe }}
+</body>
+</html>
