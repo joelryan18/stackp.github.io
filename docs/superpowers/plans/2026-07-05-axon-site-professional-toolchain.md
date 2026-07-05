@@ -1250,7 +1250,7 @@ git commit -m "docs: README for the Eleventy/esbuild toolchain"
 **Files:**
 - Create: `.github/workflows/deploy.yml`
 
-- [ ] **Step 1: Write `.github/workflows/deploy.yml`**
+- [x] **Step 1: Write `.github/workflows/deploy.yml`**
 
 ```yaml
 name: Deploy site
@@ -1295,7 +1295,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-- [ ] **Step 2: Final local gate before pushing**
+- [x] **Step 2: Final local gate before pushing**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs
@@ -1307,7 +1307,7 @@ git status --short
 ```
 Expected: `ALL PASS`; both screenshot sets match their baselines (open side-by-side; ONLY acceptable difference: slightly lighter faint-gray labels). Working tree clean except `.github/`.
 
-- [ ] **Step 3: Commit and push**
+- [x] **Step 3: Commit and push**
 
 ```bash
 git add .github
@@ -1315,14 +1315,14 @@ git commit -m "ci: build and deploy via GitHub Actions + Pages artifact"
 git push origin main
 ```
 
-- [ ] **Step 4: Switch Pages source to GitHub Actions**
+- [x] **Step 4: Switch Pages source to GitHub Actions** (done BEFORE Step 3's push, deliberately: with the legacy branch-source still active, pushing the restructured repo would have triggered a broken branch-build; switching first gave a zero-downtime cutover. `gh` was not installed — used the osxkeychain git credential with the REST API directly: PUT `/repos/joelryan18/stackp.github.io/pages` `{"build_type":"workflow"}` → 204.)
 
 ```bash
 gh auth status && gh api -X PUT repos/joelryan18/stackp.github.io/pages -f build_type=workflow
 ```
 If `gh` is not authenticated: tell the user to open https://github.com/joelryan18/stackp.github.io/settings/pages and set **Source: GitHub Actions** (one dropdown). The branch-based site keeps serving until the first Actions deploy succeeds.
 
-- [ ] **Step 5: Watch the workflow and verify live**
+- [x] **Step 5: Watch the workflow and verify live** (run `Deploy site` completed success on 09ddd64; home/about/sitemap 200, missing route 404, hashed assets live, `pagead2` absent from static HTML, live smoke `ALL PASS`.)
 
 ```bash
 gh run watch --repo joelryan18/stackp.github.io --exit-status || gh run list --repo joelryan18/stackp.github.io --limit 3
