@@ -1176,7 +1176,7 @@ git commit -m "build: conservative HTML minification transform"
 **Files:**
 - Modify: `README.md` (full replacement)
 
-- [ ] **Step 1: Replace README.md with:**
+- [x] **Step 1: Replace README.md with:**
 
 ```markdown
 # AXON — "Signal Instrument"
@@ -1236,7 +1236,7 @@ While empty, the form shows an honest inline confirmation and sends nothing.
 Made with intent.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add README.md

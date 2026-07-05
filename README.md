@@ -1,93 +1,55 @@
 # AXON — "Signal Instrument"
 
-An award-caliber, non-templated landing page for a fictional autonomous-agent
-platform, art-directed as a **lab oscilloscope**: carbon canvas, one rationed
-electric **signal-green**, and a **modern WebGL nerve you fly through as you scroll**.
+Landing site for AXON, art-directed as a lab oscilloscope: carbon canvas, one rationed
+electric signal-green, and a WebGL nerve you fly through as you scroll.
+Live at **https://stackwith.me** (GitHub Pages, custom domain).
 
-**Zero build step** — plain HTML/CSS/JS. Libraries load from CDN (GSAP, ScrollTrigger,
-Lenis, and Three.js r160 + addons via import-map).
+## Stack
 
-```
-axon-site/
-├── index.html      # structure, copy, meta/OG/JSON-LD, import-map, noscript
-├── about.html · contact.html · privacy.html · terms.html   # content/legal pages
-├── styles.css      # instrument design system, layout, responsive, reduced-motion
-├── main.js         # boot, smooth scroll, probe cursor, reveals, trace, counters, form
-├── consent.js      # cookie-consent banner (GDPR/CCPA, required for ads)
-├── neural3d.js     # Three.js HDR nerve flythrough (ES module)
-├── og.png          # 1200×630 social card (rendered)
-├── robots.txt · sitemap.xml
-└── scripts/        # dev-only: og-card.html + qa-shots.mjs (CDP screenshot harness)
-```
+- **Eleventy 3** (Nunjucks layouts in `src/_includes/`) renders 5 pages from shared shells.
+- **esbuild** bundles `main.js` (gsap + lenis), `consent.js`, `neural3d.js` (three.js) and
+  `styles.css` with content-hashed filenames; `scripts/build-assets.mjs` writes the manifest
+  Eleventy templates read (`src/_data/assets.json`).
+- **Self-hosted fonts** (`src/assets/fonts/` — Inter, JetBrains Mono, Clash Display; see
+  LICENSES.md there). Zero third-party origins at load time.
+- **Deploy:** push to `main` → GitHub Actions builds `_site/` → `actions/deploy-pages`.
 
-## Google AdSense readiness
-
-The site ships with everything reviewers check: **Privacy Policy** (with AdSense/DoubleClick
-cookie disclosures + opt-out links), **Terms**, **About**, **Contact**, a **cookie-consent
-banner**, zero dead links, canonical + og:url, robots.txt and a 5-page sitemap.
-
-To activate ads after approval:
-1. Replace every `stackwith.me` URL with your real domain (index + 4 pages + sitemap + robots).
-2. Paste your AdSense `<script async …adsbygoogle.js?client=ca-pub-…>` snippet where the
-   comment in `index.html`'s `<head>` marks it.
-3. Add your `ads.txt` (e.g. `google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0`)
-   at the site root.
-
-## The craft
-
-- **Modern WebGL nerve** — an `EffectComposer` HDR pipeline: 24k vertex-shader-animated
-  particles form a flowing sheath, a glowing filament of current carries a travelling
-  signal band, synapse nodes fire as the impulse passes → **UnrealBloom → ACES tone-map
-  → filmic grade (chromatic aberration + vignette + grain) → SMAA**, crisp at capped DPR.
-  The camera rides down the nerve on scroll.
-- **Two-beat power-on** boot + **decode** headline (scramble → resolve, non-breaking words).
-- **Probe cursor** — drawn crosshair with a live x/y + state HUD, magnetic to buttons.
-- **SIG margin rail** with a scroll-progress "nerve" line + live section index.
-- **Pinned horizontal** CONNECT → REASON → ACT → OBSERVE section.
-- **Sticky-stacking** slabs, **monospace datasheet**, line-mask title reveals, weight-breathe
-  headings, tabular counters, velocity marquee, live reasoning trace, inline form success.
-- Fully **responsive**; honors **`prefers-reduced-motion`**; degrades gracefully —
-  no-WebGL / < 680px / reduced-motion → a static gradient replaces the 3D; no-JS shows content.
-
-## Preview locally  (a server is required)
-
-The 3D uses ES modules + an import-map, so **open over http, not `file://`**:
+## Develop
 
 ```bash
-cd axon-site
-python3 -m http.server 8080      # → http://localhost:8080
-# or: npx serve .
+npm install
+npm run dev            # build assets once + eleventy --serve on :8080
+npm run watch:assets   # (second terminal) rebuild bundles on JS/CSS change
+npm run build          # production build → _site/
 ```
 
-## Deploy — pick one (all free, all work as-is)
-
-**Netlify (easiest):** drag the `axon-site` folder onto <https://app.netlify.com/drop>.
+## Test
 
 ```bash
-# CLI equivalents:
-npx netlify-cli deploy --prod          # Netlify
-npx vercel --prod                      # Vercel
-npx wrangler pages deploy .            # Cloudflare Pages
-# GitHub Pages: push repo → Settings → Pages → deploy from main / root
+npm run build && npm run smoke   # CDP smoke tests: pages, consent gating, menu a11y, form
+python3 -m http.server 8080 -d _site &
+npm run qa                        # scrolling screenshots → /tmp/axon-qa (also: npm run qa -- 390 844)
 ```
 
-## Customize
+## Consent architecture
 
-- **Palette / type / spacing:** the `:root` block in `styles.css` (all design tokens).
-- **Page color:** `html`/`body` gradient + `.nerve-scrim` in `styles.css`; 3D clear color in `neural3d.js`.
-- **3D nerve:** tune `N_POINTS`, bloom (`0.5, 0.7, 0.9`), exposure, fade `uNear/uFar`, grain in `neural3d.js`.
-- **Copy:** all text is in `index.html`. **Trace / datasheet:** arrays/markup in `main.js` / `index.html`.
-- **Regenerate OG:** `scripts/og-card.html` → screenshot at 1200×630 (see commit history / qa harness).
+`consent.js` shows the cookie banner on first visit. The Google AdSense script is injected
+**only** after "Accept all" (or a stored `all` choice). "Essential only" never loads it.
+This is consent-gating, not a full IAB TCF CMP — if you need TCF strings for EEA
+personalized ads, wire a certified CMP and keep `loadAds()` as the post-consent hook.
+Stored under `localStorage["axon-consent"]` (`all` | `essential`).
 
-## Dev tooling (optional, not needed to run the site)
+## Access form
 
-`scripts/qa-shots.mjs` drives headless Chrome over the DevTools Protocol to screenshot
-every section at any viewport — handy for visual regression:
+`src/assets/js/main.js` → `FORM_ENDPOINT`. Create a free form at https://formspree.io,
+paste the endpoint (e.g. `https://formspree.io/f/abcdwxyz`) into the constant, rebuild.
+While empty, the form shows an honest inline confirmation and sends nothing.
 
-```bash
-node scripts/qa-shots.mjs 1440 900   # desktop → /tmp/axon-qa/
-node scripts/qa-shots.mjs 390 844    # mobile
-```
+## Editing
 
----
+- Design tokens: `:root` in `src/assets/css/styles.css`.
+- Copy: page front matter + `<main>` content in `src/*.html`; shared shells in `src/_includes/`.
+- 3D nerve tuning: `N_POINTS`, bloom, exposure, `uNear/uFar` in `src/assets/js/neural3d.js`.
+- `src/blog/` and `src/404.html` are copied verbatim (not templated).
+
 Made with intent.
