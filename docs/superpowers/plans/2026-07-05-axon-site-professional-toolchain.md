@@ -796,7 +796,7 @@ git commit -m "test: CDP smoke harness for pages, consent gating, menu a11y, for
 **Files:**
 - Modify: `src/assets/js/consent.js` (full rewrite below)
 
-- [ ] **Step 1: Replace `src/assets/js/consent.js` entirely with:**
+- [x] **Step 1: Replace `src/assets/js/consent.js` entirely with:**
 
 ```js
 /* AXON — consent.js · cookie-consent banner + consent-gated AdSense loader
@@ -857,14 +857,14 @@ git commit -m "test: CDP smoke harness for pages, consent gating, menu a11y, for
 })();
 ```
 
-- [ ] **Step 2: Rebuild + smoke**
+- [x] **Step 2: Rebuild + smoke**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs 2>&1 | grep -E "ads|essential|accept|consent"
 ```
 Expected: ALL consent-section checks PASS (`essential → no ads script`, `accept → ads script injected`, persistence both ways).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/assets/js/consent.js src/_data/assets.json

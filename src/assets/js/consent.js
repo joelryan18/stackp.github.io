@@ -1,9 +1,24 @@
-/* AXON — consent.js · lightweight cookie-consent banner (no dependencies)
-   Required for ad-supported pages (e.g. Google AdSense) in GDPR/CCPA regions. */
+/* AXON — consent.js · cookie-consent banner + consent-gated AdSense loader
+   The AdSense script is ONLY injected after explicit "Accept all" consent
+   (or a stored "all" choice from a previous visit). "Essential only" never
+   loads it. Not a full IAB TCF CMP — see README "Consent architecture". */
 (() => {
   "use strict";
+  const ADS_CLIENT = "ca-pub-7262404901375077";
+
+  const loadAds = () => {
+    if (document.getElementById("adsbygoogle-js")) return;
+    const s = document.createElement("script");
+    s.id = "adsbygoogle-js";
+    s.async = true;
+    s.crossOrigin = "anonymous";
+    s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=" + ADS_CLIENT;
+    document.head.appendChild(s);
+  };
+
   let stored = null;
   try { stored = localStorage.getItem("axon-consent"); } catch (e) { /* private mode */ }
+  if (stored === "all") loadAds();
   if (stored) return;
 
   const bar = document.createElement("aside");
@@ -27,6 +42,7 @@
     b.textContent = label;
     b.addEventListener("click", () => {
       try { localStorage.setItem("axon-consent", val); } catch (e) { /* ignore */ }
+      if (val === "all") loadAds();
       bar.remove();
     });
     return b;
