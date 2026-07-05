@@ -1015,11 +1015,11 @@ git commit -m "fix(a11y): mobile menu — visibility gating, Escape to close, fo
 **Files:**
 - Modify: `src/assets/js/main.js` (sections 11, 12, 15), `src/assets/css/styles.css` (`:root` + one new rule)
 
-- [ ] **Step 1: Contrast token**
+- [x] **Step 1: Contrast token**
 
 In `src/assets/css/styles.css` `:root`, change `--faint:     #565E6A;` → `--faint:     #78828E;` (≈5.1:1 on `--bg`, passes WCAG AA; verified with WCAG relative-luminance formula).
 
-- [ ] **Step 2: Error style for the form**
+- [x] **Step 2: Error style for the form**
 
 Add after the `.engage__ok` rule:
 
@@ -1027,7 +1027,7 @@ Add after the `.engage__ok` rule:
 .engage__err { font-family: var(--mono); font-size: .8rem; color: var(--warn); margin-top: .8rem; }
 ```
 
-- [ ] **Step 3: Replace form handler (section 15)**
+- [x] **Step 3: Replace form handler (section 15)**
 
 Replace the whole `const form = $(".engage__form"); if (form) { ... }` block with:
 
@@ -1076,7 +1076,7 @@ Replace the whole `const form = $(".engage__form"); if (form) { ... }` block wit
   }
 ```
 
-- [ ] **Step 4: Gate the marquee (section 12)**
+- [x] **Step 4: Gate the marquee (section 12)**
 
 Replace the whole `const mtrack = $("#marquee"); if (mtrack && !reduced) { ... }` block with:
 
@@ -1106,7 +1106,7 @@ Replace the whole `const mtrack = $("#marquee"); if (mtrack && !reduced) { ... }
   }
 ```
 
-- [ ] **Step 5: Gate the live counters (section 11)**
+- [x] **Step 5: Gate the live counters (section 11)**
 
 In the `if (!reduced) setInterval(() => { ... }, 2600);` block for `firing`/`throughput`, add as the first line of the callback:
 
@@ -1114,14 +1114,14 @@ In the `if (!reduced) setInterval(() => { ... }, 2600);` block for `firing`/`thr
     if (document.hidden) return;
 ```
 
-- [ ] **Step 6: Rebuild + smoke — everything green now**
+- [x] **Step 6: Rebuild + smoke — everything green now**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs
 ```
 Expected: `ALL PASS` (every check from Task 7's list flipped).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/assets/js/main.js src/assets/css/styles.css src/_data/assets.json

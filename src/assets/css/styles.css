@@ -26,7 +26,7 @@
   --text:      #F2F4F3;
   --text-dim:  #B7BEC6;
   --muted:     #7E8794;
-  --faint:     #565E6A;
+  --faint:     #78828E;
 
   /* ---- lines ---- */
   --line:        rgba(255, 255, 255, 0.07);
@@ -444,6 +444,7 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .engage__form input:focus { outline: none; border-color: var(--signal); }
 .engage__ok { font-family: var(--mono); font-size: .92rem; color: var(--text-dim); display: inline-flex; align-items: center; gap: .6rem; padding: .9rem 1.2rem; border: 1px solid rgba(184,255,60,.35); border-radius: 6px; background: rgba(184,255,60,.05); }
 .engage__ok b { color: var(--signal); font-weight: 500; }
+.engage__err { font-family: var(--mono); font-size: .8rem; color: var(--warn); margin-top: .8rem; }
 
 /* ============================================================
    FOOTER

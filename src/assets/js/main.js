@@ -335,6 +335,7 @@ import Lenis from "@studio-freight/lenis";
   // live drift on hero + nav
   const firing = $("#firing"), throughput = $("#throughput");
   if (!reduced) setInterval(() => {
+    if (document.hidden) return;
     if (firing) firing.textContent = (12041 + Math.floor(Math.sin(Date.now() / 9000) * 40 + Math.random() * 14)).toLocaleString();
     if (throughput) throughput.textContent = (3.55 + Math.random() * 0.12).toFixed(2) + "k";
   }, 2600);
@@ -345,15 +346,25 @@ import Lenis from "@studio-freight/lenis";
   const mtrack = $("#marquee");
   if (mtrack && !reduced) {
     mtrack.innerHTML += mtrack.innerHTML;
-    let off = 0, base = 0.4;
-    (function move() {
+    let off = 0, base = 0.4, marqueeOn = false, marqueeVisible = false;
+    const move = () => {
+      if (!marqueeOn) return;
       const v = lenis ? Math.min(6, Math.abs(lenis.velocity || 0) * 0.35) : 0;
       off -= base + v;
       const half = mtrack.scrollWidth / 2;
       if (-off >= half) off += half;
       mtrack.style.transform = `translateX(${off}px)`;
       requestAnimationFrame(move);
-    })();
+    };
+    const setRunning = () => {
+      const should = marqueeVisible && !document.hidden;
+      if (should && !marqueeOn) { marqueeOn = true; requestAnimationFrame(move); }
+      else if (!should) marqueeOn = false;
+    };
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([e]) => { marqueeVisible = e.isIntersecting; setRunning(); }, { threshold: 0 }).observe(mtrack);
+    } else { marqueeVisible = true; setRunning(); }
+    document.addEventListener("visibilitychange", setRunning);
   }
 
   /* ---------------------------------------------------------
@@ -433,10 +444,24 @@ import Lenis from "@studio-freight/lenis";
   /* ---------------------------------------------------------
      15 · access form — inline success state
   --------------------------------------------------------- */
+  const FORM_ENDPOINT = ""; // ← paste your Formspree endpoint here, e.g. "https://formspree.io/f/abcdwxyz" (see README)
   const form = $(".engage__form");
   if (form) {
     let sending = false;
-    form.addEventListener("submit", (e) => {
+    const showSuccess = (email) => {
+      const p = document.createElement("p");
+      p.className = "engage__ok"; p.setAttribute("role", "status");
+      const dot = document.createElement("span"); dot.className = "live-dot";
+      const b = document.createElement("b"); b.textContent = email || "you";
+      p.append(dot, " Signal received — ", b, " is on the list. We'll be in touch.");
+      form.replaceChildren(p);
+    };
+    const showError = () => {
+      let err = form.querySelector(".engage__err");
+      if (!err) { err = document.createElement("p"); err.className = "engage__err"; err.setAttribute("role", "alert"); form.appendChild(err); }
+      err.textContent = "Transmission failed — please retry, or email hello@stackwith.me.";
+    };
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (sending) return;
       const input = form.querySelector("input");
@@ -445,15 +470,20 @@ import Lenis from "@studio-freight/lenis";
       const btn = form.querySelector("button");
       if (btn) { btn.setAttribute("aria-busy", "true"); btn.textContent = "TRANSMITTING…"; }
       const email = input ? input.value.trim() : "";
-      setTimeout(() => {
-        // success node built via DOM APIs — email rendered as textContent (no injection path)
-        const p = document.createElement("p");
-        p.className = "engage__ok"; p.setAttribute("role", "status");
-        const dot = document.createElement("span"); dot.className = "live-dot";
-        const b = document.createElement("b"); b.textContent = email || "you";
-        p.append(dot, " Signal received — access queued for ", b, ". Check your inbox.");
-        form.replaceChildren(p);
-      }, 650);
+      if (!FORM_ENDPOINT) { setTimeout(() => showSuccess(email), 650); return; }
+      try {
+        const res = await fetch(FORM_ENDPOINT, {
+          method: "POST",
+          headers: { "Accept": "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        showSuccess(email);
+      } catch (err) {
+        sending = false;
+        if (btn) { btn.removeAttribute("aria-busy"); btn.textContent = "Request access"; }
+        showError();
+      }
     });
   }
 
