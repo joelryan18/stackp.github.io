@@ -1135,7 +1135,7 @@ git commit -m "fix: real form path w/ honest copy, idle-gated marquee/counters, 
 **Files:**
 - Modify: `eleventy.config.js`
 
-- [ ] **Step 1: Add the transform** (top of file: `import { minify } from "html-minifier-terser";`)
+- [x] **Step 1: Add the transform** (top of file: `import { minify } from "html-minifier-terser";`)
 
 ```js
   eleventyConfig.addTransform("htmlmin", async function (content) {
@@ -1153,7 +1153,7 @@ git commit -m "fix: real form path w/ honest copy, idle-gated marquee/counters, 
   });
 ```
 
-- [ ] **Step 2: Build + verify**
+- [x] **Step 2: Build + verify**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy
@@ -1162,7 +1162,7 @@ node scripts/smoke.mjs
 ```
 Expected: index.html noticeably smaller; decorative comments gone (grep exits 1); `ALL PASS` (conservativeCollapse preserves the single spaces that inline-block word/glyph layout depends on — if any smoke visual check regresses, drop `collapseWhitespace` rather than debugging spacing).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add eleventy.config.js

@@ -1,3 +1,5 @@
+import { minify } from "html-minifier-terser";
+
 export default function (eleventyConfig) {
   // hashed bundles (Task 4 populates dist-assets/)
   eleventyConfig.addPassthroughCopy({ "dist-assets": "assets" });
@@ -13,6 +15,20 @@ export default function (eleventyConfig) {
   // assets are bundled/passthrough-copied, never templated (LICENSES.md would
   // otherwise be rendered into a stray HTML page)
   eleventyConfig.ignores.add("src/assets/**");
+
+  eleventyConfig.addTransform("htmlmin", async function (content) {
+    if ((this.page.outputPath || "").endsWith(".html")) {
+      return minify(content, {
+        collapseWhitespace: true,
+        conservativeCollapse: true,
+        removeComments: true,
+        keepClosingSlash: true,
+        minifyJS: false,
+        minifyCSS: false,
+      });
+    }
+    return content;
+  });
 
   eleventyConfig.addWatchTarget("dist-assets");
 
