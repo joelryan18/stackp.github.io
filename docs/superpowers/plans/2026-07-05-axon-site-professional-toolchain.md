@@ -328,7 +328,7 @@ git commit -m "build: esbuild pipeline with content-hashed bundles and template 
 **Interfaces:**
 - Produces: font URLs `/assets/fonts/<Family>-<weight>.woff2` — exact names below are referenced by Task 6's preload tags. Families/weights: Inter 400/500/600, JetBrainsMono 400/500/700, ClashDisplay 500/600/700.
 
-- [ ] **Step 1: Download Inter + JetBrains Mono (google-webfonts-helper, latin subset)**
+- [x] **Step 1: Download Inter + JetBrains Mono (google-webfonts-helper, latin subset)**
 
 ```bash
 mkdir -p /tmp/axon-fonts src/assets/fonts
@@ -338,7 +338,7 @@ cd /tmp/axon-fonts && unzip -o inter.zip -d inter && unzip -o jbm.zip -d jbm && 
 ```
 Expected: six woff2 files (names like `inter-v*-latin-regular.woff2`). If gwfh is down, fallback: download the same variants from https://fonts.google.com via the CSS API (fetch `https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap` with a modern-Chrome User-Agent header, extract the latin-subset woff2 URLs, curl each).
 
-- [ ] **Step 2: Download Clash Display (Fontshare)**
+- [x] **Step 2: Download Clash Display (Fontshare)**
 
 ```bash
 curl -fsSL -o /tmp/axon-fonts/clash.zip "https://api.fontshare.com/v2/fonts/download/clash-display"
@@ -347,7 +347,7 @@ find /tmp/axon-fonts/clash -iname "*.woff2" | sort
 ```
 Expected: woff2 files including Medium/Semibold/Bold variants, plus a license file (`find /tmp/axon-fonts/clash -iname "*license*"`).
 
-- [ ] **Step 3: Normalize into the repo**
+- [x] **Step 3: Normalize into the repo**
 
 ```bash
 cd /Users/joel/Projects/axon-site
@@ -364,7 +364,7 @@ ls -la src/assets/fonts/
 ```
 Expected: 9 woff2 files, each > 10 KB. CAUTION: `find -iname '*Bold.woff2'` also matches `Semibold` — verify the ClashDisplay-700 copy came from a file literally named `ClashDisplay-Bold.woff2` (`find /tmp/axon-fonts/clash -iname '*-Bold.woff2'` — use that stricter pattern instead).
 
-- [ ] **Step 4: Write `src/assets/fonts/LICENSES.md`**
+- [x] **Step 4: Write `src/assets/fonts/LICENSES.md`**
 
 ```markdown
 # Font licenses
@@ -378,7 +378,7 @@ Also copy the license file from the Clash zip if present:
 cp "$(find /tmp/axon-fonts/clash -iname '*license*' | head -1)" src/assets/fonts/ClashDisplay-LICENSE.txt || true
 ```
 
-- [ ] **Step 5: Prepend @font-face block to `src/assets/css/styles.css`**
+- [x] **Step 5: Prepend @font-face block to `src/assets/css/styles.css`**
 
 Insert immediately after the opening banner comment (before `:root {`):
 
@@ -395,14 +395,14 @@ Insert immediately after the opening banner comment (before `:root {`):
 @font-face { font-family: "Clash Display"; src: url("/assets/fonts/ClashDisplay-700.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 ```
 
-- [ ] **Step 6: Build check**
+- [x] **Step 6: Build check**
 
 ```bash
 node scripts/build-assets.mjs && grep -c "@font-face" dist-assets/styles.*.css
 ```
 Expected: `9`.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/assets/fonts src/assets/css/styles.css src/_data/assets.json
