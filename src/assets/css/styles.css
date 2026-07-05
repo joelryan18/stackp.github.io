@@ -221,10 +221,10 @@ body:not(.has-probe) .probe { display: none; }
 .menu {
   position: fixed; inset: 0; z-index: 90; background: var(--bg);
   display: flex; flex-direction: column; justify-content: center; gap: 1rem; padding: var(--pad);
-  opacity: 0; pointer-events: none; transform: translateY(-10px);
-  transition: opacity .4s var(--ease), transform .4s var(--ease);
+  opacity: 0; pointer-events: none; transform: translateY(-10px); visibility: hidden;
+  transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s linear .4s;
 }
-.menu.is-open { opacity: 1; pointer-events: auto; transform: none; }
+.menu.is-open { opacity: 1; pointer-events: auto; transform: none; visibility: visible; transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s; }
 .menu a { font-family: var(--display); font-weight: 500; font-size: clamp(2rem, 9vw, 3rem); letter-spacing: -0.02em; display: flex; align-items: baseline; gap: 1rem; }
 .menu a i { font-family: var(--mono); font-size: .9rem; color: var(--signal); font-style: normal; }
 .menu__cta { color: var(--muted); }

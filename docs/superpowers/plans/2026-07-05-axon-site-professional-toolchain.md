@@ -945,7 +945,7 @@ git commit -m "refactor: bundle gsap/lenis via npm imports; remove dead oscillos
 **Files:**
 - Modify: `src/assets/css/styles.css` (`.menu` rule), `src/assets/js/main.js` (section 3)
 
-- [ ] **Step 1: CSS — make the closed menu truly hidden**
+- [x] **Step 1: CSS — make the closed menu truly hidden**
 
 Change the `.menu` rule (NAV section) from:
 
@@ -969,7 +969,7 @@ to:
 .menu.is-open { opacity: 1; pointer-events: auto; transform: none; visibility: visible; transition: opacity .4s var(--ease), transform .4s var(--ease), visibility 0s; }
 ```
 
-- [ ] **Step 2: JS — focus management + Escape**
+- [x] **Step 2: JS — focus management + Escape**
 
 Replace section 3's `toggleMenu` and add the Escape handler after `burger?.addEventListener("click", toggleMenu);`:
 
@@ -994,14 +994,14 @@ Replace section 3's `toggleMenu` and add the Escape handler after `burger?.addEv
 ```
 (`closeMenu` already exists and is also called by anchor clicks — leave it unchanged.)
 
-- [ ] **Step 3: Rebuild + smoke**
+- [x] **Step 3: Rebuild + smoke**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs 2>&1 | grep "mobile:"
 ```
 Expected: all five `mobile:` checks PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/assets/css/styles.css src/assets/js/main.js src/_data/assets.json

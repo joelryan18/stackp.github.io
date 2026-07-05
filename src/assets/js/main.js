@@ -81,6 +81,8 @@ import Lenis from "@studio-freight/lenis";
     burger.setAttribute("aria-expanded", String(open));
     menu.setAttribute("aria-hidden", String(!open));
     document.body.style.overflow = open ? "hidden" : "";
+    if (open) setTimeout(() => menu.querySelector("a")?.focus(), 50);
+    else burger.focus();
   }
   function closeMenu() {
     if (!menu) return;
@@ -89,6 +91,12 @@ import Lenis from "@studio-freight/lenis";
     document.body.style.overflow = "";
   }
   burger?.addEventListener("click", toggleMenu);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu?.classList.contains("is-open")) {
+      closeMenu();
+      burger.focus();
+    }
+  });
 
   /* ---------------------------------------------------------
      4 · PROBE — crosshair cursor + magnetic + HUD
