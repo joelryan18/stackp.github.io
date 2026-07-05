@@ -629,7 +629,7 @@ git commit -m "feat: Nunjucks layouts; self-hosted assets replace all CDN origin
 **Interfaces:**
 - Produces: `node scripts/smoke.mjs` — serves `_site/` on port 8123, drives headless Chrome, exits 0/1 with a PASS/FAIL list. Later tasks add no new files for testing; they extend `CHECKS` in this file.
 
-- [ ] **Step 1: Write `scripts/smoke.mjs`**
+- [x] **Step 1: Write `scripts/smoke.mjs`**
 
 ```js
 // Smoke tests: serve _site, drive headless Chrome over CDP, assert behavior.
@@ -773,19 +773,21 @@ console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);
 ```
 
-- [ ] **Step 2: Run — expect the KNOWN failures list**
+- [x] **Step 2: Run — expect the KNOWN failures list**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs
 ```
 Expected at this point (fixes land in Tasks 8–11): FAILs for `no adsense before consent`?? — NO: the static tag is already gone (Task 6), and consent.js doesn't inject yet, so ads checks PASS vacuously except `accept → ads script injected` FAILS; `lenis active`/`gsap` FAIL (main.js still expects CDN globals); `--faint token` FAILS; `closed menu hidden` FAILS; `focus` checks FAIL; `form honest` FAILS ("Check your inbox" copy). Every `no JS exceptions`, `title`, `canonical`, `og:image`, `consent banner shown` must PASS. Record the exact list — Tasks 8–11 must flip each to PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add scripts/smoke.mjs
 git commit -m "test: CDP smoke harness for pages, consent gating, menu a11y, form"
 ```
+
+> Recorded Task 7 baseline (12 known FAILs, all expected): `index lenis active`, `index gsap anim armed`, `index hero decoded` (→ Task 9); `index --faint token`, `form: honest success shown`, `form: no inbox promise` (→ Task 11); `accept → ads script injected`, `accept persists → ads on load` (→ Task 8); `mobile: closed menu hidden`, `mobile: focus moved into menu`, `mobile: Escape closes menu`, `mobile: focus returned to burger` (→ Task 10). All page-head/consent-banner/no-exception checks PASS.
 
 ---
 
