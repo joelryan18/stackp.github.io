@@ -468,6 +468,49 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .page .footer { padding-left: var(--pad); }
 
 /* ============================================================
+   BLOG
+   ============================================================ */
+.bloglist { display: flex; flex-direction: column; gap: 1rem; margin-top: 2.5rem; }
+.post-card {
+  display: block; border: 1px solid var(--line-strong); border-radius: 12px;
+  background: var(--surface); padding: 1.6rem 1.8rem;
+  transition: transform .4s var(--ease), border-color .4s var(--ease);
+}
+.post-card:hover { transform: translateY(-4px); border-color: rgba(184,255,60,.4); }
+.post-card__meta { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; color: var(--signal); text-transform: uppercase; }
+.post-card h2 { font-family: var(--display); font-weight: 600; font-size: clamp(1.3rem, 3vw, 1.7rem); letter-spacing: -0.015em; margin: .5rem 0 .4rem; }
+.post-card p { color: var(--muted); font-size: .95rem; max-width: 64ch; }
+.post-card__more { font-family: var(--mono); font-size: .74rem; color: var(--signal); display: inline-block; margin-top: .8rem; }
+.doc .post-meta { font-family: var(--mono); font-size: .72rem; letter-spacing: .12em; color: var(--faint); text-transform: uppercase; display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.doc blockquote { border-left: 2px solid var(--signal); padding: .4rem 0 .4rem 1.2rem; margin: 1.4rem 0; color: var(--text); font-style: italic; }
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+.faq__list { display: flex; flex-direction: column; border-top: 1px solid var(--line-strong); margin-top: 2.5rem; }
+.faq__item { border-bottom: 1px solid var(--line); }
+.faq__item summary {
+  cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 1rem;
+  padding: 1.3rem 0; font-family: var(--display); font-weight: 500; font-size: 1.15rem;
+  letter-spacing: -0.01em; transition: color .3s var(--ease);
+}
+.faq__item summary::-webkit-details-marker { display: none; }
+.faq__item summary::before { content: "+"; font-family: var(--mono); color: var(--signal); flex-shrink: 0; transition: transform .3s var(--ease); }
+.faq__item[open] summary::before { content: "–"; }
+.faq__item summary:hover { color: var(--signal); }
+.faq__item p { color: var(--text-dim); padding: 0 0 1.4rem 1.9rem; max-width: 62ch; }
+
+/* ============================================================
+   404
+   ============================================================ */
+.lost { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: var(--pad); position: relative; overflow: hidden; }
+.lost__code { font-family: var(--display); font-weight: 700; font-size: clamp(6rem, 24vw, 16rem); letter-spacing: -0.04em; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px var(--signal); filter: drop-shadow(0 0 24px rgba(184,255,60,.25)); }
+.lost__flat { width: min(560px, 80vw); height: 60px; margin: .5rem 0 1.5rem; }
+.lost__flat path { stroke: var(--signal); stroke-width: 2; fill: none; filter: drop-shadow(0 0 8px rgba(184,255,60,.5)); }
+.lost h1 { font-family: var(--display); font-weight: 600; font-size: clamp(1.4rem, 4vw, 2.2rem); letter-spacing: -0.02em; margin-bottom: .6rem; }
+.lost p { color: var(--muted); max-width: 44ch; margin-bottom: 2rem; }
+
+/* ============================================================
    COOKIE CONSENT
    ============================================================ */
 .consent {

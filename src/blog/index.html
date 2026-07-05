@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal Log — the AXON blog</title>
+  <meta name="description" content="Field notes on autonomous agents, orchestration latency, guardrails, and the engineering of trustworthy automation — from the AXON team." />
+  <link rel="canonical" href="https://stackwith.me/blog/" />
+  <meta name="theme-color" content="#07080A" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2307080A'/%3E%3Cpath d='M4 16h6l3-8 6 16 3-8h6' fill='none' stroke='%23B8FF3C' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7262404901375077" crossorigin="anonymous"></script>
+</head>
+<body class="no3d page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav is-scrolled">
+    <a href="../index.html" class="nav__brand" aria-label="AXON home">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <span class="nav__word">AXON</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="./index.html" data-index="01" aria-current="page">Blog</a>
+      <a href="../about.html" data-index="02">About</a>
+      <a href="../contact.html" data-index="03">Contact</a>
+    </nav>
+    <div class="nav__right">
+      <a href="../index.html#engage" class="btn btn--signal">Get access</a>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <p class="updated">[ SIGNAL LOG · FIELD NOTES FROM THE INSTRUMENT ]</p>
+    <h1>Signal Log</h1>
+    <p>What we're learning while teaching software to have reflexes — orchestration latency, reasoning traces, guardrails, and the occasional 3&nbsp;a.m. war story.</p>
+
+    <div class="bloglist">
+      <a class="post-card" href="./why-automation-needs-an-audit-trail.html">
+        <span class="post-card__meta">2026-06-24 · Trust &amp; Observability · 6 min</span>
+        <h2>Your automation is only as good as its audit trail</h2>
+        <p>An agent that can't explain itself is a liability wearing a productivity costume. Here's how reasoning traces turn "it did something" into "it did exactly this, for exactly this reason."</p>
+        <span class="post-card__more">READ THE TRACE →</span>
+      </a>
+
+      <a class="post-card" href="./engineering-sub-40ms-orchestration.html">
+        <span class="post-card__meta">2026-06-10 · Infrastructure · 7 min</span>
+        <h2>Engineering sub-40ms orchestration: reflexes, not workflows</h2>
+        <p>A human nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.</p>
+        <span class="post-card__more">READ THE TRACE →</span>
+      </a>
+
+      <a class="post-card" href="./guardrails-are-a-feature.html">
+        <span class="post-card__meta">2026-05-28 · Safety &amp; Design · 5 min</span>
+        <h2>Guardrails are a feature, not friction</h2>
+        <p>The fastest way to lose an ops team's trust is an agent with root and no rules. Scoped permissions, approval gates, and why constraints are what make autonomy shippable.</p>
+        <span class="post-card__more">READ THE TRACE →</span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__base">
+      <span>© <span id="year">2026</span> AXON</span>
+      <span><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../about.html">About</a> · <a href="../contact.html">Contact</a></span>
+      <span>MADE&nbsp;WITH&nbsp;INTENT</span>
+    </div>
+  </footer>
+
+  <script src="../consent.js" defer></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

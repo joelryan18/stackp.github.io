@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your automation is only as good as its audit trail — AXON Signal Log</title>
+  <meta name="description" content="An agent that can't explain itself is a liability wearing a productivity costume. How reasoning traces turn 'it did something' into 'it did exactly this, for exactly this reason.'" />
+  <link rel="canonical" href="https://stackwith.me/blog/why-automation-needs-an-audit-trail.html" />
+  <meta name="theme-color" content="#07080A" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Your automation is only as good as its audit trail" />
+  <meta property="og:description" content="How reasoning traces turn 'it did something' into 'it did exactly this, for exactly this reason.'" />
+  <meta property="og:url" content="https://stackwith.me/blog/why-automation-needs-an-audit-trail.html" />
+  <meta property="og:image" content="https://stackwith.me/og.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2307080A'/%3E%3Cpath d='M4 16h6l3-8 6 16 3-8h6' fill='none' stroke='%23B8FF3C' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7262404901375077" crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Your automation is only as good as its audit trail",
+    "description": "How reasoning traces turn 'it did something' into 'it did exactly this, for exactly this reason.'",
+    "datePublished": "2026-06-24",
+    "author": { "@type": "Organization", "name": "AXON" },
+    "publisher": { "@type": "Organization", "name": "AXON", "logo": { "@type": "ImageObject", "url": "https://stackwith.me/og.png" } },
+    "mainEntityOfPage": "https://stackwith.me/blog/why-automation-needs-an-audit-trail.html",
+    "image": "https://stackwith.me/og.png"
+  }
+  </script>
+</head>
+<body class="no3d page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav is-scrolled">
+    <a href="../index.html" class="nav__brand" aria-label="AXON home">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <span class="nav__word">AXON</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="./index.html" data-index="01">Blog</a>
+      <a href="../about.html" data-index="02">About</a>
+      <a href="../contact.html" data-index="03">Contact</a>
+    </nav>
+    <div class="nav__right">
+      <a href="../index.html#engage" class="btn btn--signal">Get access</a>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <p class="updated">[ SIGNAL LOG · TRUST &amp; OBSERVABILITY ]</p>
+    <h1>Your automation is only as good as its audit trail</h1>
+    <div class="post-meta"><span>2026-06-24</span><span>6 MIN READ</span><span>BY THE AXON TEAM</span></div>
+
+    <p>Every team that adopts autonomous agents goes through the same three emotional phases. First, delight: the queue that used to eat a human evening drains itself. Second, unease: wait — <i>what exactly did it do?</i> Third, one of two endings: trust, or a quiet rollback to cron jobs and runbooks.</p>
+    <p>The difference between those endings is never model quality. It's whether the agent can show its work.</p>
+
+    <h2>"It did something" is not a status</h2>
+    <p>Traditional automation fails loudly and legibly — a cron job either ran or it didn't, and the log line says which. Agents are different. An agent <i>decides</i>. It weighs a goal against an environment, picks one path out of many, and acts. If all you record is the outcome, you've built a system whose failures are indistinguishable from its successes until the damage surfaces somewhere downstream.</p>
+    <p>We learned this the honest way, reconciling failed payments. The agent's summary said <code>29 retried ok</code>. Great. But the number that mattered was in the trace: six charges it <i>chose not to touch</i> because ledger entries were ambiguous. Without the trace, those six would have read as "handled." With it, they became a ticket routed to a human — which is exactly what should happen at the edge of an agent's confidence.</p>
+
+    <blockquote>An agent without an audit trail is a liability wearing a productivity costume.</blockquote>
+
+    <h2>What a reasoning trace actually contains</h2>
+    <p>A useful trace is not a chat log. It's a structured record with four parts, one per phase of the loop:</p>
+    <ul>
+      <li><b>Sense</b> — the exact inputs and events the agent observed, timestamped.</li>
+      <li><b>Plan</b> — the paths it considered and the expected outcome of each, including the ones it rejected.</li>
+      <li><b>Act</b> — every tool call with arguments, results, and side effects, in order.</li>
+      <li><b>Observe</b> — what changed, what was verified, what got escalated, and what it cost.</li>
+    </ul>
+    <p>The rejected paths are the underrated part. When an agent explains why it <i>didn't</i> retry those six charges, review shifts from forensic reconstruction to reading a paragraph. Your incident post-mortems get shorter. Your compliance team stops treating the agent as a black box exception and starts treating it as a well-documented employee.</p>
+
+    <h2>Traces change agent behavior, not just human confidence</h2>
+    <p>Here's the part we didn't expect: once traces are first-class, they become training signal. Patterns in escalations show where the agent's confidence threshold is mis-set. Recurring rejected paths reveal missing capabilities. The trace isn't just accountability — it's the feedback loop that makes run <i>n+1</i> sharper than run <i>n</i>. Memory that compounds needs a substrate, and that substrate is the trace.</p>
+
+    <h2>Design rules we hold ourselves to</h2>
+    <ul>
+      <li>Every run produces a trace — there is no "quiet mode."</li>
+      <li>Traces are immutable. Corrections are appended, never rewritten.</li>
+      <li>A human can subscribe to any decision boundary — approval gates are just trace filters with a pause button.</li>
+      <li>Cost appears in the trace, per run, down to the token. Surprise bills are an observability failure.</li>
+    </ul>
+
+    <p>If you're evaluating any autonomy platform — ours included — ask one question first: <i>show me the trace for a run that went wrong.</i> The vendors who can't are selling you the first emotional phase. The third one is where you'll live.</p>
+
+    <p><a href="../index.html#trace">Watch a live trace</a> on the homepage, or read <a href="./guardrails-are-a-feature.html">why guardrails are a feature, not friction</a>.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__base">
+      <span>© <span id="year">2026</span> AXON</span>
+      <span><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../about.html">About</a> · <a href="../contact.html">Contact</a></span>
+      <span>MADE&nbsp;WITH&nbsp;INTENT</span>
+    </div>
+  </footer>
+
+  <script src="../consent.js" defer></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -126,7 +126,7 @@ Build output must equal the current site (pages pass through the njk engine unch
 **Interfaces:**
 - Produces: `npm run build`-style Eleventy invocation (`npx @11ty/eleventy`) that emits `_site/` with every page at its flat URL. Later tasks rely on dirs `src/_includes/`, `src/_data/`, config keys exactly as written here.
 
-- [ ] **Step 1: Move files**
+- [x] **Step 1: Move files**
 
 ```bash
 cd /Users/joel/Projects/axon-site
@@ -141,11 +141,11 @@ mv blog src/blog
 ```
 (`404.html`/`blog` are untracked — plain `mv`.)
 
-- [ ] **Step 2: Temporarily point pages at moved assets**
+- [x] **Step 2: Temporarily point pages at moved assets**
 
 The pages still reference `./styles.css`, `./main.js`, `./consent.js`, `./neural3d.js`. Until Task 6 replaces these with hashed layout references, keep the build working by passthrough-copying the plain assets AND leaving references as-is — so add to the config below passthroughs that place them at the old URLs. No page edits in this task.
 
-- [ ] **Step 3: Write `eleventy.config.js`**
+- [x] **Step 3: Write `eleventy.config.js`**
 
 ```js
 export default function (eleventyConfig) {
@@ -177,7 +177,7 @@ export default function (eleventyConfig) {
 }
 ```
 
-- [ ] **Step 4: Add flat permalinks via front matter**
+- [x] **Step 4: Add flat permalinks via front matter**
 
 Eleventy outputs `src/about.html` as `/about/` by default — that breaks live URLs. Prepend front matter to each of the five pages (this is the ONLY edit to them in this task). Example for `src/about.html` — repeat with the right filename for contact/privacy/terms; `index.html` gets `permalink: "index.html"`:
 
@@ -187,7 +187,7 @@ permalink: "about.html"
 ---
 ```
 
-- [ ] **Step 5: Build and verify output equals input**
+- [x] **Step 5: Build and verify output equals input**
 
 ```bash
 npx @11ty/eleventy
@@ -196,7 +196,7 @@ ls _site/ && ls _site/blog/
 ```
 Expected: `PAGES-MATCH` (the sed strips the 3 front-matter lines; njk passthrough emits identical bytes, possibly modulo a trailing newline — if diff shows ONLY a trailing-newline difference, that is acceptable); `_site/` contains all five pages, `404.html`, `blog/`, `styles.css`, `main.js`, `consent.js`, `neural3d.js`, `og.png`, `robots.txt`, `ads.txt`, `CNAME`, `sitemap.xml`.
 
-- [ ] **Step 6: Spot-check in browser**
+- [x] **Step 6: Spot-check in browser**
 
 ```bash
 python3 -m http.server 8080 -d _site & echo $! > /tmp/axon-serve.pid
@@ -205,7 +205,7 @@ kill $(cat /tmp/axon-serve.pid)
 ```
 Expected: `REPORT` shows `"no3d":false`, `"navFound":true`; screenshots in `/tmp/axon-qa` visually match `/tmp/axon-qa-baseline-desktop` (open both, compare hero + pipeline + footer).
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Engineering sub-40ms orchestration: reflexes, not workflows — AXON Signal Log</title>
+  <meta name="description" content="A nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds." />
+  <link rel="canonical" href="https://stackwith.me/blog/engineering-sub-40ms-orchestration.html" />
+  <meta name="theme-color" content="#07080A" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Engineering sub-40ms orchestration: reflexes, not workflows" />
+  <meta property="og:description" content="Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds." />
+  <meta property="og:url" content="https://stackwith.me/blog/engineering-sub-40ms-orchestration.html" />
+  <meta property="og:image" content="https://stackwith.me/og.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2307080A'/%3E%3Cpath d='M4 16h6l3-8 6 16 3-8h6' fill='none' stroke='%23B8FF3C' stroke-width='2' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7262404901375077" crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Engineering sub-40ms orchestration: reflexes, not workflows",
+    "description": "Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.",
+    "datePublished": "2026-06-10",
+    "author": { "@type": "Organization", "name": "AXON" },
+    "publisher": { "@type": "Organization", "name": "AXON", "logo": { "@type": "ImageObject", "url": "https://stackwith.me/og.png" } },
+    "mainEntityOfPage": "https://stackwith.me/blog/engineering-sub-40ms-orchestration.html",
+    "image": "https://stackwith.me/og.png"
+  }
+  </script>
+</head>
+<body class="no3d page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav is-scrolled">
+    <a href="../index.html" class="nav__brand" aria-label="AXON home">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <span class="nav__word">AXON</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="./index.html" data-index="01">Blog</a>
+      <a href="../about.html" data-index="02">About</a>
+      <a href="../contact.html" data-index="03">Contact</a>
+    </nav>
+    <div class="nav__right">
+      <a href="../index.html#engage" class="btn btn--signal">Get access</a>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <p class="updated">[ SIGNAL LOG · INFRASTRUCTURE ]</p>
+    <h1>Engineering sub-40ms orchestration: reflexes, not workflows</h1>
+    <div class="post-meta"><span>2026-06-10</span><span>7 MIN READ</span><span>BY THE AXON TEAM</span></div>
+
+    <p>Touch a hot stove and your hand moves in about 30 milliseconds. The signal doesn't travel to your brain, get triaged, wait for a planning meeting, and come back with an approved remediation workflow. It's handled at the spinal cord — close to the sensor, close to the muscle. Biology calls this a reflex arc. We think it's the correct architecture for agent orchestration, and we built AXON around it.</p>
+
+    <h2>The workflow-engine trap</h2>
+    <p>Most orchestration platforms descend from batch pipelines: a central scheduler owns a queue, workers poll it, every hand-off is a round trip through the hub. That shape is fine when the work is "render a report nightly." It collapses when the work is "an incident is unfolding and four agents need to coordinate <i>now</i>." Every hop through a central broker adds serialization, a queue wait, and a network round trip — 150 to 400&nbsp;ms per hand-off in the systems we measured. Chain five hand-offs and your "autonomous response" is two seconds of bureaucracy before anything happens.</p>
+
+    <blockquote>A reflex that takes two seconds is not a reflex. It's a committee with good branding.</blockquote>
+
+    <h2>What we cut to get under 40ms</h2>
+    <p>Our p99 target for agent-to-agent hand-off is 40&nbsp;ms, wall-clock, including routing, guardrail checks, and trace write. Four decisions got us there:</p>
+    <ul>
+      <li><b>Hand-offs at the edge.</b> Agents that talk to each other are co-scheduled onto the same edge region. A hand-off is a local call, not a trip through a central hub. The hub only sees the trace, asynchronously.</li>
+      <li><b>Guardrails as compiled policy.</b> Permission checks run as a pre-compiled decision table at the call site — microseconds — instead of a policy-service round trip. Scope changes recompile and propagate; the hot path never blocks on them.</li>
+      <li><b>Speculative routing.</b> While an agent is finishing a step, the router has already warmed the most likely next agent — context loaded, connection open. When the plan branch is confirmed, the baton is already in motion. Mispredictions cost us a warm worker; predictions save a cold start.</li>
+      <li><b>Async everything that isn't the decision.</b> Trace persistence, metrics, memory writes — all off the hot path, all reconciled with backpressure. The only synchronous work is the decision and the act.</li>
+    </ul>
+
+    <h2>Retries and failure at reflex speed</h2>
+    <p>Fast coordination is easy until something breaks. The router treats failure as a first-class routing outcome: a failed step re-routes to a retry with jittered backoff, a slow path triggers a parallel hedge request, and a repeated failure trips a circuit that escalates to a human — with the <a href="./why-automation-needs-an-audit-trail.html">full trace</a> attached. None of this waits on a central scheduler tick. The p99 for "detect failure → alternative path dispatched" is under 60&nbsp;ms in production workloads.</p>
+
+    <h2>Why latency is a trust issue, not a vanity metric</h2>
+    <p>Teams trust automation in proportion to how it behaves mid-incident. An agent swarm that coordinates in milliseconds contains a blast radius while a human is still reading the page alert. One that coordinates in seconds is a spectator with API keys. The uncomfortable truth: by the time most workflow engines finish orchestrating a response, the window where the response mattered has often closed.</p>
+    <p>Reflexes first. Deliberation where it belongs — in the planner, before the incident, and in the review, after. The moment in between belongs to the spinal cord.</p>
+
+    <p><a href="../index.html#pipeline">See the signal path</a> — Connect → Reason → Act → Observe — on the homepage.</p>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__base">
+      <span>© <span id="year">2026</span> AXON</span>
+      <span><a href="../privacy.html">Privacy</a> · <a href="../terms.html">Terms</a> · <a href="../about.html">About</a> · <a href="../contact.html">Contact</a></span>
+      <span>MADE&nbsp;WITH&nbsp;INTENT</span>
+    </div>
+  </footer>
+
+  <script src="../consent.js" defer></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

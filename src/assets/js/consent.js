@@ -14,7 +14,7 @@
   const msg = document.createElement("p");
   msg.append("[ COOKIES ] We use cookies to analyse traffic and, with your consent, to serve ads. Details in our ");
   const link = document.createElement("a");
-  link.href = "./privacy.html";
+  link.href = "/privacy.html";
   link.textContent = "Privacy Policy";
   msg.append(link, ".");
 
