@@ -88,7 +88,7 @@ for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.h
 await go(BASE + "/", 4000);
 check("index lenis active", await evalJs("!!window.__lenis"));
 check("index gsap anim armed", await evalJs(`document.body.classList.contains("anim")`));
-check("index hero decoded", (await evalJs(`document.querySelector(".hero__title").textContent.replace(/\\s+/g," ").trim()`)) === "The nervous system for your software.");
+check("index hero decoded", (await evalJs(`document.querySelector(".hero__title").innerText.replace(/\\s+/g," ").trim()`)) === "The nervous system for your software.");
 check("index no3d not triggered", !(await evalJs(`document.body.classList.contains("no3d")`)));
 check("index --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
 

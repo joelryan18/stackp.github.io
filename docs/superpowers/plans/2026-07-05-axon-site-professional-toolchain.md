@@ -878,7 +878,7 @@ git commit -m "fix: consent banner actually gates AdSense (inject only on accept
 **Files:**
 - Modify: `src/assets/js/main.js`, `src/assets/css/styles.css`
 
-- [ ] **Step 1: Swap globals for imports in `src/assets/js/main.js`**
+- [x] **Step 1: Swap globals for imports in `src/assets/js/main.js`**
 
 At the very top, BEFORE the opening `(() => {` IIFE line, add:
 
@@ -898,19 +898,19 @@ if (!reduced && typeof Lenis === "function") {
 ```
 Everything else in those sections stays identical (`gsap.registerPlugin(ScrollTrigger)`, `new Lenis({...})`, `window.__lenis = lenis`).
 
-- [ ] **Step 2: Delete the dead oscilloscope section**
+- [x] **Step 2: Delete the dead oscilloscope section**
 
 Remove the ENTIRE section 5 block — from the comment
 `/* ---------------------------------------------------------\n     5 · OSCILLOSCOPE (hero canvas)\n  --------------------------------------------------------- */`
 through the closing `}` right before the section 6 comment (`6 · DECODE`). It is ~70 lines beginning `const scope = $("#scope");` — the `#scope` canvas does not exist in the HTML; this code never ran.
 
-- [ ] **Step 3: Remove dead `.scope` CSS**
+- [x] **Step 3: Remove dead `.scope` CSS**
 
 In `src/assets/css/styles.css`:
 - Delete the rule `.scope { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: .9; }` (HERO section).
 - In the reduced-motion block change `.scope, .engage__scope { display: none; }` → `.engage__scope { display: none; }`.
 
-- [ ] **Step 4: Rebuild + smoke**
+- [x] **Step 4: Rebuild + smoke**
 
 ```bash
 node scripts/build-assets.mjs && npx @11ty/eleventy && node scripts/smoke.mjs 2>&1 | grep -E "lenis|gsap|decoded|no3d|exceptions"
@@ -921,7 +921,7 @@ grep -c "scope" dist-assets/main.*.js
 ```
 Expected: `0` (or exit 1 = no matches).
 
-- [ ] **Step 5: Visual spot-check**
+- [x] **Step 5: Visual spot-check**
 
 ```bash
 python3 -m http.server 8080 -d _site & echo $! > /tmp/axon-serve.pid
@@ -929,12 +929,14 @@ node scripts/qa-shots.mjs 1440 900 && kill $(cat /tmp/axon-serve.pid)
 ```
 Expected: screenshots match baseline; `REPORT` has `"no3d":false`; `ERRORS []`. Animations (reveals, pinned pipeline, marquee, 3D nerve) all present.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/assets/js/main.js src/assets/css/styles.css src/_data/assets.json
 git commit -m "refactor: bundle gsap/lenis via npm imports; remove dead oscilloscope code"
 ```
+
+> Task 9 verification notes: (1) `grep -c "scope" dist-assets/main.*.js` returns matches from gsap's OWN minified internals (`Invalid scope`, `this.scope`) now that gsap is bundled — the plan's expected `0` didn't account for that. Verified our dead code is gone via `grep -c '"#scope"'` = 0 matches. (2) `index hero decoded` could never pass as written: the markup is `The nervous system<br>for your software.` with no whitespace around `<br>`, so `textContent` yields "systemfor". Fixed the harness check to use `innerText` (treats `<br>` as a line break) — verified it returns exactly "The nervous system for your software." post-decode. Page content untouched.
 
 ---
 

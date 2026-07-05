@@ -2,6 +2,9 @@
    AXON — Signal Instrument · main.js
    boot · lenis+gsap · probe · oscilloscope · scroll story · trace
    ============================================================ */
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "@studio-freight/lenis";
 (() => {
   "use strict";
 
@@ -9,7 +12,7 @@
   const $$ = (s, c = document) => [...c.querySelectorAll(s)];
   const reduced   = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const hoverFine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const hasGSAP   = !!(window.gsap && window.ScrollTrigger);
+  const hasGSAP   = !!(gsap && ScrollTrigger);
   if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
 
   const yearEl = $("#year"); if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -18,7 +21,7 @@
      1 · LENIS + GSAP wiring
   --------------------------------------------------------- */
   let lenis = null;
-  if (!reduced && window.Lenis) {
+  if (!reduced && typeof Lenis === "function") {
     lenis = new Lenis({ lerp: 0.1, wheelMultiplier: 1, smoothWheel: true });
     window.__lenis = lenis;
     if (hasGSAP) {
@@ -124,81 +127,6 @@
       });
       el.addEventListener("mouseleave", () => { el.style.transform = ""; probe.classList.remove("is-locked"); });
     });
-  }
-
-  /* ---------------------------------------------------------
-     5 · OSCILLOSCOPE (hero canvas)
-  --------------------------------------------------------- */
-  const scope = $("#scope");
-  if (scope && !reduced) {
-    const ctx = scope.getContext("2d");
-    let w, h, dpr, N, buf, t = 0, spikeT = 0, mouseAmp = 0, mouseY = 0, rafId = null;
-
-    function size() {
-      dpr = Math.min(devicePixelRatio || 1, 2);
-      w = scope.clientWidth; h = scope.clientHeight;
-      scope.width = w * dpr; scope.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      N = Math.max(120, Math.floor(w / 2));
-      buf = new Float32Array(N);
-    }
-    window.addEventListener("mousemove", (e) => {
-      const r = scope.getBoundingClientRect();
-      mouseY = (e.clientY - r.top) / r.height - 0.5;
-      const near = 1 - Math.min(1, Math.abs(e.clientX - r.left - r.width / 2) / (r.width / 2));
-      mouseAmp = near;
-    }, { passive: true });
-
-    function sample() {
-      t += 1;
-      let base = 0.14 * Math.sin(t * 0.045) + 0.07 * Math.sin(t * 0.11) + 0.03 * Math.sin(t * 0.23);
-      // travelling impulse (nerve firing)
-      spikeT -= 1;
-      if (spikeT <= 0) spikeT = 90 + Math.random() * 80;
-      const env = Math.exp(-Math.pow((spikeT - 45) / 6, 2));
-      base += env * (0.55 + 0.25 * Math.random());
-      base += (Math.random() - 0.5) * 0.02;
-      base += mouseY * 0.25;
-      base *= 0.7 + mouseAmp * 0.6;
-      return base;
-    }
-
-    function draw() {
-      // shift buffer
-      for (let i = 0; i < N - 1; i++) buf[i] = buf[i + 1];
-      buf[N - 1] = sample();
-
-      ctx.clearRect(0, 0, w, h);
-      const cy = h * 0.52, amp = h * 0.3;
-      // trace
-      ctx.beginPath();
-      for (let i = 0; i < N; i++) {
-        const x = (i / (N - 1)) * w;
-        const y = cy - buf[i] * amp;
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.strokeStyle = "rgba(184,255,60,0.75)";
-      ctx.lineWidth = 1.4;
-      ctx.shadowColor = "rgba(184,255,60,0.6)";
-      ctx.shadowBlur = 8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      // leading dot
-      const lx = w, ly = cy - buf[N - 1] * amp;
-      ctx.beginPath(); ctx.arc(lx - 2, ly, 2.4, 0, Math.PI * 2);
-      ctx.fillStyle = "#B8FF3C"; ctx.fill();
-
-      mouseAmp *= 0.96;
-      rafId = requestAnimationFrame(draw);
-    }
-    const start = () => { if (!rafId) draw(); };
-    const stop  = () => { if (rafId) cancelAnimationFrame(rafId), (rafId = null); };
-    window.addEventListener("resize", size);
-    document.addEventListener("visibilitychange", () => document.hidden ? stop() : start());
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(([e]) => e.isIntersecting ? start() : stop(), { threshold: 0.01 }).observe($("#hero"));
-    }
-    size(); start();
   }
 
   /* ---------------------------------------------------------
