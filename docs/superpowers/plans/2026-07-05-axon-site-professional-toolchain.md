@@ -222,7 +222,7 @@ git commit -m "build: restructure into src/ with passthrough Eleventy build (out
 **Interfaces:**
 - Produces: `src/_data/assets.json` = `{"styles": "/assets/styles.<hash>.css", "main": "/assets/main.<hash>.js", "consent": "/assets/consent.<hash>.js", "neural3d": "/assets/neural3d.<hash>.js"}`. Templates consume as `{{ assets.styles }}` etc. `dist-assets/` holds the files; Eleventy copies them to `_site/assets/`.
 
-- [ ] **Step 1: Write `scripts/build-assets.mjs`**
+- [x] **Step 1: Write `scripts/build-assets.mjs`**
 
 ```js
 // Bundles JS entries + CSS with content hashes; writes src/_data/assets.json
@@ -293,7 +293,7 @@ if (WATCH) {
 }
 ```
 
-- [ ] **Step 2: Run and verify**
+- [x] **Step 2: Run and verify**
 
 ```bash
 node scripts/build-assets.mjs && cat src/_data/assets.json && ls dist-assets/
@@ -302,7 +302,7 @@ Expected: manifest has 4 keys with hashed paths; `dist-assets/` contains the 4 f
 
 esbuild will FAIL on `src/assets/js/main.js`/`neural3d.js` only if imports are broken — at this point they still use globals (`window.gsap`)/import-map specifiers. `neural3d.js` imports `three` and `three/addons/...` which npm resolves — it builds now. `main.js`/`consent.js` have no imports — they build as-is. If any build errors, stop and inspect.
 
-- [ ] **Step 3: Verify Eleventy picks up the manifest**
+- [x] **Step 3: Verify Eleventy picks up the manifest**
 
 ```bash
 npx @11ty/eleventy
@@ -310,7 +310,7 @@ ls _site/assets/
 ```
 Expected: hashed files present in `_site/assets/` (pages still reference legacy URLs — that flips in Task 6).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add scripts/build-assets.mjs src/_data/assets.json
