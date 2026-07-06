@@ -1343,7 +1343,7 @@ Expected: workflow green; home/about/sitemap `200`; hashed assets referenced; `p
 
 Only start after Task 14's live verification passed.
 
-- [ ] **Step 1: Verify the new checkout is authoritative**
+- [x] **Step 1: Verify the new checkout is authoritative**
 
 ```bash
 cd /Users/joel/Projects/axon-site
@@ -1353,14 +1353,14 @@ ls src/blog src/404.html      # expect: carried-over work present
 ```
 ALL three must hold. If not, STOP — do not delete anything.
 
-- [ ] **Step 2: Inspect the stray root npm files before touching them**
+- [x] **Step 2: Inspect the stray root npm files before touching them**
 
 ```bash
 head -20 /Users/joel/package.json && ls /Users/joel/node_modules | head
 ```
 If `package.json` clearly belongs to a site experiment (deps like `serve`, `three`, `gsap`, nothing else), include it in Step 3's deletion. If it references anything unrelated, LEAVE IT and note it to the user.
 
-- [ ] **Step 3: Remove the repo and tracked site files from the home directory — exactly this list, nothing more**
+- [x] **Step 3: Remove the repo and tracked site files from the home directory — exactly this list, nothing more**
 
 ```bash
 cd /Users/joel
@@ -1371,7 +1371,7 @@ rm -rf scripts blog
 # rm -rf node_modules package.json package-lock.json
 ```
 
-- [ ] **Step 4: Verify**
+- [x] **Step 4: Verify**
 
 ```bash
 cd /Users/joel && git status 2>&1 | head -1
@@ -1379,7 +1379,9 @@ ls /Users/joel/Projects/axon-site/src/index.html
 ```
 Expected: `fatal: not a git repository` (home dir is clean); the site lives only in `~/Projects/axon-site`.
 
-- [ ] **Step 5: Final report to user** — summarize: new location, live URL, what changed, the one manual step remaining (Formspree endpoint), and where baselines/screenshots are.
+- [x] **Step 5: Final report to user** — summarize: new location, live URL, what changed, the one manual step remaining (Formspree endpoint), and where baselines/screenshots are.
+
+> Task 15 notes: all three Step-1 gates held; blog/, 404.html, scripts/ verified byte-identical to project copies before deletion. `~/package.json` contained only `framer-motion` (unrelated to this site) — per Step 2's rule, `~/package.json`, `~/package-lock.json`, `~/node_modules` were LEFT in place for the user to triage.
 
 ---
 

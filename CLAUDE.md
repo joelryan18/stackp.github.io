@@ -4,41 +4,37 @@ Landing site for AXON ("signal instrument" design), live at https://stackwith.me
 via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
-⚠️ `/Users/joel` (home dir) is ALSO still a clone of this public repo — never run
-`git add`/`commit`/`push` there; it risks publishing personal files. Removing it is
-the final planned task.
 
-## Current state (2026-07-05)
+## Current state (2026-07-06)
 
-- Full engineering audit done; design spec approved and committed:
-  `docs/superpowers/specs/2026-07-05-axon-site-professional-toolchain-design.md`
-- Step-by-step implementation plan written, committed, **not yet started** (Task 1 pending):
-  `docs/superpowers/plans/2026-07-05-axon-site-professional-toolchain.md`
-- To resume: execute the plan task-by-task (superpowers:executing-plans), checking
-  off `- [ ]` steps and committing after each task. The plan contains complete code —
-  don't redesign, just execute.
+- Toolchain migration plan **fully executed (Tasks 1–15)** and live:
+  `docs/superpowers/plans/2026-07-05-axon-site-professional-toolchain.md` (all boxes checked,
+  deviations noted inline). Eleventy 3 + esbuild + self-hosted fonts + consent-gated AdSense +
+  CDP smoke harness (`npm run build && npm run smoke` → must be ALL PASS).
+- Deploys: push to `main` → `.github/workflows/deploy.yml` → Pages artifact
+  (Pages `build_type=workflow` since 2026-07-06). Old home-directory clone of this repo
+  was deleted per plan Task 15 (`~/package.json` + `node_modules` with framer-motion were
+  unrelated and left in place).
+- `gh` CLI is NOT installed. For GitHub API calls, pull the token from the keychain:
+  `git credential fill` → `curl -H "Authorization: token …"` (worked for the Pages API).
+- Manual step still open: create a Formspree form and paste its endpoint into
+  `FORM_ENDPOINT` in `src/assets/js/main.js`.
+- **Next feature (requested 2026-07-06, not started): make the pricing plans at the bottom
+  of index.html real** — click a plan → show full benefits → collect buyer details → pay via
+  **Razorpay**; the "free" tier should charge a minimum (~₹5 incl. tax) instead of being free.
+  Needs design first: static site (no backend) → Razorpay hosted options (Payment
+  Button/Links/Pages) vs. serverless order-creation; also honest-copy concerns (site is a
+  fictional-product showcase).
 
-## Decisions already made by the user — do NOT re-ask
+## Standing decisions
 
-- Approach C: Eleventy 3 + esbuild + GitHub Actions deploy (spec has details).
-- Design stays pixel-identical. Only sanctioned changes: `--faint` token → `#78828E`
-  (WCAG AA) and honest form copy.
-- Form: real fetch POST behind empty `FORM_ENDPOINT` constant (Formspree later, user pastes ID);
-  honest fallback copy meanwhile.
-- Out of scope, never touch: `blog/`, `404.html`, and the BLOG/FAQ/404 CSS sections
-  in `styles.css` (uncommitted in-progress work, carried over verbatim).
-- After live verification: delete the home-directory repo (plan Task 15, checklist-gated).
-
-## Layout (pre-migration; plan Task 3 moves everything into src/)
-
-Plain HTML/CSS/JS, zero build yet: `index.html` (landing), `about/contact/privacy/terms.html`
-(subpages, shared shell), `styles.css` (design tokens in `:root`), `main.js` (GSAP/Lenis
-animations), `neural3d.js` (three.js nerve), `consent.js` (cookie banner),
-`scripts/qa-shots.mjs` (CDP screenshot harness, expects a server on :8080).
-
-## Known facts (from audit — don't re-audit)
-
-- AdSense client: `ca-pub-7262404901375077`; consent localStorage key `axon-consent`.
-- Consent banner does NOT yet gate the AdSense script (plan Task 8 fixes).
-- `main.js` §5 "oscilloscope" (~70 lines, `#scope`) is dead code (plan Task 9 removes).
-- Chrome path for QA scripts: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`.
+- Design stays pixel-identical unless the user sanctions a change (sanctioned so far:
+  `--faint` → `#78828E`, honest form copy).
+- Out of scope, never touch: `src/blog/`, `src/404.html`, and the BLOG/FAQ/404 CSS sections
+  in `styles.css` (carried over verbatim, copied not templated).
+- AdSense client `ca-pub-7262404901375077`; consent localStorage key `axon-consent`;
+  AdSense loads ONLY after "Accept all" (consent.js `loadAds()`).
+- Chrome for QA/smoke: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`.
+- QA baselines: `/tmp/axon-qa-baseline-desktop` + `/tmp/axon-qa-baseline-mobile`
+  (post-migration finals: `/tmp/axon-qa-final-desktop|mobile`). `/tmp` is volatile — regenerate
+  with `npm run qa` if missing.
