@@ -16,6 +16,7 @@ minimum amount instead of being free.
 | Card copy | Cards display the real ₹ one-time prices (sanctioned design change) |
 | Tone | All new copy professional in register — no gimmicks |
 | Razorpay account | Already activated (live mode available) |
+| Post-payment delivery | Branded benefits email via EmailJS (client-side, free tier) + personalized downloadable Supporter Pass on the success screen; Razorpay receipt email enabled as backup |
 
 ## 1. Card copy changes (sanctioned)
 
@@ -46,8 +47,8 @@ Contents, top to bottom:
    (same validation/error styling approach as the engage form). Values prefill
    Razorpay checkout; name + plan also passed in `notes`.
 4. **Honest-copy line (professional wording):**
-   > AXON is a design showcase. This is a genuine ₹{amount} payment for a
-   > supporter pass — no software product is delivered.
+   > AXON is a design showcase. This is a genuine ₹{amount} payment for an AXON
+   > Supporter Pass, delivered by email — no software product is provided.
 5. **Pay button:** `Pay ₹5` / `Pay ₹6,999` (`btn btn--signal`).
 
 Behavior:
@@ -71,21 +72,49 @@ Behavior:
    - `notes: { plan, buyer_name }` (surfaces in the Razorpay dashboard per payment),
    - `theme.color` matched to the site accent,
    - `modal.ondismiss` → return to our modal silently.
-3. **Success** (`handler`): modal flips to a success state — confirmation line +
-   `razorpay_payment_id` displayed for the buyer's records.
+3. **Success** (`handler`): modal flips to a success state (see §3a) and the
+   benefits email is dispatched.
 4. No order_id / no signature verification: accepted trade-off of the static
    client-side approach (amount is technically editable via dev tools; nothing is
    fulfilled, so integrity risk is cosmetic). Payments must be **auto-captured** —
    user enables this in Razorpay Dashboard → Settings → Payment capture.
 
-**Buyer data handling:** details go only to Razorpay (prefill + notes). The site
-stores nothing; no Formspree involvement.
+**Buyer data handling:** details go to Razorpay (prefill + notes) and, on success
+only, to EmailJS for the benefits email. The site stores nothing; no Formspree
+involvement.
+
+## 3a. Post-payment delivery (email + Supporter Pass)
+
+**Success screen — Supporter Pass.** The modal's success state renders a
+personalized **AXON Supporter Pass** in the site's design language: buyer name,
+tier, pass ID (`razorpay_payment_id`), issue date, and the tier's benefits list.
+A **Download pass** button renders it to PNG client-side (canvas, self-hosted
+fonts — no new dependencies) so the buyer keeps a real artifact.
+
+**Benefits email — EmailJS (client-side).** On the success handler, the site
+calls the EmailJS REST API directly via `fetch`
+(`https://api.emailjs.com/api/v1.0/email/send`) — no SDK dependency. Template
+params: buyer name, email (recipient), tier name, amount, pass ID, benefits list.
+The EmailJS template is authored once (AXON-branded, professional register):
+subject "Your AXON Supporter Pass", body with pass details + full benefits.
+
+- The EmailJS public key, service ID, and template ID are embedded constants
+  (public by design; the fixed template means the key can only send this one
+  email format; free tier is rate-limited to ~200 emails/month — acceptable).
+- Email dispatch is **fire-and-forget**: failure never breaks the success state.
+  On failure the pass screen shows a quiet note ("email delivery delayed — your
+  pass ID above is your proof of purchase") — the Razorpay receipt (below) is
+  the fallback channel.
+
+**Razorpay receipt (backup).** User enables customer email notifications in the
+Razorpay dashboard so every buyer also gets Razorpay's standard payment receipt,
+independent of the browser session.
 
 ## 4. Code structure
 
 | File | Change |
 |---|---|
-| `src/assets/js/payments.js` | **New module**, `import`ed by `main.js` (esbuild `bundle: true` folds it into the existing hashed `assets.main` bundle — zero build-config changes). Holds `RAZORPAY_KEY_ID`, `PLANS` config (amount, labels, benefits), modal controller, checkout launcher, success/failure handlers. |
+| `src/assets/js/payments.js` | **New module**, `import`ed by `main.js` (esbuild `bundle: true` folds it into the existing hashed `assets.main` bundle — zero build-config changes). Holds `RAZORPAY_KEY_ID` + EmailJS constants, `PLANS` config (amount, labels, benefits), modal controller, checkout launcher, success/failure handlers, Supporter Pass canvas renderer, EmailJS dispatch. |
 | `src/assets/js/main.js` | One-line `import` + init call. |
 | `src/index.html` | Tier card edits (§1); modal markup appended at end of page content. |
 | `src/assets/css/styles.css` | New clearly-delimited "PAYMENTS MODAL" section using existing custom-property tokens. **BLOG/FAQ/404 sections untouched** (standing rule). |
@@ -100,6 +129,8 @@ engage form, deploy workflow.
 | checkout.js fails to load (offline, blocked) | Inline error line in the modal + the Pay button re-enabled for retry |
 | `payment.failed` event | Human-readable reason in the modal; retry allowed |
 | Popup dismissed by user | Return to modal silently, form values intact |
+| EmailJS send fails (network, quota) | Success state unaffected; quiet "email delivery delayed" note; Razorpay receipt is the fallback channel |
+| Pass PNG render fails | Pass remains visible on-screen; download button hidden |
 | Account requires server-side `order_id` (discovered in testing) | Documented fallback: free Cloudflare Worker creating Orders + verifying signatures. **Not built now**; revisit only if test/live checkout rejects order-less payments. |
 
 ## 6. Testing & rollout
@@ -107,9 +138,12 @@ engage form, deploy workflow.
 1. `npm run build && npm run smoke` stays **ALL PASS**; extend the CDP smoke harness:
    modal opens on plan click, required-field validation blocks empty submit,
    checkout.js is requested on Pay (network-stubbed in smoke — no real Razorpay
-   call), success state renders when the handler is invoked synthetically.
+   call), success state + Supporter Pass render when the handler is invoked
+   synthetically, EmailJS request is issued with correct template params
+   (network-stubbed — no real email).
 2. Manual QA in **test mode** (user's test `key_id` + Razorpay test cards) covering
-   both tiers end-to-end.
+   both tiers end-to-end, including a real EmailJS send to the user's own address
+   to verify the branded email.
 3. Swap in live `key_id`; one real ₹5 self-purchase as final verification, refunded
    from the dashboard.
 4. Regenerate QA baselines (`npm run qa`) — tier-card pixel changes are sanctioned.
@@ -117,3 +151,8 @@ engage form, deploy workflow.
 **User-provided inputs needed at implementation time:**
 - Test-mode `key_id`, then live `key_id`.
 - Auto payment capture enabled in the Razorpay dashboard.
+- Customer email notifications enabled in the Razorpay dashboard (receipt backup).
+- Free EmailJS account: connect an email service, create the Supporter Pass
+  template (content supplied by implementation plan), then provide the
+  **service ID, template ID, and public key**. Exact click-by-click steps will be
+  in the implementation plan.
