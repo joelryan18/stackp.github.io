@@ -15,7 +15,7 @@ minimum amount instead of being free.
 | Integration | **Client-side Checkout.js**, 100% static, no backend/serverless |
 | Card copy | Cards display the real ₹ one-time prices (sanctioned design change) |
 | Tone | All new copy professional in register — no gimmicks |
-| Razorpay account | Already activated (live mode available) |
+| Razorpay account | Already activated (live mode available); payment handle `razorpay.me/@stackwith` |
 | Post-payment delivery | Branded benefits email via EmailJS (client-side, free tier) + personalized downloadable Supporter Pass on the success screen; Razorpay receipt email enabled as backup |
 
 ## 1. Card copy changes (sanctioned)
@@ -126,8 +126,8 @@ engage form, deploy workflow.
 
 | Failure | Behavior |
 |---|---|
-| checkout.js fails to load (offline, blocked) | Inline error line in the modal + the Pay button re-enabled for retry |
-| `payment.failed` event | Human-readable reason in the modal; retry allowed |
+| checkout.js fails to load (offline, blocked) | Inline error line in the modal + the Pay button re-enabled for retry; after a failed retry, offer the hosted fallback link `https://razorpay.me/@stackwith/{amount}` (opens in new tab; no on-site pass/email on that path — Razorpay receipt covers it) |
+| `payment.failed` event | Human-readable reason in the modal; retry allowed; hosted fallback link offered after repeat failure |
 | Popup dismissed by user | Return to modal silently, form values intact |
 | EmailJS send fails (network, quota) | Success state unaffected; quiet "email delivery delayed" note; Razorpay receipt is the fallback channel |
 | Pass PNG render fails | Pass remains visible on-screen; download button hidden |
