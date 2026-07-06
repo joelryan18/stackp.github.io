@@ -507,7 +507,7 @@ git commit -m "feat: buyer form validates and launches Razorpay checkout"
 - Consumes: `showSuccess(plan, buyer, paymentId)` placeholder from Task 3; success-stage DOM ids from Task 2.
 - Produces: real `showSuccess` (fills `#okPlan #okPassId`, renders canvas, triggers email dispatch via `sendBenefitsEmail` — Task 5 provides it; until then `showSuccess` calls it guarded: `typeof sendBenefitsEmail === "function"` is NOT used — instead Task 4 includes a stub `sendBenefitsEmail` returning `Promise.reject()` that Task 5 replaces); `renderPass(plan, buyer, passId)` → boolean; `downloadPass(passId)`.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 Append to section 6 in `scripts/smoke.mjs` (continues from Task 3's state — checkout was launched, `window.__rzpCalls[0].handler` is callable):
 
@@ -523,12 +523,12 @@ check("pay: pass canvas painted", (await evalJs(`document.getElementById("passCa
 check("pay: download button visible", await evalJs(`!document.getElementById("payDownload").hidden`));
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: FAIL on "pay: pass id shown", "pay: pass canvas painted" (stage checks pass via Task 3's placeholder).
 
-- [ ] **Step 3: Implement pass rendering**
+- [x] **Step 3: Implement pass rendering**
 
 In `payments.js`, replace the placeholder `showSuccess` and add the render/download/email-stub functions inside `initPayments()`:
 
@@ -596,17 +596,19 @@ In `payments.js`, replace the placeholder `showSuccess` and add the render/downl
 
 (The `showSuccess` placeholder from Task 3 is deleted; `handler:` in `launchCheckout` already points here.)
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/assets/js/payments.js scripts/smoke.mjs
 git commit -m "feat: success stage renders downloadable Supporter Pass"
 ```
+
+> Deviation (executed): the "pass canvas painted" smoke check samples pixel (100,100) for the pass background #"07080A" instead of asserting toDataURL().length > 20000 — headless SwiftShader PNG encoding made the size heuristic unreliable.
 
 ---
 

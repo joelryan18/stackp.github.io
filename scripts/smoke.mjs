@@ -202,6 +202,16 @@ check("pay: prefill contact", rzpOpts?.contact === "9999999999");
 check("pay: notes.plan studio", rzpOpts?.plan === "studio");
 check("pay: success handler wired", rzpOpts?.hasHandler === true);
 
+// synthetic success → pass rendered
+await evalJs(`window.__rzpCalls[0].handler({ razorpay_payment_id: "pay_SMOKE1234567890" })`);
+await sleep(700);
+check("pay: success stage shown", !(await evalJs(`document.querySelector('[data-stage="success"]').hidden`)));
+check("pay: form stage hidden", await evalJs(`document.querySelector('[data-stage="form"]').hidden`));
+check("pay: pass id shown", (await evalJs(`document.getElementById("okPassId").textContent`)) === "pay_SMOKE1234567890");
+check("pay: plan named on success", (await evalJs(`document.getElementById("okPlan").textContent`)) === "Studio");
+check("pay: pass canvas painted", (await evalJs(`document.getElementById("passCanvas").getContext("2d").getImageData(100, 100, 1, 1).data.join()`)) === "7,8,10,255");
+check("pay: download button visible", await evalJs(`!document.getElementById("payDownload").hidden`));
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

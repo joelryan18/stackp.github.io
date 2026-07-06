@@ -119,10 +119,65 @@ export function initPayments() {
     rzp.open();
   }
 
-  function showSuccess(plan, buyer, paymentId) {
-    // Task 4 replaces this placeholder body with the pass + email flow.
-    stageForm.hidden = true; stageOk.hidden = false;
+  function sendBenefitsEmail(plan, buyer, passId) {
+    return Promise.reject(new Error("email not configured")); // Task 5 replaces
   }
+
+  function renderPass(plan, buyer, passId) {
+    const c = document.getElementById("passCanvas");
+    if (!c || !c.getContext) return false;
+    try {
+      const x = c.getContext("2d");
+      const W = c.width, H = c.height; // 1200 × 675
+      const mono = (w, s) => `${w} ${s}px "JetBrains Mono", monospace`;
+      x.fillStyle = "#07080A"; x.fillRect(0, 0, W, H);
+      x.strokeStyle = "rgba(255,255,255,0.14)"; x.lineWidth = 2;
+      x.strokeRect(28, 28, W - 56, H - 56);
+      x.fillStyle = "#B8FF3C"; x.fillRect(28, 28, W - 56, 5);
+      x.fillStyle = "#B8FF3C"; x.font = mono(700, 58); x.fillText("AXON", 76, 150);
+      x.fillStyle = "#7E8794"; x.font = mono(500, 24); x.fillText("SUPPORTER PASS · " + plan.tag, 76, 196);
+      x.fillStyle = "#F2F4F3"; x.font = mono(600, 46);
+      x.fillText(buyer.name.slice(0, 28), 76, 320);
+      x.fillStyle = "#B7BEC6"; x.font = mono(500, 26);
+      x.fillText(plan.name + " · " + plan.display + " · one-time", 76, 375);
+      x.fillStyle = "#7E8794"; x.font = mono(500, 22);
+      x.fillText("PASS ID  " + passId, 76, 470);
+      x.fillText("ISSUED   " + new Date().toISOString().slice(0, 10), 76, 508);
+      x.fillStyle = "#78828E"; x.font = mono(500, 17);
+      x.fillText("stackwith.me — AXON is a design showcase. This pass certifies your support.", 76, 600);
+      return true;
+    } catch { return false; }
+  }
+
+  function downloadPass(passId) {
+    const c = document.getElementById("passCanvas");
+    c.toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "axon-supporter-pass-" + passId + ".png";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }, "image/png");
+  }
+
+  let lastPassId = "";
+  function showSuccess(plan, buyer, paymentId) {
+    lastPassId = paymentId;
+    document.getElementById("okPlan").textContent = plan.name;
+    document.getElementById("okPassId").textContent = paymentId;
+    const drew = renderPass(plan, buyer, paymentId);
+    document.getElementById("payDownload").hidden = !drew;
+    document.getElementById("passCanvas").hidden = !drew;
+    stageForm.hidden = true; stageOk.hidden = false;
+    const note = document.getElementById("okMailNote");
+    note.textContent = "A confirmation email with your benefits is on its way.";
+    sendBenefitsEmail(plan, buyer, paymentId).catch(() => {
+      note.textContent = "Email delivery delayed — your pass ID above is your proof of purchase.";
+    });
+  }
+
+  document.getElementById("payDownload").addEventListener("click", () => downloadPass(lastPassId));
 
   function onPaymentFailed(resp, plan) {
     // Task 6 replaces this placeholder body with readable errors + fallback.
