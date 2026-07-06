@@ -847,15 +847,19 @@ git commit -m "docs: payments setup guide (Razorpay + EmailJS) + project state"
 **Interfaces:**
 - Consumes: README → Payments instructions from Task 7; values only the user can provide.
 
-- [ ] **Step 1: User provides test config**
+- [x] **Step 1: User provides test config**
 
 Ask the user for: `rzp_test_…` key, EmailJS service/template/public IDs (README steps). Paste into `payments.js` constants.
 
-- [ ] **Step 2: Test-mode QA**
+> Deviation (2026-07-07): user supplied the **live** key (`rzp_live_…`) directly plus EmailJS IDs — no test key. Test-card QA (Step 2) is impossible against a live key and was skipped by the user's choice.
+
+- [x] **Step 2: Test-mode QA**
 
 Run: `npm run build && npm run smoke` → ALL PASS. Then `npx serve _site` (or `npm run dev`) and manually: both tiers end-to-end with test card `4111 1111 1111 1111` (any future expiry, any CVV) — verify checkout opens with correct amount, success pass renders + downloads, EmailJS mail arrives at a real inbox, `payment.failed` path via test failure card shows reason + fallback link on retry.
 
-- [ ] **Step 3: Go live**
+> Deviation (executed 2026-07-07): replaced by a zero-cost live sanity check — served `_site` locally, real `checkout.js` + live key, Studio flow: production sheet opened (merchant AXON, ₹6,999, theme applied, prefill working, no `order_id` rejection at open; no payment made). EmailJS end-to-end delivery still unverified until the live ₹5 purchase (Step 4).
+
+- [x] **Step 3: Go live**
 
 Swap `RAZORPAY_KEY_ID` to `rzp_live_…`. Run `npm run build && npm run smoke` → ALL PASS. Commit:
 

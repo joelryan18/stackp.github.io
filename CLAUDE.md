@@ -23,10 +23,12 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   `docs/superpowers/plans/2026-07-06-razorpay-pricing-plans.md`; spec in
   `docs/superpowers/specs/`). Client-side Razorpay Checkout + EmailJS benefits mail +
   canvas Supporter Pass, all in `src/assets/js/payments.js` + modal in `index.html`.
-  **Pending (Task 8, user-gated):** paste real `RAZORPAY_KEY_ID` and `EMAILJS_DEFAULT`
-  values into `payments.js` (README → Payments has the steps), test-mode QA, go-live ₹5
-  verification + refund. Until keys are set, Pay shows an honest "not live yet" error with
-  a razorpay.me/@stackwith fallback link.
+  **Live config set 2026-07-07** (user supplied `rzp_live_…` + EmailJS IDs directly;
+  test-mode QA skipped — impossible against a live key). Local live sanity check passed:
+  production sheet opens order-less with correct amount/theme/prefill.
+  **Pending (Task 8 Step 4, user-gated):** one real ₹5 Hobby purchase on stackwith.me,
+  confirm captured + notes in dashboard, EmailJS mail arrives, then refund; then Step 5
+  close-out.
 
 ## Standing decisions
 

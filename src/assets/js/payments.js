@@ -2,8 +2,8 @@
    AXON — payments.js · plans checkout (Razorpay) + supporter pass
    ============================================================ */
 
-const RAZORPAY_KEY_ID = ""; // ← paste rzp_test_… for QA, rzp_live_… for deploy (README → Payments)
-const EMAILJS_DEFAULT = { serviceId: "", templateId: "", publicKey: "" }; // ← README → Payments
+const RAZORPAY_KEY_ID = "rzp_live_TAKxGxbsRAvd0N"; // live key — publishable by design (README → Payments)
+const EMAILJS_DEFAULT = { serviceId: "service_keg45ah", templateId: "template_x5fq3zo", publicKey: "yeb2fwT093Ki8zSG_" }; // README → Payments
 const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
