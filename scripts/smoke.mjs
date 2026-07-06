@@ -167,6 +167,41 @@ await evalJs(`document.querySelector(".paywrap__backdrop").click()`);
 await sleep(300);
 check("pay: backdrop closes", await evalJs(`document.getElementById("paywrap").hidden`));
 
+// checkout launch — stub Razorpay + fetch BEFORE interacting
+await evalJs(`(() => {
+  window.__rzpCalls = []; window.__rzpOpened = 0;
+  window.Razorpay = function (opts) {
+    window.__rzpCalls.push(opts);
+    this.open = () => { window.__rzpOpened++; };
+    this.on = (ev, cb) => { if (ev === "payment.failed") window.__rzpFail = cb; };
+  };
+  window.__fetches = [];
+  window.fetch = (url, init) => { window.__fetches.push({ url: String(url), body: (init && init.body) || "" }); return Promise.resolve(new Response("{}", { status: 200 })); };
+  window.__axonEmailCfg = { serviceId: "svc_smoke", templateId: "tpl_smoke", publicKey: "pub_smoke" };
+})()`);
+await evalJs(`document.querySelector('button[data-plan="studio"]').click()`);
+await sleep(300);
+// empty form blocked by native validation
+await evalJs(`document.getElementById("payForm").requestSubmit()`);
+await sleep(300);
+check("pay: empty form blocked", (await evalJs(`window.__rzpCalls.length`)) === 0);
+// filled form launches checkout with exact options
+await evalJs(`(() => {
+  document.getElementById("payName").value = "Smoke Tester";
+  document.getElementById("payEmail").value = "smoke@test.dev";
+  document.getElementById("payPhone").value = "9999999999";
+  document.getElementById("payForm").requestSubmit();
+})()`);
+await sleep(500);
+check("pay: checkout opened", (await evalJs(`window.__rzpOpened`)) === 1);
+const rzpOpts = await evalJs(`window.__rzpCalls[0] && { amount: window.__rzpCalls[0].amount, currency: window.__rzpCalls[0].currency, name: window.__rzpCalls[0].name, email: window.__rzpCalls[0].prefill?.email, contact: window.__rzpCalls[0].prefill?.contact, plan: window.__rzpCalls[0].notes?.plan, hasHandler: typeof window.__rzpCalls[0].handler === "function" }`);
+check("pay: amount 699900 paise", rzpOpts?.amount === 699900, JSON.stringify(rzpOpts));
+check("pay: currency INR", rzpOpts?.currency === "INR");
+check("pay: prefill email", rzpOpts?.email === "smoke@test.dev");
+check("pay: prefill contact", rzpOpts?.contact === "9999999999");
+check("pay: notes.plan studio", rzpOpts?.plan === "studio");
+check("pay: success handler wired", rzpOpts?.hasHandler === true);
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

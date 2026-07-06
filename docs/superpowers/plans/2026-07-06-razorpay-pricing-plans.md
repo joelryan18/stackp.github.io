@@ -354,7 +354,7 @@ git commit -m "feat: checkout modal — markup, styles, open/close/populate"
 - Consumes: `openModal`/`closeModal`, `#payForm` fields, `PLANS` from Task 2.
 - Produces: `launchCheckout(plan, buyer)` where `buyer = { name, email, phone }`; `loadScript(src)`; `showPayError(message, plan, withFallback)`; checkout `options.handler(response)` invoked on success (Task 4 fills in `showSuccess`); `rzp.on("payment.failed", …)` wired (Task 6 extends). Uses `window.Razorpay` if already defined (smoke stub path); options include `key, amount, currency: "INR", name: "AXON", description, prefill: { name, email, contact }, notes: { plan, buyer_name }, theme: { color: "#B8FF3C" }, modal: { ondismiss } `.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 Append to section 6 in `scripts/smoke.mjs`:
 
@@ -395,12 +395,12 @@ check("pay: notes.plan studio", rzpOpts?.plan === "studio");
 check("pay: success handler wired", rzpOpts?.hasHandler === true);
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: FAIL on "pay: checkout opened" and the option checks (empty-form check may already pass — native `required` blocks submit even without JS).
 
-- [ ] **Step 3: Implement checkout launch in `payments.js`**
+- [x] **Step 3: Implement checkout launch in `payments.js`**
 
 Add below `PLANS` (module scope):
 
@@ -483,12 +483,12 @@ Inside `initPayments()`, add after `closeModal()`:
   });
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/assets/js/payments.js scripts/smoke.mjs
