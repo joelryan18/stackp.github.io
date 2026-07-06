@@ -622,7 +622,7 @@ git commit -m "feat: success stage renders downloadable Supporter Pass"
 - Consumes: `sendBenefitsEmail` stub from Task 4, `EMAILJS_DEFAULT` from Task 2, `window.__axonEmailCfg` override hook (set by smoke in Task 3's stub block).
 - Produces: real `sendBenefitsEmail(plan, buyer, passId)` → Promise; POST `https://api.emailjs.com/api/v1.0/email/send` with `{ service_id, template_id, user_id, template_params: { to_name, to_email, plan_name, amount, pass_id, benefits } }`.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 Append to section 6 (the success handler already fired in Task 4 with `__axonEmailCfg` set and `fetch` stubbed):
 
@@ -638,12 +638,12 @@ check("pay: emailjs benefits included", String(mailBody.template_params?.benefit
 check("pay: mail note optimistic", (await evalJs(`document.getElementById("okMailNote").textContent`)).includes("on its way"));
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: FAIL "pay: emailjs request sent" (stub rejects without fetching). Note: "pay: mail note optimistic" will also FAIL right now (stub rejection flips the note) — that's expected.
 
-- [ ] **Step 3: Implement `sendBenefitsEmail`**
+- [x] **Step 3: Implement `sendBenefitsEmail`**
 
 Replace the Task 4 stub inside `initPayments()`:
 
@@ -673,12 +673,12 @@ Replace the Task 4 stub inside `initPayments()`:
   }
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS** (stubbed fetch returns 200 → optimistic note stays).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/assets/js/payments.js scripts/smoke.mjs

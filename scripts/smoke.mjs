@@ -212,6 +212,16 @@ check("pay: plan named on success", (await evalJs(`document.getElementById("okPl
 check("pay: pass canvas painted", (await evalJs(`document.getElementById("passCanvas").getContext("2d").getImageData(100, 100, 1, 1).data.join()`)) === "7,8,10,255");
 check("pay: download button visible", await evalJs(`!document.getElementById("payDownload").hidden`));
 
+// EmailJS request captured by the fetch stub
+const mail = await evalJs(`window.__fetches.find((f) => f.url.includes("api.emailjs.com"))`);
+check("pay: emailjs request sent", !!mail, JSON.stringify(await evalJs(`window.__fetches.map((f) => f.url)`)));
+const mailBody = mail ? JSON.parse(mail.body) : {};
+check("pay: emailjs service/template", mailBody.service_id === "svc_smoke" && mailBody.template_id === "tpl_smoke" && mailBody.user_id === "pub_smoke", mail && mail.body);
+check("pay: emailjs to_email", mailBody.template_params?.to_email === "smoke@test.dev");
+check("pay: emailjs pass_id", mailBody.template_params?.pass_id === "pay_SMOKE1234567890");
+check("pay: emailjs benefits included", String(mailBody.template_params?.benefits || "").includes("Priority trace lanes"));
+check("pay: mail note optimistic", (await evalJs(`document.getElementById("okMailNote").textContent`)).includes("on its way"));
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

@@ -120,7 +120,27 @@ export function initPayments() {
   }
 
   function sendBenefitsEmail(plan, buyer, passId) {
-    return Promise.reject(new Error("email not configured")); // Task 5 replaces
+    const cfg = window.__axonEmailCfg || EMAILJS_DEFAULT;
+    if (!cfg.serviceId || !cfg.templateId || !cfg.publicKey) {
+      return Promise.reject(new Error("emailjs unconfigured"));
+    }
+    return fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: cfg.serviceId,
+        template_id: cfg.templateId,
+        user_id: cfg.publicKey,
+        template_params: {
+          to_name: buyer.name,
+          to_email: buyer.email,
+          plan_name: plan.name,
+          amount: plan.display,
+          pass_id: passId,
+          benefits: plan.benefits.join(" · "),
+        },
+      }),
+    }).then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); });
   }
 
   function renderPass(plan, buyer, passId) {
