@@ -143,6 +143,30 @@ check("pay: studio card ₹6,999 one-time", (await evalJs(`document.querySelecto
 check("pay: no $ price on payable cards", !(await evalJs(`/\\$\\d/.test(document.querySelector(".tiers")?.textContent || "")`)) || (await evalJs(`document.querySelector(".tier:last-of-type .tier__price").textContent`)) === "Custom");
 check("pay: enterprise card untouched", (await evalJs(`document.querySelector(".tier:last-of-type .btn")?.getAttribute("href")`)) === "#engage");
 
+// modal opens, populated from PLANS
+await evalJs(`document.querySelector('button[data-plan="studio"]').click()`);
+await sleep(500);
+check("pay: modal opens", !(await evalJs(`document.getElementById("paywrap").hidden`)));
+check("pay: modal is dialog", (await evalJs(`document.querySelector(".paymodal").getAttribute("aria-modal")`)) === "true");
+check("pay: plan name", (await evalJs(`document.getElementById("payPlanName").textContent`)) === "Studio");
+check("pay: modal price", (await evalJs(`document.getElementById("payPrice").textContent`)).includes("₹6,999"));
+check("pay: benefits ≥ 8", (await evalJs(`document.querySelectorAll("#payBenefits li").length`)) >= 8, String(await evalJs(`document.querySelectorAll("#payBenefits li").length`)));
+check("pay: honest note", (await evalJs(`document.querySelector(".paymodal__note").textContent.replace(/\\s+/g, " ")`)).includes("AXON is a design showcase. This is a genuine ₹6,999 payment"));
+check("pay: focus inside modal", await evalJs(`document.querySelector(".paymodal").contains(document.activeElement)`));
+check("pay: body scroll locked", await evalJs(`document.body.classList.contains("pay-open")`));
+// Esc closes, focus returns
+await evalJs(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`);
+await sleep(300);
+check("pay: Escape closes", await evalJs(`document.getElementById("paywrap").hidden`));
+check("pay: focus returns to CTA", await evalJs(`document.activeElement === document.querySelector('button[data-plan="studio"]')`));
+// backdrop click closes; hobby populates too
+await evalJs(`document.querySelector('button[data-plan="hobby"]').click()`);
+await sleep(300);
+check("pay: hobby price", (await evalJs(`document.getElementById("payPrice").textContent`)).includes("₹5"));
+await evalJs(`document.querySelector(".paywrap__backdrop").click()`);
+await sleep(300);
+check("pay: backdrop closes", await evalJs(`document.getElementById("paywrap").hidden`));
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

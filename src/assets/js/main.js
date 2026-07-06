@@ -5,6 +5,7 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
+import { initPayments } from "./payments.js";
 (() => {
   "use strict";
 
@@ -504,6 +505,8 @@ import Lenis from "@studio-freight/lenis";
     document.fonts.ready.then(() => ScrollTrigger.refresh());
   }
   window.addEventListener("load", () => hasGSAP && ScrollTrigger.refresh());
+
+  initPayments();
 
   console.log("%cAXON", "font:700 20px 'JetBrains Mono',monospace;color:#B8FF3C", "· signal instrument online.");
 })();

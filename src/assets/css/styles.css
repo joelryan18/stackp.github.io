@@ -429,6 +429,37 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .tier .btn { justify-content: center; margin-top: auto; }
 
 /* ============================================================
+   CHECKOUT MODAL (Razorpay supporter pass)
+   ============================================================ */
+.paywrap { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1.2rem; }
+.paywrap[hidden] { display: none; }
+.paywrap__backdrop { position: absolute; inset: 0; background: rgba(7, 8, 10, 0.78); backdrop-filter: blur(6px); }
+.paymodal { position: relative; z-index: 1; width: min(560px, 100%); max-height: min(86vh, 780px); overflow: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 2rem; }
+.paymodal__stage { display: flex; flex-direction: column; gap: 1rem; }
+.paymodal__stage[hidden] { display: none; }
+.paymodal__x { position: absolute; top: 0.9rem; right: 0.9rem; width: 2rem; height: 2rem; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; cursor: pointer; transition: border-color 0.3s var(--ease), color 0.3s var(--ease); }
+.paymodal__x:hover { color: var(--text); border-color: var(--line-strong); }
+.paymodal__head { display: flex; align-items: baseline; justify-content: space-between; }
+.paymodal__head h3 { font-family: var(--display); font-weight: 600; font-size: 1.5rem; }
+.paymodal__benefits { display: flex; flex-direction: column; gap: 0.55rem; }
+.paymodal__benefits li { font-size: 0.9rem; color: var(--text-dim); padding-left: 1.4rem; position: relative; }
+.paymodal__benefits li::before { content: "▸"; position: absolute; left: 0; color: var(--signal); font-size: 0.8rem; }
+.paymodal__form { display: flex; flex-direction: column; gap: 0.6rem; }
+.paymodal__form input { background: var(--bg-soft); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0.8rem 1.1rem; color: var(--text); font-family: var(--mono); font-size: 0.88rem; }
+.paymodal__form input:focus { outline: none; border-color: var(--signal); }
+.paymodal__note { font-family: var(--mono); font-size: 0.74rem; color: var(--faint); border-left: 2px solid var(--line-strong); padding-left: 0.8rem; }
+.paymodal__err { font-family: var(--mono); font-size: 0.8rem; color: var(--warn); }
+.paymodal__err a { color: var(--signal); text-decoration: underline; }
+.paymodal__oktitle { font-family: var(--display); font-weight: 600; font-size: 1.5rem; }
+.paymodal__okline { color: var(--text-dim); font-size: 0.95rem; }
+.paymodal__okline b { color: var(--signal); font-weight: 500; font-family: var(--mono); }
+.paymodal__pass { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
+.paymodal__mailnote { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+.paymodal__actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.paymodal .btn { justify-content: center; }
+body.pay-open { overflow: hidden; }
+
+/* ============================================================
    ENGAGE (final CTA)
    ============================================================ */
 .engage { text-align: center; position: relative; overflow: hidden; }

@@ -105,7 +105,7 @@ git commit -m "feat: tier cards show real one-time ₹ prices (sanctioned copy c
 - Consumes: `button[data-plan]` CTAs from Task 1.
 - Produces: `export function initPayments()`; `PLANS` object `{ hobby|studio: { name, tag, amount /*paise*/, display, description, benefits[] } }`; DOM ids `#paywrap #payPlanName #payPlanTag #payPrice #payBenefits #payNoteAmount #payForm #payName #payEmail #payPhone #payErr #payBtn #passCanvas #okPlan #okPassId #okMailNote #payDownload #payDone`; stages `[data-stage="form"]` / `[data-stage="success"]`; internal fns later tasks extend: `openModal(key)`, `closeModal()`.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 Append to section 6 in `scripts/smoke.mjs`:
 
@@ -135,12 +135,12 @@ await sleep(300);
 check("pay: backdrop closes", await evalJs(`document.getElementById("paywrap").hidden`));
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: FAILs on all new "pay: modal…" checks (Task 1 checks still PASS).
 
-- [ ] **Step 3: Add modal markup**
+- [x] **Step 3: Add modal markup**
 
 In `src/index.html`, after the closing `</section>` of the ENGAGE section (end of file):
 
@@ -184,7 +184,7 @@ In `src/index.html`, after the closing `</section>` of the ENGAGE section (end o
     </div>
 ```
 
-- [ ] **Step 4: Add modal CSS**
+- [x] **Step 4: Add modal CSS**
 
 In `src/assets/css/styles.css`, insert between the PLANS section (ends line 429) and the ENGAGE section header (line 431):
 
@@ -221,7 +221,7 @@ In `src/assets/css/styles.css`, insert between the PLANS section (ends line 429)
 body.pay-open { overflow: hidden; }
 ```
 
-- [ ] **Step 5: Create `src/assets/js/payments.js`**
+- [x] **Step 5: Create `src/assets/js/payments.js`**
 
 ```js
 /* ============================================================
@@ -314,7 +314,7 @@ export function initPayments() {
 }
 ```
 
-- [ ] **Step 6: Wire into `main.js`**
+- [x] **Step 6: Wire into `main.js`**
 
 At the top of `src/assets/js/main.js` (after the Lenis import, line 7):
 
@@ -328,17 +328,19 @@ Inside the IIFE, immediately before the final `console.log("%cAXON", …)` line:
   initPayments();
 ```
 
-- [ ] **Step 7: Run to verify pass**
+- [x] **Step 7: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS** (page-load exception checks in section 1 also confirm payments.js parses clean).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/index.html src/assets/css/styles.css src/assets/js/payments.js src/assets/js/main.js scripts/smoke.mjs
 git commit -m "feat: checkout modal — markup, styles, open/close/populate"
 ```
+
+> Deviation (executed): `openModal(key, trigger)` receives the clicked button and uses it as the focus-return target — `document.activeElement` is `<body>` for mouse/JS clicks, so the plan's original code failed the "focus returns to CTA" check.
 
 ---
 

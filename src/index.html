@@ -275,3 +275,41 @@ permalink: "index.html"
         <button type="submit" class="btn btn--signal" data-magnet data-probe="DEPLOY">Request access</button>
       </form>
     </section>
+
+    <!-- ░░ SIG.07a · CHECKOUT MODAL (Razorpay supporter pass) ░░ -->
+    <div class="paywrap" id="paywrap" hidden>
+      <div class="paywrap__backdrop" data-pay-close></div>
+      <div class="paymodal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+        <button type="button" class="paymodal__x" data-pay-close aria-label="Close checkout">✕</button>
+
+        <div class="paymodal__stage" data-stage="form">
+          <p class="eyebrow">[ SIG.07 · CHECKOUT ]</p>
+          <header class="paymodal__head">
+            <h3 id="payTitle"><span id="payPlanName">—</span></h3>
+            <span class="tier__tag" id="payPlanTag">[ — ]</span>
+          </header>
+          <p class="tier__price"><span id="payPrice">—</span><span> · one-time</span></p>
+          <ul class="paymodal__benefits" id="payBenefits"></ul>
+          <form class="paymodal__form" id="payForm">
+            <input type="text" id="payName" name="name" placeholder="Full name" aria-label="Full name" autocomplete="name" required minlength="2" />
+            <input type="email" id="payEmail" name="email" placeholder="you@company.com" aria-label="Email address" autocomplete="email" required />
+            <input type="tel" id="payPhone" name="phone" placeholder="Phone (10 digits)" aria-label="Phone number" autocomplete="tel" required pattern="[0-9+ -]{10,15}" />
+            <p class="paymodal__note">AXON is a design showcase. This is a genuine <span id="payNoteAmount">₹—</span> payment for an AXON Supporter Pass, delivered by email — no software product is provided.</p>
+            <p class="paymodal__err" id="payErr" role="alert" hidden></p>
+            <button type="submit" class="btn btn--signal" id="payBtn" data-probe="PAY">Pay ₹—</button>
+          </form>
+        </div>
+
+        <div class="paymodal__stage" data-stage="success" hidden>
+          <p class="eyebrow">[ SIG.07 · CONFIRMED ]</p>
+          <h3 class="paymodal__oktitle">Signal received.</h3>
+          <p class="paymodal__okline">Your <b id="okPlan">—</b> Supporter Pass is issued. Pass ID <b id="okPassId">—</b></p>
+          <canvas class="paymodal__pass" id="passCanvas" width="1200" height="675" aria-label="Your AXON Supporter Pass"></canvas>
+          <p class="paymodal__mailnote" id="okMailNote" role="status">A confirmation email with your benefits is on its way.</p>
+          <div class="paymodal__actions">
+            <button type="button" class="btn btn--signal" id="payDownload">Download pass</button>
+            <button type="button" class="btn btn--ghost" id="payDone" data-pay-close>Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
