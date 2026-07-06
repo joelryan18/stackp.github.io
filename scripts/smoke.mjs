@@ -134,6 +134,15 @@ const okText = await evalJs(`document.querySelector(".engage__ok")?.textContent 
 check("form: honest success shown", okText.includes("on the list"), okText);
 check("form: no inbox promise", !okText.toLowerCase().includes("inbox"), okText);
 
+/* ---- 6 · payments: cards, modal, checkout, pass, email ---- */
+await metrics(1440, 900);
+await go(BASE + "/", 3000);
+check("pay: heading says Start for ₹5", (await evalJs(`document.querySelector(".plans .section__title")?.textContent.replace(/\\s+/g, " ").trim() || ""`)).includes("Start for ₹5"));
+check("pay: hobby card ₹5 one-time", (await evalJs(`document.querySelector('button[data-plan="hobby"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹5 one-time"));
+check("pay: studio card ₹6,999 one-time", (await evalJs(`document.querySelector('button[data-plan="studio"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹6,999 one-time"));
+check("pay: no $ price on payable cards", !(await evalJs(`/\\$\\d/.test(document.querySelector(".tiers")?.textContent || "")`)) || (await evalJs(`document.querySelector(".tier:last-of-type .tier__price").textContent`)) === "Custom");
+check("pay: enterprise card untouched", (await evalJs(`document.querySelector(".tier:last-of-type .btn")?.getAttribute("href")`)) === "#engage");
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

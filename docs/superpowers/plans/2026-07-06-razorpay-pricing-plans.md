@@ -31,7 +31,7 @@
 **Interfaces:**
 - Produces: `<button type="button" class="btn …" data-plan="hobby|studio">` CTAs that Task 2's `initPayments()` binds to. Enterprise card keeps its `<a href="#engage">`.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 In `scripts/smoke.mjs`, insert before the final `ws.close(); chrome.kill(); server.close();` line:
 
@@ -46,12 +46,12 @@ check("pay: no $ price on payable cards", !(await evalJs(`/\\$\\d/.test(document
 check("pay: enterprise card untouched", (await evalJs(`document.querySelector(".tier:last-of-type .btn")?.getAttribute("href")`)) === "#engage");
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: `FAIL  pay: heading says Start for ₹5`, `FAIL  pay: hobby card ₹5 one-time`, `FAIL  pay: studio card ₹6,999 one-time` (existing checks all PASS; exit 1).
 
-- [ ] **Step 3: Edit the cards**
+- [x] **Step 3: Edit the cards**
 
 In `src/index.html`:
 
@@ -78,12 +78,12 @@ Studio card — replace price line and CTA:
 
 Enterprise card: no changes.
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS** (the 5 new checks included).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/index.html scripts/smoke.mjs
