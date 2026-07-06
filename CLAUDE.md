@@ -19,17 +19,23 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   `git credential fill` → `curl -H "Authorization: token …"` (worked for the Pages API).
 - Manual step still open: create a Formspree form and paste its endpoint into
   `FORM_ENDPOINT` in `src/assets/js/main.js`.
-- **Next feature (requested 2026-07-06, not started): make the pricing plans at the bottom
-  of index.html real** — click a plan → show full benefits → collect buyer details → pay via
-  **Razorpay**; the "free" tier should charge a minimum (~₹5 incl. tax) instead of being free.
-  Needs design first: static site (no backend) → Razorpay hosted options (Payment
-  Button/Links/Pages) vs. serverless order-creation; also honest-copy concerns (site is a
-  fictional-product showcase).
+- **Pricing plans feature implemented** (Tasks 1–7 of
+  `docs/superpowers/plans/2026-07-06-razorpay-pricing-plans.md`; spec in
+  `docs/superpowers/specs/`). Client-side Razorpay Checkout + EmailJS benefits mail +
+  canvas Supporter Pass, all in `src/assets/js/payments.js` + modal in `index.html`.
+  **Pending (Task 8, user-gated):** paste real `RAZORPAY_KEY_ID` and `EMAILJS_DEFAULT`
+  values into `payments.js` (README → Payments has the steps), test-mode QA, go-live ₹5
+  verification + refund. Until keys are set, Pay shows an honest "not live yet" error with
+  a razorpay.me/@stackwith fallback link.
 
 ## Standing decisions
 
 - Design stays pixel-identical unless the user sanctions a change (sanctioned so far:
-  `--faint` → `#78828E`, honest form copy).
+  `--faint` → `#78828E`, honest form copy; 2026-07-06: tier cards show ₹5/₹6,999 one-time
+  prices, plans heading "Start for ₹5…", checkout modal).
+- Payments: checkout modal + `payments.js` + smoke section 6 ("pay:" checks) exist;
+  `window.__axonEmailCfg` is a QA/smoke config-override hook — do not remove. Honest-copy
+  line in the modal is verbatim-sanctioned; amounts are exact (500 / 699900 paise).
 - Out of scope, never touch: `src/blog/`, `src/404.html`, and the BLOG/FAQ/404 CSS sections
   in `styles.css` (carried over verbatim, copied not templated).
 - AdSense client `ca-pub-7262404901375077`; consent localStorage key `axon-consent`;

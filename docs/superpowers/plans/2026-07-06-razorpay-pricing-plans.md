@@ -770,7 +770,7 @@ git commit -m "feat: readable payment errors + razorpay.me fallback link"
 - Consumes: everything shipped in Tasks 1–6.
 - Produces: operator documentation the user follows for Task 8.
 
-- [ ] **Step 1: Add README "Payments (Razorpay + EmailJS)" section**
+- [x] **Step 1: Add README "Payments (Razorpay + EmailJS)" section**
 
 Append to `README.md`:
 
@@ -817,18 +817,20 @@ purchase and refund it from the dashboard. Fallback payment page:
 https://razorpay.me/@stackwith/{amount-in-rupees}.
 ```
 
-- [ ] **Step 2: Update `CLAUDE.md`**
+- [x] **Step 2: Update `CLAUDE.md`**
 
 In the "Current state" section: replace the "Next feature (requested 2026-07-06, not started)" paragraph with a line noting the pricing feature is implemented per `docs/superpowers/plans/2026-07-06-razorpay-pricing-plans.md`, pending user config (`RAZORPAY_KEY_ID`, `EMAILJS_DEFAULT` in `src/assets/js/payments.js`) and the live ₹5 verification. Add to "Standing decisions": tier cards now show ₹5/₹6,999 one-time (sanctioned 2026-07-06); payments modal + smoke section 6 exist; `window.__axonEmailCfg` is a QA/smoke hook — do not remove.
 
-- [ ] **Step 3: Full verification + fresh QA baselines**
+- [x] **Step 3: Full verification + fresh QA baselines**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS**.
 Run: `npm run qa`
 Expected: new baseline screenshots in `/tmp` (tier-card changes are sanctioned; eyeball desktop + mobile shots for layout breakage before accepting).
 
-- [ ] **Step 4: Commit**
+> Deviation (executed): also captured checkout-modal shots (form / unconfigured-key error / success stages, desktop + mobile) via a one-off CDP script since `qa-shots.mjs` never opens the modal; all eyeballed clean. Baselines copied to `/tmp/axon-qa-baseline-desktop|mobile` (14 shots each).
+
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md CLAUDE.md

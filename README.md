@@ -52,4 +52,45 @@ While empty, the form shows an honest inline confirmation and sends nothing.
 - 3D nerve tuning: `N_POINTS`, bloom, exposure, `uNear/uFar` in `src/assets/js/neural3d.js`.
 - `src/blog/` and `src/404.html` are copied verbatim (not templated).
 
+## Payments (Razorpay + EmailJS)
+
+Pricing tiers charge one-time via client-side Razorpay Checkout (no backend).
+Config lives at the top of `src/assets/js/payments.js`:
+
+- `RAZORPAY_KEY_ID` — Dashboard → Account & Settings → API Keys. Use
+  `rzp_test_…` for QA, swap to `rzp_live_…` before deploying.
+- `EMAILJS_DEFAULT` — from https://dashboard.emailjs.com: **Email Services →
+  Add service** (connect your mailbox; note the Service ID), **Email
+  Templates → Create template** (note the Template ID), **Account → API
+  Keys** (Public Key).
+
+EmailJS template (set "To Email" to `{{to_email}}`):
+
+- Subject: `Your AXON Supporter Pass — {{pass_id}}`
+- Body:
+
+      Hi {{to_name}},
+
+      Thank you for supporting AXON. Your {{plan_name}} Supporter Pass is
+      confirmed ({{amount}}, one-time).
+
+      Pass ID: {{pass_id}}
+      Benefits: {{benefits}}
+
+      AXON is a design showcase — this pass certifies your support; no
+      software product is delivered.
+
+      — stackwith.me
+
+Razorpay dashboard prep (one-time):
+
+1. Settings → Payment capture → enable automatic capture.
+2. Settings → Notifications → enable customer email notifications (receipt backup).
+
+QA: paste the test key, run through both tiers with Razorpay test cards
+(https://razorpay.com/docs/payments/payments/test-card-details/), confirm the
+EmailJS mail arrives, then swap in the live key, deploy, make one real ₹5
+purchase and refund it from the dashboard. Fallback payment page:
+https://razorpay.me/@stackwith/{amount-in-rupees}.
+
 Made with intent.
