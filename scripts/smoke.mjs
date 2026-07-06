@@ -222,6 +222,30 @@ check("pay: emailjs pass_id", mailBody.template_params?.pass_id === "pay_SMOKE12
 check("pay: emailjs benefits included", String(mailBody.template_params?.benefits || "").includes("Priority trace lanes"));
 check("pay: mail note optimistic", (await evalJs(`document.getElementById("okMailNote").textContent`)).includes("on its way"));
 
+// failure path: readable error, fallback link on 2nd failure
+await evalJs(`document.getElementById("payDone").click()`); // close success modal
+await sleep(300);
+await evalJs(`document.querySelector('button[data-plan="hobby"]').click()`);
+await sleep(300);
+await evalJs(`(() => {
+  document.getElementById("payName").value = "Smoke Tester";
+  document.getElementById("payEmail").value = "smoke@test.dev";
+  document.getElementById("payPhone").value = "9999999999";
+  document.getElementById("payForm").requestSubmit();
+})()`);
+await sleep(400);
+await evalJs(`window.__rzpFail({ error: { description: "Card declined by issuer" } })`);
+await sleep(300);
+check("pay: failure reason shown", (await evalJs(`document.getElementById("payErr").textContent`)).includes("Card declined by issuer"));
+check("pay: no fallback on 1st failure", !(await evalJs(`!!document.querySelector("#payErr a")`)));
+check("pay: pay button re-enabled", !(await evalJs(`document.getElementById("payBtn").hasAttribute("aria-busy")`)));
+await evalJs(`document.getElementById("payForm").requestSubmit()`);
+await sleep(400);
+await evalJs(`window.__rzpFail({ error: { description: "Card declined by issuer" } })`);
+await sleep(300);
+const fb = await evalJs(`document.querySelector("#payErr a")?.href || ""`);
+check("pay: fallback link on 2nd failure", fb === "https://razorpay.me/@stackwith/5", fb);
+
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");
 process.exit(failed ? 1 : 0);

@@ -47,7 +47,7 @@ export function initPayments() {
   const err = document.getElementById("payErr");
   const payBtn = document.getElementById("payBtn");
 
-  let planKey = null, opener = null;
+  let planKey = null, opener = null, failCount = 0;
 
   const focusables = () =>
     [...modal.querySelectorAll("button, input, a[href]")].filter((el) => el.offsetParent !== null);
@@ -68,6 +68,7 @@ export function initPayments() {
       const li = document.createElement("li"); li.textContent = b; return li;
     }));
     err.hidden = true; err.replaceChildren();
+    failCount = 0;
     stageOk.hidden = true; stageForm.hidden = false;
     wrap.hidden = false;
     document.body.classList.add("pay-open");
@@ -200,8 +201,11 @@ export function initPayments() {
   document.getElementById("payDownload").addEventListener("click", () => downloadPass(lastPassId));
 
   function onPaymentFailed(resp, plan) {
-    // Task 6 replaces this placeholder body with readable errors + fallback.
-    showPayError("Payment failed. Please retry.", plan, false);
+    failCount++;
+    const reason = resp && resp.error && resp.error.description
+      ? resp.error.description
+      : "Payment could not be completed.";
+    showPayError(reason + " You can retry.", plan, failCount >= 2);
   }
 
   form.addEventListener("submit", (e) => {

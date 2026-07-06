@@ -697,7 +697,7 @@ git commit -m "feat: EmailJS benefits email on payment success"
 - Consumes: `onPaymentFailed` placeholder from Task 3, `showPayError` from Task 3, `window.__rzpFail` captured by the smoke stub.
 - Produces: final `onPaymentFailed(resp, plan)` — shows Razorpay's `error.description` when present; offers the `razorpay.me/@stackwith/{rupees}` fallback link from the **second** failure in a modal session; `failCount` resets on `openModal`.
 
-- [ ] **Step 1: Add failing smoke checks**
+- [x] **Step 1: Add failing smoke checks**
 
 Append to section 6:
 
@@ -727,12 +727,12 @@ const fb = await evalJs(`document.querySelector("#payErr a")?.href || ""`);
 check("pay: fallback link on 2nd failure", fb === "https://razorpay.me/@stackwith/5", fb);
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: FAIL "pay: failure reason shown" (placeholder shows generic text), FAIL "pay: fallback link on 2nd failure".
 
-- [ ] **Step 3: Implement final failure handling**
+- [x] **Step 3: Implement final failure handling**
 
 In `payments.js`: add `let failCount = 0;` next to `let planKey = null, opener = null;`, set `failCount = 0;` inside `openModal` (next to `err.hidden = true`), and replace the Task 3 placeholder:
 
@@ -746,12 +746,12 @@ In `payments.js`: add `let failCount = 0;` next to `let planKey = null, opener =
   }
 ```
 
-- [ ] **Step 4: Run to verify pass**
+- [x] **Step 4: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS**.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/assets/js/payments.js scripts/smoke.mjs
