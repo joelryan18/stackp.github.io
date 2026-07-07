@@ -38,7 +38,7 @@ Supabase free tier.
 ## Execution Tracker (tick as tasks land — designed for one-or-more tasks per session)
 
 - [x] **Task 1** — Spec: fulfillment map, data model, RLS, Edge Function contracts · commit `docs: hobby benefits fulfillment spec`
-- [ ] **Task 2** — Supabase schema + RLS (passes, agents, runs, access_requests, registry opt-in) · commit `feat: entitlements schema + RLS`
+- [x] **Task 2** — Supabase schema + RLS (passes, agents, runs, access_requests, registry opt-in) · commit `feat: entitlements schema + RLS` *(deviation: no CLI/psql/Docker on this machine — migration is repo-committed + hand-verified; applying to the live project is a paste step in `supabase/README.md`, pending)*
 - [ ] **Task 3** — Activation webhook: Razorpay → Edge Function (signature verify) → passes row (user-gated: webhook + secret in Razorpay dashboard) · commit `feat: verified purchase activation via Razorpay webhook`
 - [ ] **Task 4** — Run executor Edge Function + 500/month quota + 7-day purge + pg_cron schedule · commit `feat: agent run executor with quota and replay retention`
 - [ ] **Task 5** — AXON Console page (`/console.html`): sign-in gate, pass check, 1-agent CRUD, manual run, replay view, quota meter · commit `feat: AXON console for pass holders`

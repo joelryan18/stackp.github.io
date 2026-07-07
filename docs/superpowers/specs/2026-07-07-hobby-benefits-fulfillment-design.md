@@ -37,7 +37,7 @@ Supabase (Postgres + RLS, Edge Functions, pg_cron).
   both on the checkout page's visual language. The console makes no marketing claims, so
   Tasks 2–10 can ship while the sanctioned honest-copy line stands (revised only in Task 12).
 
-## 2. Data model (`supabase/migrations/0001_entitlements.sql`)
+## 2. Data model (`supabase/migrations/20260707000001_entitlements.sql`)
 
 Plan limits live in two immutable SQL functions (single source of truth):
 `plan_agent_limit('hobby'|'studio') → 1 | NULL` (NULL = unlimited) and
@@ -246,7 +246,7 @@ Discussions / registry links (**user-gated:** template edited in the EmailJS das
 
 | File | Change |
 |---|---|
-| `supabase/migrations/0001_entitlements.sql` | **New:** everything in §2–§4d |
+| `supabase/migrations/*.sql` | **New:** `…000001_entitlements.sql` = §2–§3 (Task 2); `…000002` adds §4d schedules (Task 4). Timestamped names for `supabase db push` |
 | `supabase/functions/{razorpay-webhook,run-agent,agent-hook}/index.ts` | **New** (Deno) |
 | `supabase/README.md` | **New:** apply/deploy/secrets runbook (user-gated steps) |
 | `connectors/**` | **New:** presets + templates + PR contract |
