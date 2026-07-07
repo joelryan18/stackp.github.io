@@ -251,7 +251,12 @@ check("gate: github option", await evalJs(`!!document.querySelector('button[data
 check("gate: discord option", await evalJs(`!!document.querySelector('button[data-auth="discord"]')`));
 check("gate: email form present", await evalJs(`!!document.getElementById("authEmailForm")`));
 check("gate: page noindex", (await evalJs(`document.querySelector('meta[name="robots"]')?.content`)) === "noindex");
-// unconfigured constants → honest error + fallback link
+// live Supabase config must ship in the bundle (constants were empty pre-rollout)
+const checkoutBundle = await readFile(path.join(ROOT, JSON.parse(await readFile("src/_data/assets.json", "utf8")).checkout), "utf8");
+check("gate: live supabase config shipped", checkoutBundle.includes("https://jldzkjihbekxqxagkame.supabase.co") && checkoutBundle.includes("sb_publishable_"));
+// hook-forced empty config → honest error + fallback link (safety-net path, kept deterministic)
+const { identifier: unconfPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `window.__axonAuthCfg = { url: "", key: "" };` });
+await go(BASE + "/checkout.html?plan=studio", 3000);
 await evalJs(`document.querySelector('button[data-auth="google"]').click()`);
 await sleep(300);
 check("gate: unconfigured error", (await evalJs(`document.getElementById("authErr").textContent`)).includes("isn't configured yet"));
@@ -259,6 +264,7 @@ check("gate: fallback link", (await evalJs(`document.querySelector("#authErr a")
 // email mode toggle
 await evalJs(`document.getElementById("authToggle").click()`);
 check("gate: toggle flips to signup", (await evalJs(`document.getElementById("authSubmit").textContent`)) === "Create account");
+await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: unconfPreload });
 // signed in via the QA hook — must exist before checkout.js runs, so preload it
 const { identifier: authPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `window.__axonAuthCfg = { session: { user: { id: "uid_smoke_1", email: "smoke@test.dev", user_metadata: { full_name: "Smoke Tester" }, app_metadata: { provider: "google" } } } };` });
 await go(BASE + "/checkout.html?plan=studio", 3000);

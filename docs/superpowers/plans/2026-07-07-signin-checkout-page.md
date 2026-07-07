@@ -1050,15 +1050,35 @@ git commit -m "docs: sign-in setup guide (Supabase) + project state"
 **Interfaces:**
 - Consumes: README → Sign-in instructions from Task 3; values only the user can provide.
 
-- [ ] **Step 1: User provides Supabase config**
+- [x] **Step 1: User provides Supabase config**
 
 Ask the user for: project URL + anon key, after they complete the README → Sign-in dashboard setup (Email provider, Google/GitHub/Discord OAuth apps, URL configuration). Paste into `checkout.js` constants.
 
-- [ ] **Step 2: Local sign-in QA**
+(Done 2026-07-07 — user supplied URL + new-format `sb_publishable_…` key (works as the
+anon key) BEFORE completing the dashboard setup: `/auth/v1/settings` shows google/github/
+discord all disabled, `mailer_autoconfirm: false`. Deviations: (a) smoke's "unconfigured
+error" checks now force the empty-config path via a `window.__axonAuthCfg = { url, key }`
+hook extension in `checkout.js` — with real constants the old check would navigate away;
+(b) added a smoke check that the live config shipped in the built bundle; (c) `signUp`
+now passes `emailRedirectTo: location.href` so confirm-links return to the checkout page.)
+
+- [x] **Step 2: Local sign-in QA**
 
 Run: `npm run build && npm run smoke` → ALL PASS. Then `python3 -m http.server 8080 -d _site` and manually at `http://localhost:8080/checkout.html?plan=hobby`: sign in with each provider (Google, GitHub, Discord) — verify the redirect returns to the checkout page signed-in with the right email; create an email/password account and sign in with it; sign out and back in; confirm the buyer email field is read-only and prefilled.
 
+(Done 2026-07-07, partially — build+smoke ALL PASS; email+password QA'd E2E headlessly
+against the real project (signup → confirm-email notice + "email rate limit exceeded"
+error surfaced verbatim; admin-confirmed test user; wrong password → readable error;
+sign-in → pay stage with readonly prefilled email; session persists across reload; real
+sign-out returns to auth stage; test user deleted via admin API). Provider sign-ins
+CANNOT be QA'd — all three are disabled in the dashboard; clicking one navigates to a
+raw Supabase 400 JSON page. Deferred to the live check after the user enables them.)
+
 - [ ] **Step 3: Deploy**
+
+(Commit landed 2026-07-07; **push HELD** until the user enables the three providers +
+URL Configuration — deploying now would ship OAuth buttons that dead-end on a 400 JSON
+page. Re-verify with `/auth/v1/settings` (google/github/discord true), then push.)
 
 ```bash
 git add src/assets/js/checkout.js

@@ -33,10 +33,18 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   `docs/superpowers/plans/2026-07-07-signin-checkout-page.md`; spec in
   `docs/superpowers/specs/`). Supabase Auth (Google/GitHub/Discord/email+password) in
   `src/assets/js/checkout.js`; `payments.js` refactored to `PLANS` + `initPayFlow`;
-  the index checkout modal is **gone**. **Pending (Task 4, user-gated):** user creates
-  the Supabase project + provider OAuth apps (README → Sign-in) and supplies
-  `SUPABASE_URL`/`SUPABASE_ANON_KEY` for `checkout.js`; then local provider QA, deploy,
-  live sign-in check, and the ₹5 live purchase verification above.
+  the index checkout modal is **gone**. **Supabase config is set in `checkout.js`**
+  (2026-07-07: project URL + `sb_publishable_…` key; email+password sign-in QA'd E2E
+  headlessly against the real project — wrong-password error, sign-in → pay stage,
+  prefill readonly, session persists, sign-out). **Pending (Task 4, user-gated):**
+  Google/GitHub/Discord providers are still DISABLED in the Supabase dashboard
+  (verified via `/auth/v1/settings`) — clicking them would land on a raw 400 JSON page,
+  so the deploy **push is HELD** until the user enables the provider OAuth apps + URL
+  Configuration (README → Sign-in). Recommend **Confirm email OFF**: it's currently ON
+  and the default Supabase SMTP allows ~2 confirmation mails/hour ("email rate limit
+  exceeded" otherwise). Then: push, live sign-in check, ₹5 purchase verification above.
+  Never commit the `sb_secret_…` key (admin/service key, used only for transient local
+  QA; user was advised to rotate it).
 
 ## Standing decisions
 
@@ -45,7 +53,8 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   prices, plans heading "Start for ₹5…", checkout modal).
 - Payments: checkout page (`/checkout.html?plan=…`) + `payments.js` + smoke section 6
   ("pay:" checks) + section 6b ("gate:" checks) exist; `window.__axonEmailCfg` and
-  `window.__axonAuthCfg` are QA/smoke config-override hooks — do not remove. Honest-copy
+  `window.__axonAuthCfg` (accepts `{ session }` and/or `{ url, key }` overrides) are
+  QA/smoke config-override hooks — do not remove. Honest-copy
   line on the page is verbatim-sanctioned; amounts are exact (500 / 699900 paise).
 - Tier CTAs are links to `/checkout.html?plan=hobby|studio` (same classes/`data-probe`);
   the checkout page is `noindex`; sign-in required before the pay stage.

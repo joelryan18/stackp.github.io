@@ -4,8 +4,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { PLANS, initPayFlow } from "./payments.js";
 
-const SUPABASE_URL = "";      // ← Supabase → Settings → API (README → Sign-in)
-const SUPABASE_ANON_KEY = ""; // ← publishable anon key, same place
+const SUPABASE_URL = "https://jldzkjihbekxqxagkame.supabase.co"; // Supabase → Settings → API (README → Sign-in)
+const SUPABASE_ANON_KEY = "sb_publishable_Nm79C7JsHnf4lLjruU5g2Q_EuwskRuK"; // publishable key — safe to ship by design
 const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
 
 (() => {
@@ -80,11 +80,13 @@ const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
     setStage("pay");
   }
 
-  const hook = window.__axonAuthCfg;
+  const hook = window.__axonAuthCfg; // may carry { session } and/or { url, key } overrides
+  const authUrl = hook && hook.url !== undefined ? hook.url : SUPABASE_URL;
+  const authKey = hook && hook.key !== undefined ? hook.key : SUPABASE_ANON_KEY;
   if (hook && hook.session) {
     applySession(hook.session);
-  } else if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-    sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else if (authUrl && authKey) {
+    sb = createClient(authUrl, authKey);
     sb.auth.getSession().then(({ data }) => applySession(data.session));
     sb.auth.onAuthStateChange((_event, session) => applySession(session));
     // surface an OAuth error bounced back in the URL
@@ -129,7 +131,7 @@ const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
     authSubmit.setAttribute("aria-busy", "true");
     const { data, error } = mode === "signin"
       ? await sb.auth.signInWithPassword(creds)
-      : await sb.auth.signUp(creds);
+      : await sb.auth.signUp({ ...creds, options: { emailRedirectTo: location.href } });
     authSubmit.removeAttribute("aria-busy");
     if (error) {
       const hint = mode === "signin" ? " New here? Use “Create an account” below." : " Already registered? Switch to “Sign in”.";

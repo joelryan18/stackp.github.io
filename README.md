@@ -120,7 +120,13 @@ One-time Supabase dashboard setup:
 
 While the constants are empty, the checkout page renders all sign-in options
 and shows an honest "sign-in isn't configured yet" error (with the razorpay.me
-fallback link) when one is used. `window.__axonAuthCfg` is the QA/smoke
-session-injection hook — do not remove.
+fallback link) when one is used. `window.__axonAuthCfg` is the QA/smoke hook —
+inject `{ session: { user: … } }` and/or override `{ url, key }` — do not remove.
+
+Note: while a provider is enabled-in-code but disabled in the dashboard,
+clicking its button navigates to a raw Supabase 400 JSON page — enable all
+three providers before deploying. Keep **Confirm email OFF** unless custom
+SMTP is configured: the default Supabase mailer is limited to ~2 confirmation
+emails/hour ("email rate limit exceeded").
 
 Made with intent.
