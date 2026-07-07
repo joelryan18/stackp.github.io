@@ -42,6 +42,31 @@ Client sanity (publishable key, signed in, **no pass yet**): selecting from
 `passes` returns `[]`; inserting into `agents` fails; inserting into
 `access_requests` succeeds and lands with `priority = false`.
 
+## Edge Functions (user-gated — needs CLI auth)
+
+```sh
+supabase functions deploy razorpay-webhook --no-verify-jwt   # Razorpay calls it, no JWT
+```
+
+### Wiring the activation webhook (Razorpay dashboard)
+
+1. Generate a strong secret: `openssl rand -hex 32`.
+2. `supabase secrets set RAZORPAY_WEBHOOK_SECRET=<that value>`
+3. Razorpay dashboard → Settings → Webhooks → Add:
+   - URL `https://jldzkjihbekxqxagkame.supabase.co/functions/v1/razorpay-webhook`
+   - Secret: the same value
+   - Active events: **payment.captured** and **refund.processed** only.
+4. Sanity: `curl -X POST <url> -d '{}'` → `401 {"error":"bad_signature"}` proves
+   the function is up and rejecting unsigned calls.
+5. Real proof is the pending ₹5 verification: after payment, a `passes` row with
+   `plan='hobby', amount=500, status='active'` and your `auth_uid`; after the
+   refund, the same row flips to `status='refunded'`.
+
+Idempotency: Razorpay retries are safe — the insert upserts on `payment_id`.
+Authentic-but-invalid events (wrong amount/plan/uid) are answered `200
+{skipped}` and logged, so they never retry-storm; genuine write failures answer
+5xx so Razorpay retries them.
+
 ## Secrets (arrive with Tasks 3–4 — never commit any of these)
 
 | Secret | Where | Used by |
