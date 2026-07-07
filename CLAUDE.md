@@ -46,6 +46,14 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   limit exceeded" otherwise). Remaining user-gated steps: live Google sign-in spot
   check, then the ₹5 purchase verification above. Never commit the `sb_secret_…` key
   (admin/service key, used only for transient local QA; user was advised to rotate it).
+- **Next feature: Hobby benefits fulfillment** (planned 2026-07-07, not started):
+  buyers must actually receive every Hobby-tier benefit after activation. Plan with
+  benefit→deliverable map and 14 tracked tasks:
+  `docs/superpowers/plans/2026-07-07-hobby-benefits-fulfillment.md`. Key calls: agents
+  are signal watchers (no LLM), Supabase Edge Functions for trusted writes (Razorpay
+  webhook activation, run executor), new `/console.html` + `/registry.html`. The
+  verbatim honest-copy line ("no software product is provided") stays until Task 12's
+  replacement is user-sanctioned; Studio parity is an open user decision (Task 14).
 
 ## Standing decisions
 
