@@ -1,0 +1,59 @@
+---
+layout: layouts/checkout.njk
+title: "Checkout — AXON"
+description: "Sign in and complete your AXON Supporter Pass purchase."
+permalink: "checkout.html"
+noindex: true
+---
+    <section class="checkout">
+      <div class="paymodal">
+        <p class="eyebrow">[ SIG.07 · CHECKOUT ]</p>
+        <header class="paymodal__head">
+          <h3 id="payTitle"><span id="payPlanName">—</span></h3>
+          <span class="tier__tag" id="payPlanTag">[ — ]</span>
+        </header>
+        <p class="tier__price"><span id="payPrice">—</span><span> · one-time</span></p>
+
+        <div class="paymodal__stage" data-stage="auth" hidden>
+          <h4 class="paymodal__subtitle">Sign in to continue</h4>
+          <p class="paymodal__hint">Your Supporter Pass is issued against your account email.</p>
+          <div class="payauth">
+            <button type="button" class="btn btn--ghost payauth__btn" data-auth="google"><span class="payauth__tag">[ G ]</span> Continue with Google</button>
+            <button type="button" class="btn btn--ghost payauth__btn" data-auth="github"><span class="payauth__tag">[ GH ]</span> Continue with GitHub</button>
+            <button type="button" class="btn btn--ghost payauth__btn" data-auth="discord"><span class="payauth__tag">[ DC ]</span> Continue with Discord</button>
+            <p class="payauth__divider">or use email</p>
+            <form class="paymodal__form" id="authEmailForm">
+              <input type="email" id="authEmail" name="email" placeholder="you@company.com" aria-label="Email address" autocomplete="email" required />
+              <input type="password" id="authPassword" name="password" placeholder="Password (8+ characters)" aria-label="Password" autocomplete="current-password" required minlength="8" />
+              <button type="submit" class="btn btn--signal" id="authSubmit">Sign in</button>
+              <button type="button" class="payauth__toggle" id="authToggle">New here? Create an account</button>
+            </form>
+            <p class="paymodal__err" id="authErr" role="alert" hidden></p>
+          </div>
+        </div>
+
+        <div class="paymodal__stage" data-stage="pay" hidden>
+          <p class="paymodal__status" id="authStatus">Signed in as <b id="authEmailShown">—</b><button type="button" class="payauth__toggle" id="authSignout">Sign out</button></p>
+          <ul class="paymodal__benefits" id="payBenefits"></ul>
+          <form class="paymodal__form" id="payForm">
+            <input type="text" id="payName" name="name" placeholder="Full name" aria-label="Full name" autocomplete="name" required minlength="2" />
+            <input type="email" id="payEmail" name="email" placeholder="you@company.com" aria-label="Email address" autocomplete="email" required readonly />
+            <input type="tel" id="payPhone" name="phone" placeholder="Phone (10 digits)" aria-label="Phone number" autocomplete="tel" required pattern="[0-9+ -]{10,15}" />
+            <p class="paymodal__note">AXON is a design showcase. This is a genuine <span id="payNoteAmount">₹—</span> payment for an AXON Supporter Pass, delivered by email — no software product is provided.</p>
+            <p class="paymodal__err" id="payErr" role="alert" hidden></p>
+            <button type="submit" class="btn btn--signal" id="payBtn" data-probe="PAY">Pay ₹—</button>
+          </form>
+        </div>
+
+        <div class="paymodal__stage" data-stage="success" hidden>
+          <h3 class="paymodal__oktitle">Signal received.</h3>
+          <p class="paymodal__okline">Your <b id="okPlan">—</b> Supporter Pass is issued. Pass ID <b id="okPassId">—</b></p>
+          <canvas class="paymodal__pass" id="passCanvas" width="1200" height="675" aria-label="Your AXON Supporter Pass"></canvas>
+          <p class="paymodal__mailnote" id="okMailNote" role="status">A confirmation email with your benefits is on its way.</p>
+          <div class="paymodal__actions">
+            <button type="button" class="btn btn--signal" id="payDownload">Download pass</button>
+            <a class="btn btn--ghost" id="payDone" href="/#plans">Done</a>
+          </div>
+        </div>
+      </div>
+    </section>

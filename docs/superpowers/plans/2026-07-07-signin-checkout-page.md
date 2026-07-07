@@ -10,7 +10,7 @@
 
 ## Execution Tracker (tick as tasks land — designed for one-or-more tasks per session)
 
-- [ ] **Task 1** — Checkout page with sign-in gate · commit `feat: checkout page with Supabase sign-in gate (Google/GitHub/Discord/email)`
+- [x] **Task 1** — Checkout page with sign-in gate · commit `feat: checkout page with Supabase sign-in gate (Google/GitHub/Discord/email)`
 - [ ] **Task 2** — Purchase cutover, modal removed · commit `feat: purchases move to the sign-in-gated checkout page; modal removed`
 - [ ] **Task 3** — Docs + QA baselines · commit `docs: sign-in setup guide (Supabase) + project state`
 - [ ] **Task 4** — Rollout (user-gated: needs Supabase project + provider apps) · commit `feat: live Supabase sign-in configuration`
@@ -57,12 +57,12 @@ on this file). Then:
 - Consumes: `PLANS` from `payments.js` (adds the `export` keyword only; modal keeps working).
 - Produces: page DOM — stages `[data-stage="auth"|"pay"|"success"]`, ids `#payPlanName #payPlanTag #payPrice #payBenefits #payNoteAmount #payForm #payName #payEmail #payPhone #payErr #payBtn #passCanvas #okPlan #okPassId #okMailNote #payDownload #payDone #authEmailForm #authEmail #authPassword #authSubmit #authToggle #authErr #authStatus #authEmailShown #authSignout`, buttons `[data-auth="google"|"github"|"discord"]`. `checkout.js` module-scope `identity` = `{ uid, provider, email, name } | null`, kept current by `applySession(session)`. Manifest key `assets.checkout`.
 
-- [ ] **Step 1: Install the dependency**
+- [x] **Step 1: Install the dependency**
 
 Run: `npm install --save-exact @supabase/supabase-js@2`
 Expected: `package.json` dependencies gain an exact-pinned `@supabase/supabase-js` 2.x entry.
 
-- [ ] **Step 2: Add failing smoke checks**
+- [x] **Step 2: Add failing smoke checks**
 
 In `scripts/smoke.mjs`, section 1: change the page list (line 75) to include the checkout page:
 
@@ -112,12 +112,12 @@ check("gate: sign out returns to auth stage", !(await evalJs(`document.querySele
 await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: authPreload });
 ```
 
-- [ ] **Step 3: Run to verify failure**
+- [x] **Step 3: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: exit 1. The six new section-1 checks for `/checkout.html?plan=hobby` FAIL (page doesn't exist → 404 body), and every "gate:" check FAILs. All pre-existing checks still PASS.
 
-- [ ] **Step 4: Add the build entry**
+- [x] **Step 4: Add the build entry**
 
 In `scripts/build-assets.mjs`, replace:
 
@@ -135,7 +135,7 @@ with:
     plugins: [manifestPlugin({ "src/assets/js/main.js": "main", "src/assets/js/consent.js": "consent", "src/assets/js/checkout.js": "checkout" })],
 ```
 
-- [ ] **Step 5: noindex support in the base layout**
+- [x] **Step 5: noindex support in the base layout**
 
 In `src/_includes/layouts/base.njk`, after the line `  <meta name="theme-color" content="#07080A" />`, insert:
 
@@ -143,7 +143,7 @@ In `src/_includes/layouts/base.njk`, after the line `  <meta name="theme-color" 
   {% if noindex %}<meta name="robots" content="noindex" />{% endif %}
 ```
 
-- [ ] **Step 6: Create `src/_includes/layouts/checkout.njk`**
+- [x] **Step 6: Create `src/_includes/layouts/checkout.njk`**
 
 A `page.njk` clone whose `<main>` skips the `.doc` prose styles (they'd override the card's type/colors) and which loads the checkout bundle:
 
@@ -187,7 +187,7 @@ bodyClass: no3d page
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 ```
 
-- [ ] **Step 7: Create `src/checkout.html`**
+- [x] **Step 7: Create `src/checkout.html`**
 
 ```html
 ---
@@ -251,11 +251,11 @@ noindex: true
     </section>
 ```
 
-- [ ] **Step 8: Export PLANS**
+- [x] **Step 8: Export PLANS**
 
 In `src/assets/js/payments.js`, change `const PLANS = {` to `export const PLANS = {`. (Nothing else in this file changes in this task — the index modal keeps working.)
 
-- [ ] **Step 9: Create `src/assets/js/checkout.js`**
+- [x] **Step 9: Create `src/assets/js/checkout.js`**
 
 ```js
 /* ============================================================
@@ -408,7 +408,7 @@ const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
 })();
 ```
 
-- [ ] **Step 10: Add checkout-page CSS**
+- [x] **Step 10: Add checkout-page CSS**
 
 In `src/assets/css/styles.css`, immediately after the CHECKOUT MODAL section's last rule (`body.pay-open { overflow: hidden; }`) and before the ENGAGE section header, insert:
 
@@ -434,12 +434,12 @@ In `src/assets/css/styles.css`, immediately after the CHECKOUT MODAL section's l
 
 (Note: `.page main` already gives the centered 860px column with 8.5rem top padding; `.checkout-main` skips the `.doc` prose styles on purpose — they'd override the card's colors and list markers.)
 
-- [ ] **Step 11: Run to verify pass**
+- [x] **Step 11: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS** (six new section-1 checks for the checkout page + all "gate:" checks; old modal section 6 untouched and still green).
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add package.json package-lock.json scripts/build-assets.mjs src/_includes/layouts/base.njk src/_includes/layouts/checkout.njk src/checkout.html src/assets/js/checkout.js src/assets/js/payments.js src/assets/css/styles.css scripts/smoke.mjs

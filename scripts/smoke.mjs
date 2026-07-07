@@ -72,7 +72,7 @@ let failed = 0;
 const check = (name, ok, extra = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  " + extra}`); if (!ok) failed++; };
 
 /* ---- 1 · every page loads clean, correct head, no ads before consent ---- */
-for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.html"]) {
+for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby"]) {
   await metrics(1440, 900);
   await go(BASE + p, 3200);
   check(`${p} no JS exceptions`, exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -245,6 +245,44 @@ await evalJs(`window.__rzpFail({ error: { description: "Card declined by issuer"
 await sleep(300);
 const fb = await evalJs(`document.querySelector("#payErr a")?.href || ""`);
 check("pay: fallback link on 2nd failure", fb === "https://razorpay.me/@stackwith/5", fb);
+
+/* ---- 6b · checkout page: sign-in gate ---- */
+await metrics(1440, 900);
+// invalid plan bounces to the plans section
+await go(BASE + "/checkout.html?plan=nope", 2500);
+check("gate: invalid plan redirects", (await evalJs("location.pathname + location.hash")) === "/#plans");
+// signed out → auth stage
+await go(BASE + "/checkout.html?plan=studio", 3000);
+check("gate: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
+check("gate: auth stage visible", !(await evalJs(`document.querySelector('[data-stage="auth"]').hidden`)));
+check("gate: pay stage hidden", await evalJs(`document.querySelector('[data-stage="pay"]').hidden`));
+check("gate: plan summary shown signed-out", (await evalJs(`document.getElementById("payPrice").textContent`)).includes("₹6,999"));
+check("gate: google option", await evalJs(`!!document.querySelector('button[data-auth="google"]')`));
+check("gate: github option", await evalJs(`!!document.querySelector('button[data-auth="github"]')`));
+check("gate: discord option", await evalJs(`!!document.querySelector('button[data-auth="discord"]')`));
+check("gate: email form present", await evalJs(`!!document.getElementById("authEmailForm")`));
+check("gate: page noindex", (await evalJs(`document.querySelector('meta[name="robots"]')?.content`)) === "noindex");
+// unconfigured constants → honest error + fallback link
+await evalJs(`document.querySelector('button[data-auth="google"]').click()`);
+await sleep(300);
+check("gate: unconfigured error", (await evalJs(`document.getElementById("authErr").textContent`)).includes("isn't configured yet"));
+check("gate: fallback link", (await evalJs(`document.querySelector("#authErr a")?.href || ""`)) === "https://razorpay.me/@stackwith/6999");
+// email mode toggle
+await evalJs(`document.getElementById("authToggle").click()`);
+check("gate: toggle flips to signup", (await evalJs(`document.getElementById("authSubmit").textContent`)) === "Create account");
+// signed in via the QA hook — must exist before checkout.js runs, so preload it
+const { identifier: authPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `window.__axonAuthCfg = { session: { user: { id: "uid_smoke_1", email: "smoke@test.dev", user_metadata: { full_name: "Smoke Tester" }, app_metadata: { provider: "google" } } } };` });
+await go(BASE + "/checkout.html?plan=studio", 3000);
+check("gate: signed-in shows pay stage", !(await evalJs(`document.querySelector('[data-stage="pay"]').hidden`)));
+check("gate: auth stage hidden when signed in", await evalJs(`document.querySelector('[data-stage="auth"]').hidden`));
+check("gate: status shows account email", (await evalJs(`document.getElementById("authEmailShown").textContent`)) === "smoke@test.dev");
+check("gate: buyer email prefilled readonly", await evalJs(`document.getElementById("payEmail").value === "smoke@test.dev" && document.getElementById("payEmail").readOnly`));
+check("gate: buyer name prefilled", (await evalJs(`document.getElementById("payName").value`)) === "Smoke Tester");
+// sign out flips back (hook path)
+await evalJs(`document.getElementById("authSignout").click()`);
+await sleep(300);
+check("gate: sign out returns to auth stage", !(await evalJs(`document.querySelector('[data-stage="auth"]').hidden`)));
+await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: authPreload });
 
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");

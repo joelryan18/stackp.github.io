@@ -7,7 +7,7 @@ const EMAILJS_DEFAULT = { serviceId: "service_keg45ah", templateId: "template_x5
 const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
-const PLANS = {
+export const PLANS = {
   hobby: {
     name: "Hobby", tag: "[ 00 ]", amount: 500, display: "₹5",
     description: "Hobby — AXON Supporter Pass (one-time)",
