@@ -12,16 +12,16 @@ bodyClass: no3d page
     <span class="nav__word">AXON</span>
   </a>
   <nav class="nav__links" aria-label="Primary">
-    <a href="/about.html" data-index="01"{% if navCurrent == "about" %} aria-current="page"{% endif %}>About</a>
-    <a href="/contact.html" data-index="02"{% if navCurrent == "contact" %} aria-current="page"{% endif %}>Contact</a>
-    <a href="/anime.html" data-index="03"{% if navCurrent == "anime" %} aria-current="page"{% endif %}>Anime</a>
+    <a href="/" data-index="01">Home</a>
+    <a href="/blog/" data-index="02">Blog</a>
+    <a href="/anime.html" data-index="03" aria-current="page">Anime</a>
   </nav>
   <div class="nav__right">
-    <a href="/#engage" class="btn btn--signal">Get access</a>
+    <button type="button" class="btn btn--signal" id="aniNavAuth" hidden>Sign in</button>
   </div>
 </header>
 
-<main id="main" class="doc">
+<main id="main" class="ani">
 {{ content | safe }}
 </main>
 
@@ -34,4 +34,5 @@ bodyClass: no3d page
 </footer>
 
 <script src="{{ assets.consent }}" defer></script>
+<script src="{{ assets.anime }}" defer></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>

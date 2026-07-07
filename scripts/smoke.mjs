@@ -72,7 +72,7 @@ let failed = 0;
 const check = (name, ok, extra = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  " + extra}`); if (!ok) failed++; };
 
 /* ---- 1 · every page loads clean, correct head, no ads before consent ---- */
-for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby"]) {
+for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
   await metrics(1440, 900);
   await go(BASE + p, 3200);
   check(`${p} no JS exceptions`, exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -278,6 +278,132 @@ await evalJs(`document.getElementById("authSignout").click()`);
 await sleep(300);
 check("gate: sign out returns to auth stage", !(await evalJs(`document.querySelector('[data-stage="auth"]').hidden`)));
 await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: authPreload });
+
+/* ---- 7 · anime list (community tracker) ---- */
+// stub the network BEFORE anime.js boots: Supabase REST + AniList GraphQL → fixtures
+const ANI_ME = "99999999-9999-4999-8999-999999999999";
+const ANI_U1 = "11111111-1111-4111-8111-111111111111";
+const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `
+  window.__writes = [];
+  const FIX = {
+    catalog: [
+      { id: 101, title: "Frieren: Beyond Journey's End", title_romaji: "Sousou no Frieren", cover_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg", episodes: 28, year: 2023, format: "TV", genres: ["Adventure","Fantasy"], created_at: "2026-07-01T00:00:00Z", watchers: 2, avg_score: 9.5, last_activity: "2026-07-07T10:00:00Z" },
+      { id: 202, title: "Cowboy Bebop", title_romaji: "Cowboy Bebop", cover_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1.jpg", episodes: 26, year: 1998, format: "TV", genres: ["Action","Sci-Fi"], created_at: "2026-06-01T00:00:00Z", watchers: 1, avg_score: 8, last_activity: "2026-07-06T10:00:00Z" },
+    ],
+    entries101: [
+      { id: "e1", user_id: "${ANI_U1}", anime_id: 101, status: "completed", score: 10, progress: 28, updated_at: "2026-07-07T10:00:00Z" },
+      { id: "e2", user_id: "22222222-2222-4222-8222-222222222222", anime_id: 101, status: "watching", score: 9, progress: 12, updated_at: "2026-07-06T10:00:00Z" },
+    ],
+    mine: [
+      { id: "m1", user_id: "${ANI_ME}", anime_id: 101, status: "watching", score: 9, progress: 12, updated_at: "2026-07-07T10:00:00Z", anime: { id: 101, title: "Frieren: Beyond Journey's End", cover_url: null, episodes: 28 } },
+      { id: "m2", user_id: "${ANI_ME}", anime_id: 202, status: "completed", score: 8, progress: 26, updated_at: "2026-07-06T10:00:00Z", anime: { id: 202, title: "Cowboy Bebop", cover_url: null, episodes: 26 } },
+    ],
+    profiles: [
+      { user_id: "${ANI_U1}", display_name: "Aki" },
+      { user_id: "22222222-2222-4222-8222-222222222222", display_name: "Rei" },
+    ],
+    media: [
+      { id: 909, title: { english: "Steins;Gate", romaji: "Steins;Gate" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253.jpg" }, episodes: 24, seasonYear: 2011, format: "TV", genres: ["Sci-Fi","Thriller"] },
+      { id: 910, title: { english: null, romaji: "Sousou no Frieren" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg" }, episodes: 28, seasonYear: 2023, format: "TV", genres: ["Fantasy"] },
+    ],
+  };
+  const reply = (status, body) => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
+  window.fetch = (url, init) => {
+    url = String(url); init = init || {};
+    const method = (init.method || "GET").toUpperCase();
+    if (url.includes("graphql.anilist.co")) return reply(200, JSON.stringify({ data: { Page: { media: FIX.media } } }));
+    if (url.includes("/rest/v1/")) {
+      if (method === "GET") {
+        if (url.includes("anime_catalog")) return reply(200, JSON.stringify(FIX.catalog));
+        if (url.includes("anime_entries")) return reply(200, JSON.stringify(url.includes("anime_id=eq.101") ? FIX.entries101 : (url.includes("user_id=eq.") ? FIX.mine : [])));
+        if (url.includes("profiles")) return reply(200, JSON.stringify(url.includes("in.%28") || url.includes("in.(") ? FIX.profiles : (url.includes("user_id=eq.${ANI_U1}") ? [FIX.profiles[0]] : [])));
+        if (url.includes("/anime?")) return reply(200, JSON.stringify(FIX.catalog.filter((a) => url.includes("id=eq." + a.id)).map(({ watchers, avg_score, last_activity, ...a }) => a)));
+        return reply(200, "[]");
+      }
+      window.__writes.push({ url, method, body: String(init.body || "") });
+      return reply(method === "POST" ? 201 : 204, "");
+    }
+    return reply(200, "{}");
+  };
+` });
+
+// signed out: catalog browsing, detail view, add → sign-in gate
+await metrics(1440, 900);
+await go(BASE + "/anime.html", 3000);
+check("anime: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
+check("anime: nav Home/Blog/Anime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Blog,Anime");
+check("anime: nav marks Anime current", (await evalJs(`document.querySelector('.nav__links a[aria-current="page"]')?.getAttribute("href")`)) === "/anime.html");
+check("anime: overlays not painted on load", await evalJs(`getComputedStyle(document.getElementById("aniAuth")).display === "none" && getComputedStyle(document.getElementById("aniModal")).display === "none"`));
+check("anime: catalog renders fixtures", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 2);
+check("anime: sorted by recent activity", (await evalJs(`document.querySelector(".ani__card .ani__cardtitle")?.textContent`)) === "Frieren: Beyond Journey's End");
+check("anime: card shows watchers + avg", (await evalJs(`document.querySelector(".ani__card .ani__cardstats")?.textContent.replace(/\\s+/g, " ")`)).includes("watchers 2"));
+check("anime: signed out hides My list tab", await evalJs(`document.getElementById("aniTabMine").hidden`));
+check("anime: signed out shows nav Sign in", !(await evalJs(`document.getElementById("aniNavAuth").hidden`)));
+await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = "cowboy"; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+await sleep(300);
+check("anime: filter narrows catalog", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 1);
+await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = ""; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+await evalJs(`document.getElementById("aniAdd").click()`);
+await sleep(300);
+check("anime: signed-out add opens sign-in", await evalJs(`!document.getElementById("aniAuth").hidden && getComputedStyle(document.getElementById("aniAuth")).display !== "none"`));
+check("anime: google sign-in offered", await evalJs(`!!document.querySelector('#aniAuth button[data-auth="google"]')`));
+check("anime: email form present", await evalJs(`!!document.getElementById("aniAuthForm")`));
+await evalJs(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`);
+await sleep(200);
+check("anime: Escape closes sign-in", await evalJs(`document.getElementById("aniAuth").hidden`));
+await evalJs(`location.hash = "#a/101"`);
+await sleep(700);
+check("anime: detail view shown", !(await evalJs(`document.querySelector('.ani__view[data-view="detail"]').hidden`)));
+check("anime: detail title", (await evalJs(`document.querySelector(".ani__detailtitle")?.textContent`)) === "Frieren: Beyond Journey's End");
+check("anime: detail lists watchers", (await evalJs(`document.querySelectorAll(".ani__watcher").length`)) === 2);
+check("anime: watcher named via profile", (await evalJs(`document.querySelector(".ani__watcher a")?.textContent`)) === "Aki");
+check("anime: watcher links to user list", (await evalJs(`document.querySelector(".ani__watcher a")?.getAttribute("href")`)) === "#u/" + ANI_U1);
+
+// someone else's list is read-only
+await evalJs(`location.hash = "#u/${ANI_U1}"`);
+await sleep(700);
+check("anime: user list shown", !(await evalJs(`document.querySelector('.ani__view[data-view="user"]').hidden`)));
+check("anime: user display name", (await evalJs(`document.getElementById("aniUserName").textContent`)) === "Aki");
+check("anime: user rows grouped", (await evalJs(`document.querySelectorAll("#aniUserList .ani__group").length`)) === 2);
+check("anime: user rows read-only", (await evalJs(`document.querySelectorAll("#aniUserList select").length`)) === 0);
+
+// signed in: AniList search → save entry → my list
+const { identifier: aniAuthPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `window.__axonAuthCfg = { session: { user: { id: "${ANI_ME}", email: "smoke@test.dev", user_metadata: { full_name: "Smoke Tester" }, app_metadata: { provider: "google" } } } };` });
+await go(BASE + "/anime.html", 3000);
+check("anime: signed in shows My list tab", !(await evalJs(`document.getElementById("aniTabMine").hidden`)));
+check("anime: signed in hides nav Sign in", await evalJs(`document.getElementById("aniNavAuth").hidden`));
+await evalJs(`document.getElementById("aniAdd").click()`);
+await sleep(300);
+check("anime: add opens search modal", !(await evalJs(`document.getElementById("aniModal").hidden`)));
+await evalJs(`(() => { const s = document.getElementById("aniSearch"); s.value = "steins"; s.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+await sleep(900); // 300ms debounce + render
+check("anime: AniList results render", (await evalJs(`document.querySelectorAll(".ani__result").length`)) === 2);
+check("anime: result titled", (await evalJs(`document.querySelector(".ani__result .ani__picktitle")?.textContent`)) === "Steins;Gate");
+await evalJs(`document.querySelector(".ani__result").click()`);
+await sleep(300);
+check("anime: pick shows entry form", !(await evalJs(`document.querySelector('.ani__modalstage[data-stage="entry"]').hidden`)));
+await evalJs(`(() => { document.getElementById("aniEntryStatus").value = "completed"; document.getElementById("aniEntryScore").value = "10"; document.getElementById("aniEntryProgress").value = "24"; document.getElementById("aniEntryForm").requestSubmit(); })()`);
+await sleep(900);
+check("anime: no JS exceptions after save", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
+const aniWrites = await evalJs(`window.__writes`);
+check("anime: profile auto-created", aniWrites.some((w) => w.method === "POST" && w.url.includes("/rest/v1/profiles") && w.body.includes("Smoke Tester")), JSON.stringify(aniWrites));
+check("anime: catalog row upserted", aniWrites.some((w) => w.method === "POST" && w.url.includes("/rest/v1/anime?") && w.body.includes('"id":909') && w.body.includes("Steins;Gate")));
+check("anime: entry saved", aniWrites.some((w) => w.method === "POST" && w.url.includes("/rest/v1/anime_entries") && w.body.includes('"anime_id":909') && w.body.includes('"status":"completed"') && w.body.includes('"score":10') && !w.body.includes("user_id")));
+check("anime: lands on my list", (await evalJs("location.hash")) === "#mine");
+check("anime: my list renders groups", (await evalJs(`document.querySelectorAll("#aniMine .ani__group").length`)) === 2);
+check("anime: my rows editable", (await evalJs(`document.querySelectorAll("#aniMine select").length`)) > 0);
+check("anime: display name shown", (await evalJs(`document.getElementById("aniMeName").textContent`)) === "Smoke Tester");
+
+// inline edit fires a scoped update
+await evalJs(`window.__writes.length = 0`);
+await evalJs(`(() => { const s = document.querySelector("#aniMine .ani__rowacts select"); s.value = "completed"; s.dispatchEvent(new Event("change", { bubbles: true })); })()`);
+await sleep(500);
+check("anime: inline edit patches entry", await evalJs(`window.__writes.some((w) => w.method === "PATCH" && w.url.includes("/rest/v1/anime_entries") && w.url.includes("id=eq.m1") && w.body.includes('"status":"completed"'))`), JSON.stringify(await evalJs(`window.__writes`)));
+check("anime: page indexed (no robots meta)", !(await evalJs(`!!document.querySelector('meta[name="robots"]')`)));
+const animeBundle = await readFile(path.join(ROOT, JSON.parse(await readFile("src/_data/assets.json", "utf8")).anime), "utf8");
+check("anime: supabase config shipped", animeBundle.includes("https://jldzkjihbekxqxagkame.supabase.co") && animeBundle.includes("sb_publishable_"));
+await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: aniAuthPreload });
+await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: aniStubPreload });
 
 ws.close(); chrome.kill(); server.close();
 console.log(failed ? `\n${failed} FAILED` : "\nALL PASS");

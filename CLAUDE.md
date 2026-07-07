@@ -5,7 +5,22 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-07)
+## Current state (2026-07-08)
+
+- **Anime list community tracker SHIPPED 2026-07-08** (Tasks 1–9, 11 of
+  `docs/superpowers/plans/2026-07-07-anime-list-community-tracker.md`): public
+  `/anime.html` ("AniList from AXON") — community catalog + per-user lists +
+  AniList GraphQL search, backed by Supabase tables `anime` / `anime_entries` /
+  `profiles` + `anime_catalog` view (public reads, owner-only column-scoped
+  writes). New `src/assets/js/anime.js` bundle (own Supabase client, same
+  `__axonAuthCfg` hook), `layouts/anime.njk`, `/* ANIME */` CSS section, smoke
+  section 7 (`anime:` checks, network fully stubbed). "Anime" nav link added to
+  home (desktop+burger), page, checkout navs — **user-sanctioned**.
+  **USER-GATED, OPEN: paste `supabase/migrations/20260708000001_anime.sql` into
+  the Supabase SQL editor** (page shows "Catalog is initializing" until then),
+  then live-check: Google sign-in on /anime.html → add a title → visible
+  signed-out. NOTE: two migration files share the date — `…000002_executor_schedules.sql`
+  (on-hold executor work, untracked) vs `…20260708000001_anime.sql` (shipped).
 
 - Toolchain migration plan **fully executed (Tasks 1–15)** and live:
   `docs/superpowers/plans/2026-07-05-axon-site-professional-toolchain.md` (all boxes checked,

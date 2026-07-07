@@ -586,6 +586,99 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .consent .btn { padding: .6rem 1rem; font-size: .74rem; }
 
 /* ============================================================
+   ANIME (community tracker — /anime.html)
+   ============================================================ */
+.page main.ani { max-width: var(--maxw); }
+.ani__head { margin-bottom: 2.4rem; }
+.ani__title { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(2.2rem, 6vw, 3.8rem); margin: .6rem 0 1rem; }
+.ani__title em { font-style: normal; color: var(--signal); }
+.ani__lede { color: var(--text-dim); max-width: 52ch; }
+
+.ani__bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-bottom: 1.2rem; border-bottom: 1px solid var(--line); margin-bottom: 1.6rem; }
+.ani__tabs { display: flex; gap: 1.4rem; }
+.ani__tab { font-family: var(--mono); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: .3rem 0; border-bottom: 1px solid transparent; transition: color .3s var(--ease), border-color .3s var(--ease); }
+.ani__tab:hover { color: var(--text); }
+.ani__tab[aria-current="page"] { color: var(--signal); border-bottom-color: var(--signal); }
+.ani__controls { display: flex; gap: .6rem; flex-wrap: wrap; }
+.ani__controls input, .ani__controls select, .ani__field select, .ani__field input, #aniSearch {
+  background: var(--bg-soft); border: 1px solid var(--line-strong); border-radius: 4px;
+  padding: .65rem 1rem; color: var(--text); font-family: var(--mono); font-size: .82rem;
+}
+.ani__controls input:focus, .ani__controls select:focus, .ani__field select:focus, .ani__field input:focus, #aniSearch:focus { outline: none; border-color: var(--signal); }
+
+.ani__status { font-family: var(--mono); font-size: .8rem; color: var(--faint); padding: 1rem 0; }
+.ani__back { background: none; border: 0; cursor: pointer; font-family: var(--mono); font-size: .78rem; color: var(--muted); padding: 0 0 1.2rem; }
+.ani__back:hover { color: var(--signal); }
+
+.ani__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 1rem; }
+.ani__card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; text-align: left; padding: 0; display: flex; flex-direction: column; transition: border-color .35s var(--ease), transform .35s var(--ease); }
+.ani__card:hover { border-color: var(--line-strong); transform: translateY(-4px); }
+.ani__cover { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; background: var(--surface-2); display: block; }
+.ani__cardbody { padding: .8rem .9rem 1rem; display: flex; flex-direction: column; gap: .35rem; }
+.ani__cardtitle { font-size: .88rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+.ani__cardmeta { font-family: var(--mono); font-size: .68rem; color: var(--faint); }
+.ani__cardstats { font-family: var(--mono); font-size: .7rem; color: var(--muted); display: flex; gap: .8rem; margin-top: .2rem; }
+.ani__cardstats b { color: var(--signal); font-weight: 500; }
+
+.ani__detail { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; }
+.ani__detail .ani__cover { border: 1px solid var(--line); border-radius: 10px; }
+.ani__detailtitle { font-family: var(--display); font-weight: 600; font-size: 1.6rem; letter-spacing: -0.02em; margin-bottom: .3rem; }
+.ani__detailmeta { font-family: var(--mono); font-size: .76rem; color: var(--faint); margin-bottom: 1.2rem; }
+.ani__watchers { display: flex; flex-direction: column; gap: .5rem; margin-top: 1rem; }
+.ani__watcher { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: .7rem 1rem; font-size: .88rem; }
+.ani__watcher a { color: var(--text); font-weight: 600; }
+.ani__watcher a:hover { color: var(--signal); }
+.ani__chip { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: .15rem .45rem; }
+.ani__chip--watching { color: var(--signal); border-color: rgba(184,255,60,.35); }
+.ani__chip--completed { color: var(--teal); }
+.ani__chip--dropped { color: var(--warn); }
+.ani__score { font-family: var(--mono); font-size: .74rem; color: var(--signal); margin-left: auto; }
+
+.ani__rows { display: flex; flex-direction: column; gap: .6rem; }
+.ani__group { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin: 1.4rem 0 .6rem; }
+.ani__row { display: flex; align-items: center; gap: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: .7rem 1rem; transition: border-color .35s var(--ease); }
+.ani__row:hover { border-color: var(--line-strong); }
+.ani__rowcover { width: 38px; height: 54px; object-fit: cover; border-radius: 4px; background: var(--surface-2); flex: none; }
+.ani__rowtitle { font-size: .92rem; font-weight: 600; flex: 1; min-width: 0; }
+.ani__rowmeta { font-family: var(--mono); font-size: .7rem; color: var(--faint); }
+.ani__rowacts { display: flex; gap: .6rem; align-items: center; }
+.ani__rowacts select, .ani__rowacts input { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 4px; padding: .35rem .5rem; color: var(--text); font-family: var(--mono); font-size: .72rem; }
+.ani__rowacts input[type="number"] { width: 4.2em; }
+.ani__del { background: none; border: 0; cursor: pointer; font-family: var(--mono); font-size: .78rem; color: var(--faint); }
+.ani__del:hover { color: var(--warn); }
+
+.ani__me { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.ani__mename { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.ani__mename b { color: var(--signal); font-weight: 500; }
+.ani__meactions { display: flex; gap: 1rem; }
+.ani__username { font-family: var(--display); font-weight: 600; font-size: 1.5rem; margin-bottom: 1.2rem; }
+
+.ani__authwrap, .ani__modalwrap { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: var(--pad); background: rgba(7,8,10,.78); backdrop-filter: blur(8px); }
+/* author display rules above would defeat the hidden attribute — never let them */
+.ani [hidden], .ani__authwrap[hidden], .ani__modalwrap[hidden], #aniNavAuth[hidden] { display: none !important; }
+.ani__auth, .ani__modal { max-height: min(640px, 86vh); overflow: auto; }
+.ani__close { position: absolute; top: .9rem; right: 1rem; background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 1.3rem; line-height: 1; padding: .2rem; }
+.ani__close:hover { color: var(--text); }
+.ani__modalstage { display: flex; flex-direction: column; gap: .9rem; margin-top: 1rem; }
+.ani__modalstage[hidden] { display: none; }
+.ani__results { display: flex; flex-direction: column; gap: .5rem; list-style: none; }
+.ani__result { display: flex; align-items: center; gap: .9rem; width: 100%; text-align: left; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 8px; padding: .6rem .8rem; cursor: pointer; color: var(--text); transition: border-color .3s var(--ease); }
+.ani__result:hover, .ani__result:focus-visible { border-color: var(--signal); outline: none; }
+.ani__pick { display: flex; align-items: center; gap: .9rem; border-left: 2px solid var(--signal); padding-left: .9rem; }
+.ani__picktitle { font-weight: 600; font-size: .95rem; }
+.ani__pickmeta { font-family: var(--mono); font-size: .7rem; color: var(--faint); }
+.ani__field { display: flex; flex-direction: column; gap: .35rem; font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .ani__grid { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
+  .ani__detail { grid-template-columns: 1fr; }
+  .ani__detail .ani__cover { max-width: 220px; }
+  .ani__controls { width: 100%; }
+  .ani__controls input[type="search"] { flex: 1; min-width: 0; }
+  .ani__row { flex-wrap: wrap; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {

@@ -1,0 +1,114 @@
+---
+layout: layouts/anime.njk
+title: "Anime List — AXON"
+description: "The AXON community anime tracker. Browse what everyone is watching, sign in to log your own list."
+permalink: "anime.html"
+---
+    <section class="ani__head">
+      <p class="eyebrow">[ SIG.08 · ANIME LIST ]</p>
+      <h1 class="ani__title">Community <em>anime</em> log.</h1>
+      <p class="ani__lede">Every title tracked by the AXON crew — who's watching, who finished, what scored. Sign in to log yours.</p>
+    </section>
+
+    <section class="ani__bar" aria-label="Catalog controls">
+      <nav class="ani__tabs" aria-label="Views">
+        <a href="#catalog" class="ani__tab" data-view="catalog" aria-current="page">Catalog</a>
+        <a href="#mine" class="ani__tab" data-view="mine" id="aniTabMine" hidden>My list</a>
+      </nav>
+      <div class="ani__controls">
+        <input type="search" id="aniFilter" placeholder="Filter titles…" aria-label="Filter titles" autocomplete="off" />
+        <select id="aniSort" aria-label="Sort catalog">
+          <option value="recent">Recently active</option>
+          <option value="watchers">Most watched</option>
+          <option value="score">Top rated</option>
+        </select>
+        <button type="button" class="btn btn--signal" id="aniAdd" data-probe="ANIME.ADD">+ Add anime</button>
+      </div>
+    </section>
+
+    <section class="ani__view" data-view="catalog">
+      <p class="ani__status" id="aniCatalogStatus" role="status">Loading catalog…</p>
+      <div class="ani__grid" id="aniGrid" hidden></div>
+    </section>
+
+    <section class="ani__view" data-view="detail" hidden>
+      <button type="button" class="ani__back" id="aniDetailBack">← Catalog</button>
+      <article class="ani__detail" id="aniDetail"></article>
+    </section>
+
+    <section class="ani__view" data-view="mine" hidden>
+      <div class="ani__me" id="aniMe" hidden>
+        <p class="ani__mename">Signed in as <b id="aniMeName">—</b></p>
+        <div class="ani__meactions">
+          <button type="button" class="payauth__toggle" id="aniRename">Rename</button>
+          <button type="button" class="payauth__toggle" id="aniSignout">Sign out</button>
+        </div>
+      </div>
+      <div id="aniMine"></div>
+    </section>
+
+    <section class="ani__view" data-view="user" hidden>
+      <button type="button" class="ani__back" id="aniUserBack">← Catalog</button>
+      <h2 class="ani__username" id="aniUserName">—</h2>
+      <div id="aniUserList"></div>
+    </section>
+
+    <!-- sign-in panel (shown in place of add/mine when signed out) -->
+    <div class="ani__authwrap" id="aniAuth" hidden>
+      <div class="paymodal ani__auth">
+        <h4 class="paymodal__subtitle">Sign in to track anime</h4>
+        <p class="paymodal__hint">Your list is public under your display name.</p>
+        <div class="payauth">
+          <button type="button" class="btn btn--ghost payauth__btn" data-auth="google"><span class="payauth__tag">[ G ]</span> Continue with Google</button>
+          <p class="payauth__divider">or use email</p>
+          <form class="paymodal__form" id="aniAuthForm">
+            <input type="email" id="aniAuthEmail" name="email" placeholder="you@company.com" aria-label="Email address" autocomplete="email" required />
+            <input type="password" id="aniAuthPassword" name="password" placeholder="Password (8+ characters)" aria-label="Password" autocomplete="current-password" required minlength="8" />
+            <button type="submit" class="btn btn--signal" id="aniAuthSubmit">Sign in</button>
+            <button type="button" class="payauth__toggle" id="aniAuthToggle">New here? Create an account</button>
+          </form>
+          <p class="paymodal__err" id="aniAuthErr" role="alert" hidden></p>
+        </div>
+        <button type="button" class="ani__close" id="aniAuthClose" aria-label="Close sign-in">×</button>
+      </div>
+    </div>
+
+    <!-- add / search modal -->
+    <div class="ani__modalwrap" id="aniModal" hidden role="dialog" aria-modal="true" aria-labelledby="aniModalTitle">
+      <div class="paymodal ani__modal">
+        <h4 class="paymodal__subtitle" id="aniModalTitle">Add anime</h4>
+        <div class="ani__modalstage" data-stage="search">
+          <input type="search" id="aniSearch" placeholder="Search AniList — try “Frieren”…" aria-label="Search AniList" autocomplete="off" />
+          <p class="ani__status" id="aniSearchStatus" role="status" hidden></p>
+          <ul class="ani__results" id="aniResults" role="listbox" aria-label="Search results"></ul>
+        </div>
+        <div class="ani__modalstage" data-stage="entry" hidden>
+          <div class="ani__pick" id="aniPick"></div>
+          <form class="paymodal__form" id="aniEntryForm">
+            <label class="ani__field">Status
+              <select id="aniEntryStatus" required>
+                <option value="completed">Completed</option>
+                <option value="watching">Watching</option>
+                <option value="plan_to_watch">Plan to watch</option>
+                <option value="paused">Paused</option>
+                <option value="dropped">Dropped</option>
+              </select>
+            </label>
+            <label class="ani__field">Score
+              <select id="aniEntryScore">
+                <option value="">—</option>
+                <option>10</option><option>9</option><option>8</option><option>7</option><option>6</option>
+                <option>5</option><option>4</option><option>3</option><option>2</option><option>1</option>
+              </select>
+            </label>
+            <label class="ani__field">Episodes seen
+              <input type="number" id="aniEntryProgress" min="0" max="10000" value="0" />
+            </label>
+            <p class="paymodal__err" id="aniEntryErr" role="alert" hidden></p>
+            <button type="submit" class="btn btn--signal" id="aniEntrySave" data-probe="ANIME.SAVE">Save to my list</button>
+            <button type="button" class="payauth__toggle" id="aniEntryBack">← Back to search</button>
+          </form>
+        </div>
+        <button type="button" class="ani__close" id="aniModalClose" aria-label="Close">×</button>
+      </div>
+    </div>
