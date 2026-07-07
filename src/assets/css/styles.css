@@ -462,6 +462,7 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .paymodal__hint { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
 .payauth { display: flex; flex-direction: column; gap: 0.6rem; }
 .payauth .btn { justify-content: flex-start; gap: 0.6rem; }
+.payauth__btn { background: none; cursor: pointer; }
 .payauth__tag { font-family: var(--mono); font-size: 0.72rem; color: var(--signal); }
 .payauth__divider { display: flex; align-items: center; gap: 0.8rem; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--faint); text-transform: uppercase; }
 .payauth__divider::before, .payauth__divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }

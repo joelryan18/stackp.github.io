@@ -12,7 +12,7 @@
 
 - [x] **Task 1** — Checkout page with sign-in gate · commit `feat: checkout page with Supabase sign-in gate (Google/GitHub/Discord/email)`
 - [x] **Task 2** — Purchase cutover, modal removed · commit `feat: purchases move to the sign-in-gated checkout page; modal removed`
-- [ ] **Task 3** — Docs + QA baselines · commit `docs: sign-in setup guide (Supabase) + project state`
+- [x] **Task 3** — Docs + QA baselines · commit `docs: sign-in setup guide (Supabase) + project state`
 - [ ] **Task 4** — Rollout (user-gated: needs Supabase project + provider apps) · commit `feat: live Supabase sign-in configuration`
 
 **Resuming in a fresh session:** say "proceed with tasks" (superpowers:executing-plans
@@ -900,7 +900,7 @@ git commit -m "feat: purchases move to the sign-in-gated checkout page; modal re
 - Consumes: everything shipped in Tasks 1–2.
 - Produces: operator documentation the user follows in Task 4.
 
-- [ ] **Step 1: Add README "Sign-in (Supabase)" section**
+- [x] **Step 1: Add README "Sign-in (Supabase)" section**
 
 Append to `README.md` after the Payments section:
 
@@ -936,12 +936,17 @@ fallback link) when one is used. `window.__axonAuthCfg` is the QA/smoke
 session-injection hook — do not remove.
 ```
 
-- [ ] **Step 2: Update `CLAUDE.md`**
+- [x] **Step 2: Update `CLAUDE.md`**
 
 In "Current state": note that purchases moved to a sign-in-gated `/checkout.html` (Supabase Auth: Google/GitHub/Discord/email) per `docs/superpowers/plans/2026-07-07-signin-checkout-page.md`; the modal is gone; pending user config `SUPABASE_URL`/`SUPABASE_ANON_KEY` in `src/assets/js/checkout.js` plus provider apps (README → Sign-in); the ₹5 live verification is still open and now also confirms `auth_uid`/`auth_provider` notes.
 In "Standing decisions": add that tier CTAs are links to `/checkout.html?plan=…`; `window.__axonAuthCfg` is a QA/smoke hook — do not remove; checkout page is `noindex`; smoke gained section 6b ("gate:" checks).
 
-- [ ] **Step 3: Full verification + fresh QA baselines**
+- [x] **Step 3: Full verification + fresh QA baselines**
+  (Deviation found during eyeballing: OAuth `.payauth__btn` buttons rendered with the UA
+  default white background — the `.btn` base class never sets `background`, and the old
+  modal never had ghost `<button>`s. Fixed with `.payauth__btn { background: none;
+  cursor: pointer; }`, re-shot, smoke re-run ALL PASS. Stale modal shots deleted from
+  the baselines.)
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS**.
@@ -1026,12 +1031,14 @@ cp /tmp/axon-qa/1440-*.png /tmp/axon-qa-baseline-desktop/
 cp /tmp/axon-qa/390-*.png /tmp/axon-qa-baseline-mobile/
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add README.md CLAUDE.md
 git commit -m "docs: sign-in setup guide (Supabase) + project state"
 ```
+(Deviation: `src/assets/css/styles.css` + `src/_data/assets.json` included — the
+`.payauth__btn` background fix from Step 3.)
 
 ---
 

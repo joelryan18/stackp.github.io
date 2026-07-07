@@ -93,4 +93,34 @@ EmailJS mail arrives, then swap in the live key, deploy, make one real ₹5
 purchase and refund it from the dashboard. Fallback payment page:
 https://razorpay.me/@stackwith/{amount-in-rupees}.
 
+## Sign-in (Supabase)
+
+Purchases require sign-in on `/checkout.html` (Google, GitHub, Discord, or
+email + password) via Supabase Auth — no backend of ours. Config lives at the
+top of `src/assets/js/checkout.js`:
+
+- `SUPABASE_URL` + `SUPABASE_ANON_KEY` — supabase.com → your project →
+  Settings → API. The anon key is publishable by design.
+
+One-time Supabase dashboard setup:
+
+1. **Authentication → Providers → Email**: enable. Recommended: turn
+   **Confirm email OFF** (buyers shouldn't bounce to their inbox mid-checkout).
+2. **Authentication → Providers → Google / GitHub / Discord**: enable each,
+   using a free OAuth app registered at the provider with callback/redirect URL
+   `https://<project-ref>.supabase.co/auth/v1/callback`:
+   - Google: console.cloud.google.com → APIs & Services → Credentials →
+     OAuth client ID (Web application).
+   - GitHub: github.com/settings/developers → New OAuth App.
+   - Discord: discord.com/developers/applications → New Application → OAuth2.
+   Paste each client ID + secret into the Supabase provider form.
+3. **Authentication → URL Configuration**: Site URL `https://stackwith.me`;
+   additional redirect URLs `https://stackwith.me/checkout.html` and
+   `http://localhost:8080/checkout.html` (local QA).
+
+While the constants are empty, the checkout page renders all sign-in options
+and shows an honest "sign-in isn't configured yet" error (with the razorpay.me
+fallback link) when one is used. `window.__axonAuthCfg` is the QA/smoke
+session-injection hook — do not remove.
+
 Made with intent.

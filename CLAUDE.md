@@ -5,7 +5,7 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-06)
+## Current state (2026-07-07)
 
 - Toolchain migration plan **fully executed (Tasks 1–15)** and live:
   `docs/superpowers/plans/2026-07-05-axon-site-professional-toolchain.md` (all boxes checked,
@@ -27,17 +27,28 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   test-mode QA skipped — impossible against a live key). Local live sanity check passed:
   production sheet opens order-less with correct amount/theme/prefill.
   **Pending (Task 8 Step 4, user-gated):** one real ₹5 Hobby purchase on stackwith.me,
-  confirm captured + notes in dashboard, EmailJS mail arrives, then refund; then Step 5
-  close-out.
+  confirm captured + notes in dashboard (notes now include `plan, buyer_name, auth_uid,
+  auth_provider`), EmailJS mail arrives, then refund; then Step 5 close-out.
+- **Purchases moved to a sign-in-gated `/checkout.html`** (2026-07-07, Tasks 1–3 of
+  `docs/superpowers/plans/2026-07-07-signin-checkout-page.md`; spec in
+  `docs/superpowers/specs/`). Supabase Auth (Google/GitHub/Discord/email+password) in
+  `src/assets/js/checkout.js`; `payments.js` refactored to `PLANS` + `initPayFlow`;
+  the index checkout modal is **gone**. **Pending (Task 4, user-gated):** user creates
+  the Supabase project + provider OAuth apps (README → Sign-in) and supplies
+  `SUPABASE_URL`/`SUPABASE_ANON_KEY` for `checkout.js`; then local provider QA, deploy,
+  live sign-in check, and the ₹5 live purchase verification above.
 
 ## Standing decisions
 
 - Design stays pixel-identical unless the user sanctions a change (sanctioned so far:
   `--faint` → `#78828E`, honest form copy; 2026-07-06: tier cards show ₹5/₹6,999 one-time
   prices, plans heading "Start for ₹5…", checkout modal).
-- Payments: checkout modal + `payments.js` + smoke section 6 ("pay:" checks) exist;
-  `window.__axonEmailCfg` is a QA/smoke config-override hook — do not remove. Honest-copy
-  line in the modal is verbatim-sanctioned; amounts are exact (500 / 699900 paise).
+- Payments: checkout page (`/checkout.html?plan=…`) + `payments.js` + smoke section 6
+  ("pay:" checks) + section 6b ("gate:" checks) exist; `window.__axonEmailCfg` and
+  `window.__axonAuthCfg` are QA/smoke config-override hooks — do not remove. Honest-copy
+  line on the page is verbatim-sanctioned; amounts are exact (500 / 699900 paise).
+- Tier CTAs are links to `/checkout.html?plan=hobby|studio` (same classes/`data-probe`);
+  the checkout page is `noindex`; sign-in required before the pay stage.
 - Out of scope, never touch: `src/blog/`, `src/404.html`, and the BLOG/FAQ/404 CSS sections
   in `styles.css` (carried over verbatim, copied not templated).
 - AdSense client `ca-pub-7262404901375077`; consent localStorage key `axon-consent`;
