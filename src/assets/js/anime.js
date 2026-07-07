@@ -25,6 +25,16 @@ const STATUS_LABEL = {
 
 (() => {
   "use strict";
+
+  // — Stackime intro splash: let the stroke draw + glow play, then fade the
+  //   overlay out and drop it from the DOM. Click skips; reduced motion opts out.
+  const intro = document.getElementById("aniIntro");
+  if (intro) {
+    const dismiss = () => { intro.classList.add("is-done"); setTimeout(() => intro.remove(), 600); };
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) intro.remove();
+    else { intro.addEventListener("click", dismiss, { once: true }); setTimeout(dismiss, 3400); }
+  }
+
   const grid = document.getElementById("aniGrid");
   if (!grid) return;
 

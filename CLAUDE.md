@@ -7,6 +7,20 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
 
 ## Current state (2026-07-08)
 
+- **Anime page rebranded "Stackime" + intro splash SHIPPED 2026-07-08**
+  (user-requested): /anime.html brand is now **Stackime** — user asked for a
+  small unique fusion of "stackwithme" + "animelist"; "Stackime" had zero exact
+  web hits ("AniStack" was taken). New title/eyebrow/h1/lede in `src/anime.html`;
+  nav label stays "Anime" (smoke asserts it site-wide). Opening plays an
+  enma.lol-style splash: fullscreen black `#aniIntro` overlay (layouts/anime.njk),
+  "STACKIME" SVG text stroke-draws in `--signal` then glow-pulses then overlay
+  fades (`.ani-intro*` rules at end of `/* ANIME */` CSS; keyframes aniIntroDraw/
+  Glow/Tag), dismissed by anime.js at 3.4s (click skips; prefers-reduced-motion
+  hides + removes). Smoke: "anime: stackime intro painted" + "anime: intro
+  auto-dismisses". Headless screenshot QA confirmed draw/glow/reveal; the live
+  Supabase `anime_catalog` call returned 200 empty ("No titles yet") — the anime
+  SQL migration appears to have been applied.
+
 - **Anime list community tracker SHIPPED 2026-07-08** (Tasks 1–9, 11 of
   `docs/superpowers/plans/2026-07-07-anime-list-community-tracker.md`): public
   `/anime.html` ("AniList from AXON") — community catalog + per-user lists +

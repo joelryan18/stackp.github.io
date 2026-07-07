@@ -331,6 +331,10 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
 await metrics(1440, 900);
 await go(BASE + "/anime.html", 3000);
 check("anime: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
+// Stackime intro splash: still drawing at 3.0s, gone (fade + remove) by ~4.0s
+check("anime: stackime intro painted", await evalJs(`!!document.getElementById("aniIntro") && document.querySelector(".ani-intro__word")?.textContent === "STACKIME"`));
+await sleep(1500);
+check("anime: intro auto-dismisses", await evalJs(`!document.getElementById("aniIntro")`));
 check("anime: nav Home/Blog/Anime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Blog,Anime");
 check("anime: nav marks Anime current", (await evalJs(`document.querySelector('.nav__links a[aria-current="page"]')?.getAttribute("href")`)) === "/anime.html");
 check("anime: overlays not painted on load", await evalJs(`getComputedStyle(document.getElementById("aniAuth")).display === "none" && getComputedStyle(document.getElementById("aniModal")).display === "none"`));

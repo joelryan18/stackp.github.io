@@ -678,6 +678,27 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
   .ani__row { flex-wrap: wrap; }
 }
 
+/* — Stackime intro splash: brand text draws its own outline on black,
+     glow-pulses, then the overlay fades out (enma.lol-style) — */
+.ani-intro { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.2rem; cursor: pointer; opacity: 1; transition: opacity .5s ease-in-out; }
+.ani-intro.is-done { opacity: 0; pointer-events: none; }
+.ani-intro__svg { width: min(92vw, 1100px); height: auto; display: block; overflow: visible; }
+.ani-intro__word {
+  font-family: var(--display); font-weight: 700; font-size: 185px; letter-spacing: .02em;
+  fill: transparent; stroke: var(--signal); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 1600; stroke-dashoffset: 1600;
+  animation: aniIntroDraw 2.2s cubic-bezier(.65, 0, .35, 1) .2s forwards, aniIntroGlow 1.2s ease-out 2.2s forwards;
+}
+.ani-intro__tag { font-family: var(--mono); font-size: .74rem; letter-spacing: .3em; text-transform: uppercase; color: var(--faint); opacity: 0; animation: aniIntroTag .9s ease-out 1.8s forwards; }
+@keyframes aniIntroDraw { to { stroke-dashoffset: 0; } }
+@keyframes aniIntroGlow {
+  0%   { stroke-width: 2;   fill: rgba(184, 255, 60, 0);    filter: drop-shadow(0 0 0 rgba(184, 255, 60, 0)); }
+  50%  { stroke-width: 2.6; fill: rgba(184, 255, 60, .09);  filter: drop-shadow(0 0 18px rgba(184, 255, 60, .6)); }
+  100% { stroke-width: 2.2; fill: rgba(184, 255, 60, .06);  filter: drop-shadow(0 0 8px rgba(184, 255, 60, .35)); }
+}
+@keyframes aniIntroTag { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ani-intro { display: none; } }
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */
