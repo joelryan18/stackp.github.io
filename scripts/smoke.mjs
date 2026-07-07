@@ -134,40 +134,26 @@ const okText = await evalJs(`document.querySelector(".engage__ok")?.textContent 
 check("form: honest success shown", okText.includes("on the list"), okText);
 check("form: no inbox promise", !okText.toLowerCase().includes("inbox"), okText);
 
-/* ---- 6 · payments: cards, modal, checkout, pass, email ---- */
+/* ---- 6 · plans → checkout page purchase flow ---- */
 await metrics(1440, 900);
 await go(BASE + "/", 3000);
 check("pay: heading says Start for ₹5", (await evalJs(`document.querySelector(".plans .section__title")?.textContent.replace(/\\s+/g, " ").trim() || ""`)).includes("Start for ₹5"));
-check("pay: hobby card ₹5 one-time", (await evalJs(`document.querySelector('button[data-plan="hobby"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹5 one-time"));
-check("pay: studio card ₹6,999 one-time", (await evalJs(`document.querySelector('button[data-plan="studio"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹6,999 one-time"));
+check("pay: hobby CTA links to checkout", (await evalJs(`document.querySelector('a[data-plan="hobby"]')?.getAttribute("href")`)) === "/checkout.html?plan=hobby");
+check("pay: studio CTA links to checkout", (await evalJs(`document.querySelector('a[data-plan="studio"]')?.getAttribute("href")`)) === "/checkout.html?plan=studio");
+check("pay: hobby card ₹5 one-time", (await evalJs(`document.querySelector('a[data-plan="hobby"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹5 one-time"));
+check("pay: studio card ₹6,999 one-time", (await evalJs(`document.querySelector('a[data-plan="studio"]')?.closest(".tier")?.querySelector(".tier__price")?.textContent.replace(/\\s+/g, " ") || ""`)).includes("₹6,999 one-time"));
 check("pay: no $ price on payable cards", !(await evalJs(`/\\$\\d/.test(document.querySelector(".tiers")?.textContent || "")`)) || (await evalJs(`document.querySelector(".tier:last-of-type .tier__price").textContent`)) === "Custom");
 check("pay: enterprise card untouched", (await evalJs(`document.querySelector(".tier:last-of-type .btn")?.getAttribute("href")`)) === "#engage");
+check("pay: modal markup gone", !(await evalJs(`!!document.getElementById("paywrap")`)));
 
-// modal opens, populated from PLANS
-await evalJs(`document.querySelector('button[data-plan="studio"]').click()`);
-await sleep(500);
-check("pay: modal opens", !(await evalJs(`document.getElementById("paywrap").hidden`)));
-check("pay: modal is dialog", (await evalJs(`document.querySelector(".paymodal").getAttribute("aria-modal")`)) === "true");
-check("pay: plan name", (await evalJs(`document.getElementById("payPlanName").textContent`)) === "Studio");
-check("pay: modal price", (await evalJs(`document.getElementById("payPrice").textContent`)).includes("₹6,999"));
+// signed-in purchase on the checkout page
+const { identifier: payPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `window.__axonAuthCfg = { session: { user: { id: "uid_smoke_1", email: "smoke@test.dev", user_metadata: { full_name: "Smoke Tester" }, app_metadata: { provider: "google" } } } };` });
+await go(BASE + "/checkout.html?plan=studio", 3000);
 check("pay: benefits ≥ 8", (await evalJs(`document.querySelectorAll("#payBenefits li").length`)) >= 8, String(await evalJs(`document.querySelectorAll("#payBenefits li").length`)));
 check("pay: honest note", (await evalJs(`document.querySelector(".paymodal__note").textContent.replace(/\\s+/g, " ")`)).includes("AXON is a design showcase. This is a genuine ₹6,999 payment"));
-check("pay: focus inside modal", await evalJs(`document.querySelector(".paymodal").contains(document.activeElement)`));
-check("pay: body scroll locked", await evalJs(`document.body.classList.contains("pay-open")`));
-// Esc closes, focus returns
-await evalJs(`document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))`);
-await sleep(300);
-check("pay: Escape closes", await evalJs(`document.getElementById("paywrap").hidden`));
-check("pay: focus returns to CTA", await evalJs(`document.activeElement === document.querySelector('button[data-plan="studio"]')`));
-// backdrop click closes; hobby populates too
-await evalJs(`document.querySelector('button[data-plan="hobby"]').click()`);
-await sleep(300);
-check("pay: hobby price", (await evalJs(`document.getElementById("payPrice").textContent`)).includes("₹5"));
-await evalJs(`document.querySelector(".paywrap__backdrop").click()`);
-await sleep(300);
-check("pay: backdrop closes", await evalJs(`document.getElementById("paywrap").hidden`));
+check("pay: pay button labelled", (await evalJs(`document.getElementById("payBtn").textContent`)) === "Pay ₹6,999");
 
-// checkout launch — stub Razorpay + fetch BEFORE interacting
+// stub Razorpay + fetch BEFORE interacting (read lazily by the pay flow)
 await evalJs(`(() => {
   window.__rzpCalls = []; window.__rzpOpened = 0;
   window.Razorpay = function (opts) {
@@ -179,38 +165,37 @@ await evalJs(`(() => {
   window.fetch = (url, init) => { window.__fetches.push({ url: String(url), body: (init && init.body) || "" }); return Promise.resolve(new Response("{}", { status: 200 })); };
   window.__axonEmailCfg = { serviceId: "svc_smoke", templateId: "tpl_smoke", publicKey: "pub_smoke" };
 })()`);
-await evalJs(`document.querySelector('button[data-plan="studio"]').click()`);
-await sleep(300);
-// empty form blocked by native validation
+// phone still empty → native validation blocks
 await evalJs(`document.getElementById("payForm").requestSubmit()`);
 await sleep(300);
-check("pay: empty form blocked", (await evalJs(`window.__rzpCalls.length`)) === 0);
-// filled form launches checkout with exact options
+check("pay: incomplete form blocked", (await evalJs(`window.__rzpCalls.length`)) === 0);
+// complete the form (name/email came from the session) and submit
 await evalJs(`(() => {
-  document.getElementById("payName").value = "Smoke Tester";
-  document.getElementById("payEmail").value = "smoke@test.dev";
   document.getElementById("payPhone").value = "9999999999";
   document.getElementById("payForm").requestSubmit();
 })()`);
 await sleep(500);
 check("pay: checkout opened", (await evalJs(`window.__rzpOpened`)) === 1);
-const rzpOpts = await evalJs(`window.__rzpCalls[0] && { amount: window.__rzpCalls[0].amount, currency: window.__rzpCalls[0].currency, name: window.__rzpCalls[0].name, email: window.__rzpCalls[0].prefill?.email, contact: window.__rzpCalls[0].prefill?.contact, plan: window.__rzpCalls[0].notes?.plan, hasHandler: typeof window.__rzpCalls[0].handler === "function" }`);
+const rzpOpts = await evalJs(`window.__rzpCalls[0] && { amount: window.__rzpCalls[0].amount, currency: window.__rzpCalls[0].currency, name: window.__rzpCalls[0].name, email: window.__rzpCalls[0].prefill?.email, contact: window.__rzpCalls[0].prefill?.contact, plan: window.__rzpCalls[0].notes?.plan, auth_uid: window.__rzpCalls[0].notes?.auth_uid, auth_provider: window.__rzpCalls[0].notes?.auth_provider, hasHandler: typeof window.__rzpCalls[0].handler === "function" }`);
 check("pay: amount 699900 paise", rzpOpts?.amount === 699900, JSON.stringify(rzpOpts));
 check("pay: currency INR", rzpOpts?.currency === "INR");
-check("pay: prefill email", rzpOpts?.email === "smoke@test.dev");
+check("pay: prefill email from account", rzpOpts?.email === "smoke@test.dev");
 check("pay: prefill contact", rzpOpts?.contact === "9999999999");
 check("pay: notes.plan studio", rzpOpts?.plan === "studio");
+check("pay: notes.auth_uid", rzpOpts?.auth_uid === "uid_smoke_1");
+check("pay: notes.auth_provider", rzpOpts?.auth_provider === "google");
 check("pay: success handler wired", rzpOpts?.hasHandler === true);
 
 // synthetic success → pass rendered
 await evalJs(`window.__rzpCalls[0].handler({ razorpay_payment_id: "pay_SMOKE1234567890" })`);
 await sleep(700);
 check("pay: success stage shown", !(await evalJs(`document.querySelector('[data-stage="success"]').hidden`)));
-check("pay: form stage hidden", await evalJs(`document.querySelector('[data-stage="form"]').hidden`));
+check("pay: pay stage hidden", await evalJs(`document.querySelector('[data-stage="pay"]').hidden`));
 check("pay: pass id shown", (await evalJs(`document.getElementById("okPassId").textContent`)) === "pay_SMOKE1234567890");
 check("pay: plan named on success", (await evalJs(`document.getElementById("okPlan").textContent`)) === "Studio");
 check("pay: pass canvas painted", (await evalJs(`document.getElementById("passCanvas").getContext("2d").getImageData(100, 100, 1, 1).data.join()`)) === "7,8,10,255");
 check("pay: download button visible", await evalJs(`!document.getElementById("payDownload").hidden`));
+check("pay: done links to plans", (await evalJs(`document.getElementById("payDone").getAttribute("href")`)) === "/#plans");
 
 // EmailJS request captured by the fetch stub
 const mail = await evalJs(`window.__fetches.find((f) => f.url.includes("api.emailjs.com"))`);
@@ -222,14 +207,17 @@ check("pay: emailjs pass_id", mailBody.template_params?.pass_id === "pay_SMOKE12
 check("pay: emailjs benefits included", String(mailBody.template_params?.benefits || "").includes("Priority trace lanes"));
 check("pay: mail note optimistic", (await evalJs(`document.getElementById("okMailNote").textContent`)).includes("on its way"));
 
-// failure path: readable error, fallback link on 2nd failure
-await evalJs(`document.getElementById("payDone").click()`); // close success modal
-await sleep(300);
-await evalJs(`document.querySelector('button[data-plan="hobby"]').click()`);
-await sleep(300);
+// failure path on the hobby page: readable error, fallback link on 2nd failure
+await go(BASE + "/checkout.html?plan=hobby", 3000);
 await evalJs(`(() => {
-  document.getElementById("payName").value = "Smoke Tester";
-  document.getElementById("payEmail").value = "smoke@test.dev";
+  window.__rzpCalls = []; window.__rzpOpened = 0;
+  window.Razorpay = function (opts) {
+    window.__rzpCalls.push(opts);
+    this.open = () => { window.__rzpOpened++; };
+    this.on = (ev, cb) => { if (ev === "payment.failed") window.__rzpFail = cb; };
+  };
+})()`);
+await evalJs(`(() => {
   document.getElementById("payPhone").value = "9999999999";
   document.getElementById("payForm").requestSubmit();
 })()`);
@@ -245,6 +233,7 @@ await evalJs(`window.__rzpFail({ error: { description: "Card declined by issuer"
 await sleep(300);
 const fb = await evalJs(`document.querySelector("#payErr a")?.href || ""`);
 check("pay: fallback link on 2nd failure", fb === "https://razorpay.me/@stackwith/5", fb);
+await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: payPreload });
 
 /* ---- 6b · checkout page: sign-in gate ---- */
 await metrics(1440, 900);

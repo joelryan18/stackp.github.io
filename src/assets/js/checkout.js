@@ -2,7 +2,7 @@
    AXON — checkout.js · sign-in gate + checkout page controller
    ============================================================ */
 import { createClient } from "@supabase/supabase-js";
-import { PLANS } from "./payments.js";
+import { PLANS, initPayFlow } from "./payments.js";
 
 const SUPABASE_URL = "";      // ← Supabase → Settings → API (README → Sign-in)
 const SUPABASE_ANON_KEY = ""; // ← publishable anon key, same place
@@ -22,6 +22,8 @@ const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
   document.getElementById("payPlanTag").textContent = plan.tag;
   document.getElementById("payPrice").textContent = plan.display;
   document.title = plan.name + " checkout — AXON";
+
+  initPayFlow(planKey, () => identity);
 
   const stages = {
     auth: card.querySelector('[data-stage="auth"]'),

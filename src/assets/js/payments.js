@@ -1,5 +1,5 @@
 /* ============================================================
-   AXON — payments.js · plans checkout (Razorpay) + supporter pass
+   AXON — payments.js · plan data + Razorpay pay flow + supporter pass
    ============================================================ */
 
 const RAZORPAY_KEY_ID = "rzp_live_TAKxGxbsRAvd0N"; // live key — publishable by design (README → Payments)
@@ -37,53 +37,28 @@ function loadScript(src) {
   });
 }
 
-export function initPayments() {
-  const wrap = document.getElementById("paywrap");
-  if (!wrap) return;
-  const modal = wrap.querySelector(".paymodal");
-  const stageForm = wrap.querySelector('[data-stage="form"]');
-  const stageOk = wrap.querySelector('[data-stage="success"]');
+/* Binds the purchase flow on the checkout page. `getIdentity` returns the
+   signed-in buyer ({ uid, provider, email, name }) or null; it is called at
+   submit time so a sign-out mid-page never uses a stale identity. */
+export function initPayFlow(planKey, getIdentity) {
+  const plan = PLANS[planKey];
   const form = document.getElementById("payForm");
+  if (!plan || !form) return;
+  const stagePay = document.querySelector('[data-stage="pay"]');
+  const stageOk = document.querySelector('[data-stage="success"]');
   const err = document.getElementById("payErr");
   const payBtn = document.getElementById("payBtn");
+  let failCount = 0;
 
-  let planKey = null, opener = null, failCount = 0;
+  document.getElementById("payNoteAmount").textContent = plan.display;
+  payBtn.textContent = "Pay " + plan.display;
+  document.getElementById("payBenefits").replaceChildren(...plan.benefits.map((b) => {
+    const li = document.createElement("li"); li.textContent = b; return li;
+  }));
 
-  const focusables = () =>
-    [...modal.querySelectorAll("button, input, a[href]")].filter((el) => el.offsetParent !== null);
-
-  function openModal(key, trigger) {
-    const plan = PLANS[key];
-    if (!plan) return;
-    planKey = key;
-    opener = trigger || document.activeElement;
-    document.getElementById("payPlanName").textContent = plan.name;
-    document.getElementById("payPlanTag").textContent = plan.tag;
-    document.getElementById("payPrice").textContent = plan.display;
-    document.getElementById("payNoteAmount").textContent = plan.display;
-    payBtn.textContent = "Pay " + plan.display;
-    payBtn.removeAttribute("aria-busy");
-    const ul = document.getElementById("payBenefits");
-    ul.replaceChildren(...plan.benefits.map((b) => {
-      const li = document.createElement("li"); li.textContent = b; return li;
-    }));
-    err.hidden = true; err.replaceChildren();
-    failCount = 0;
-    stageOk.hidden = true; stageForm.hidden = false;
-    wrap.hidden = false;
-    document.body.classList.add("pay-open");
-    setTimeout(() => document.getElementById("payName").focus(), 50);
-  }
-
-  function closeModal() {
-    wrap.hidden = true;
-    document.body.classList.remove("pay-open");
-    if (opener && opener.focus) opener.focus();
-  }
-
-  function showPayError(message, plan, withFallback) {
+  function showPayError(message, withFallback) {
     err.replaceChildren(document.createTextNode(message + " "));
-    if (withFallback && plan) {
+    if (withFallback) {
       const a = document.createElement("a");
       a.href = FALLBACK_HANDLE + "/" + Math.round(plan.amount / 100);
       a.target = "_blank"; a.rel = "noopener";
@@ -92,18 +67,19 @@ export function initPayments() {
     }
     err.hidden = false;
     payBtn.removeAttribute("aria-busy");
-    payBtn.textContent = plan ? "Pay " + plan.display : "Pay";
+    payBtn.textContent = "Pay " + plan.display;
   }
 
-  async function launchCheckout(plan, buyer) {
+  async function launchCheckout(buyer) {
     if (!window.Razorpay) {
       if (!RAZORPAY_KEY_ID) {
-        showPayError("Payments aren't live yet — configuration is pending.", plan, true);
+        showPayError("Payments aren't live yet — configuration is pending.", true);
         return;
       }
       try { await loadScript(CHECKOUT_SRC); }
-      catch { showPayError("Could not reach the payment service. Check your connection and retry.", plan, true); return; }
+      catch { showPayError("Could not reach the payment service. Check your connection and retry.", true); return; }
     }
+    const id = getIdentity() || { uid: "", provider: "" };
     const rzp = new window.Razorpay({
       key: RAZORPAY_KEY_ID,
       amount: plan.amount,
@@ -111,16 +87,16 @@ export function initPayments() {
       name: "AXON",
       description: plan.description,
       prefill: { name: buyer.name, email: buyer.email, contact: buyer.phone },
-      notes: { plan: planKey, buyer_name: buyer.name },
+      notes: { plan: planKey, buyer_name: buyer.name, auth_uid: id.uid, auth_provider: id.provider },
       theme: { color: "#B8FF3C" },
-      handler: (response) => showSuccess(plan, buyer, response.razorpay_payment_id),
+      handler: (response) => showSuccess(buyer, response.razorpay_payment_id),
       modal: { ondismiss: () => { payBtn.removeAttribute("aria-busy"); payBtn.textContent = "Pay " + plan.display; } },
     });
-    rzp.on("payment.failed", (resp) => onPaymentFailed(resp, plan));
+    rzp.on("payment.failed", onPaymentFailed);
     rzp.open();
   }
 
-  function sendBenefitsEmail(plan, buyer, passId) {
+  function sendBenefitsEmail(buyer, passId) {
     const cfg = window.__axonEmailCfg || EMAILJS_DEFAULT;
     if (!cfg.serviceId || !cfg.templateId || !cfg.publicKey) {
       return Promise.reject(new Error("emailjs unconfigured"));
@@ -144,7 +120,7 @@ export function initPayments() {
     }).then((res) => { if (!res.ok) throw new Error("HTTP " + res.status); });
   }
 
-  function renderPass(plan, buyer, passId) {
+  function renderPass(buyer, passId) {
     const c = document.getElementById("passCanvas");
     if (!c || !c.getContext) return false;
     try {
@@ -183,58 +159,42 @@ export function initPayments() {
   }
 
   let lastPassId = "";
-  function showSuccess(plan, buyer, paymentId) {
+  function showSuccess(buyer, paymentId) {
     lastPassId = paymentId;
     document.getElementById("okPlan").textContent = plan.name;
     document.getElementById("okPassId").textContent = paymentId;
-    const drew = renderPass(plan, buyer, paymentId);
+    const drew = renderPass(buyer, paymentId);
     document.getElementById("payDownload").hidden = !drew;
     document.getElementById("passCanvas").hidden = !drew;
-    stageForm.hidden = true; stageOk.hidden = false;
+    stagePay.hidden = true; stageOk.hidden = false;
     const note = document.getElementById("okMailNote");
     note.textContent = "A confirmation email with your benefits is on its way.";
-    sendBenefitsEmail(plan, buyer, paymentId).catch(() => {
+    sendBenefitsEmail(buyer, paymentId).catch(() => {
       note.textContent = "Email delivery delayed — your pass ID above is your proof of purchase.";
     });
   }
 
   document.getElementById("payDownload").addEventListener("click", () => downloadPass(lastPassId));
 
-  function onPaymentFailed(resp, plan) {
+  function onPaymentFailed(resp) {
     failCount++;
     const reason = resp && resp.error && resp.error.description
       ? resp.error.description
       : "Payment could not be completed.";
-    showPayError(reason + " You can retry.", plan, failCount >= 2);
+    showPayError(reason + " You can retry.", failCount >= 2);
   }
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
-    const plan = PLANS[planKey];
-    if (!plan || payBtn.getAttribute("aria-busy") === "true") return;
+    if (payBtn.getAttribute("aria-busy") === "true") return;
     err.hidden = true;
     payBtn.setAttribute("aria-busy", "true");
     payBtn.textContent = "OPENING…";
-    launchCheckout(plan, {
+    launchCheckout({
       name: document.getElementById("payName").value.trim(),
       email: document.getElementById("payEmail").value.trim(),
       phone: document.getElementById("payPhone").value.trim(),
     });
-  });
-
-  document.querySelectorAll("button[data-plan]").forEach((btn) =>
-    btn.addEventListener("click", () => openModal(btn.getAttribute("data-plan"), btn)));
-  wrap.querySelectorAll("[data-pay-close]").forEach((el) =>
-    el.addEventListener("click", closeModal));
-  document.addEventListener("keydown", (e) => {
-    if (wrap.hidden) return;
-    if (e.key === "Escape") { closeModal(); return; }
-    if (e.key !== "Tab") return;
-    const f = focusables();
-    if (!f.length) return;
-    const first = f[0], last = f[f.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 }

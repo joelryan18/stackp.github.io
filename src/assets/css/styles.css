@@ -429,16 +429,11 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .tier .btn { justify-content: center; margin-top: auto; }
 
 /* ============================================================
-   CHECKOUT MODAL (Razorpay supporter pass)
+   CHECKOUT CARD (Razorpay supporter pass)
    ============================================================ */
-.paywrap { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 1.2rem; }
-.paywrap[hidden] { display: none; }
-.paywrap__backdrop { position: absolute; inset: 0; background: rgba(7, 8, 10, 0.78); backdrop-filter: blur(6px); }
-.paymodal { position: relative; z-index: 1; width: min(560px, 100%); max-height: min(86vh, 780px); overflow: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 2rem; }
+.paymodal { position: relative; z-index: 1; width: min(560px, 100%); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 2rem; }
 .paymodal__stage { display: flex; flex-direction: column; gap: 1rem; }
 .paymodal__stage[hidden] { display: none; }
-.paymodal__x { position: absolute; top: 0.9rem; right: 0.9rem; width: 2rem; height: 2rem; background: none; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; cursor: pointer; transition: border-color 0.3s var(--ease), color 0.3s var(--ease); }
-.paymodal__x:hover { color: var(--text); border-color: var(--line-strong); }
 .paymodal__head { display: flex; align-items: baseline; justify-content: space-between; }
 .paymodal__head h3 { font-family: var(--display); font-weight: 600; font-size: 1.5rem; }
 .paymodal__benefits { display: flex; flex-direction: column; gap: 0.55rem; }
@@ -457,7 +452,6 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .paymodal__mailnote { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
 .paymodal__actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .paymodal .btn { justify-content: center; }
-body.pay-open { overflow: hidden; }
 
 /* ============================================================
    CHECKOUT PAGE (sign-in gate)

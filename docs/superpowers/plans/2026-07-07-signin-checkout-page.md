@@ -11,7 +11,7 @@
 ## Execution Tracker (tick as tasks land — designed for one-or-more tasks per session)
 
 - [x] **Task 1** — Checkout page with sign-in gate · commit `feat: checkout page with Supabase sign-in gate (Google/GitHub/Discord/email)`
-- [ ] **Task 2** — Purchase cutover, modal removed · commit `feat: purchases move to the sign-in-gated checkout page; modal removed`
+- [x] **Task 2** — Purchase cutover, modal removed · commit `feat: purchases move to the sign-in-gated checkout page; modal removed`
 - [ ] **Task 3** — Docs + QA baselines · commit `docs: sign-in setup guide (Supabase) + project state`
 - [ ] **Task 4** — Rollout (user-gated: needs Supabase project + provider apps) · commit `feat: live Supabase sign-in configuration`
 
@@ -462,7 +462,7 @@ git commit -m "feat: checkout page with Supabase sign-in gate (Google/GitHub/Dis
 - Consumes: Task 1's page DOM ids/stages and `checkout.js`'s `identity`/`planKey`.
 - Produces: `export function initPayFlow(planKey, getIdentity)` in `payments.js` — `getIdentity(): { uid, provider, email, name } | null`, called at submit time; Razorpay `notes` = `{ plan, buyer_name, auth_uid, auth_provider }`. `initPayments` no longer exists.
 
-- [ ] **Step 1: Rewrite smoke section 6**
+- [x] **Step 1: Rewrite smoke section 6**
 
 In `scripts/smoke.mjs`, replace everything from the line `/* ---- 6 · payments: cards, modal, checkout, pass, email ---- */` down to (but not including) the line `/* ---- 6b · checkout page: sign-in gate ---- */` with:
 
@@ -569,12 +569,12 @@ check("pay: fallback link on 2nd failure", fb === "https://razorpay.me/@stackwit
 await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: payPreload });
 ```
 
-- [ ] **Step 2: Run to verify failure**
+- [x] **Step 2: Run to verify failure**
 
 Run: `npm run build && npm run smoke`
 Expected: exit 1 — "pay: hobby CTA links to checkout", "pay: studio CTA links to checkout", "pay: modal markup gone" FAIL (CTAs are still buttons, modal exists), and the checkout-page purchase checks FAIL ("pay: benefits ≥ 8" onward — no pay flow is bound on the page yet). Section 6b "gate:" checks still PASS.
 
-- [ ] **Step 3: Rewrite `src/assets/js/payments.js`**
+- [x] **Step 3: Rewrite `src/assets/js/payments.js`**
 
 Replace the entire file with (constants keep their current committed values — live Razorpay key + EmailJS IDs):
 
@@ -781,7 +781,7 @@ export function initPayFlow(planKey, getIdentity) {
 }
 ```
 
-- [ ] **Step 4: Bind the pay flow in `checkout.js`**
+- [x] **Step 4: Bind the pay flow in `checkout.js`**
 
 In `src/assets/js/checkout.js`, change the import line:
 
@@ -803,7 +803,7 @@ and immediately after the `document.title = plan.name + " checkout — AXON";` l
 
 (`identity` is declared below with `let` — function-scoped closure reads its current value at submit time; the declaration is hoisted, so this call site is fine because `initPayFlow` only *stores* the callback.)
 
-- [ ] **Step 5: Swap the landing CTAs to links**
+- [x] **Step 5: Swap the landing CTAs to links**
 
 In `src/index.html`, replace:
 
@@ -829,7 +829,7 @@ with:
           <a class="btn btn--signal" href="/checkout.html?plan=studio" data-plan="studio" data-probe="DEPLOY">Get access</a>
 ```
 
-- [ ] **Step 6: Delete the modal markup**
+- [x] **Step 6: Delete the modal markup**
 
 In `src/index.html`, delete the entire block from the line
 
@@ -839,7 +839,7 @@ In `src/index.html`, delete the entire block from the line
 
 through the closing `</div>` of `#paywrap` (the block ends with the success stage's `</div>`, the `.paymodal` `</div>`, and the `.paywrap` `</div>` — three closing divs after `payDone`).
 
-- [ ] **Step 7: Unwire `main.js`**
+- [x] **Step 7: Unwire `main.js`**
 
 In `src/assets/js/main.js`, delete the line:
 
@@ -853,7 +853,7 @@ and delete the line (immediately before the `console.log("%cAXON", …)` line):
   initPayments();
 ```
 
-- [ ] **Step 8: Delete modal-only CSS**
+- [x] **Step 8: Delete modal-only CSS**
 
 In `src/assets/css/styles.css` (CHECKOUT MODAL section), delete these rules — they styled the fixed overlay that no longer exists:
 
@@ -874,12 +874,13 @@ body.pay-open { overflow: hidden; }
 
 Also in the `.paymodal` rule, change `max-height: min(86vh, 780px); overflow: auto;` to nothing (delete those two declarations — the page scrolls naturally), and update the section header comment from `CHECKOUT MODAL (Razorpay supporter pass)` to `CHECKOUT CARD (Razorpay supporter pass)`.
 
-- [ ] **Step 9: Run to verify pass**
+- [x] **Step 9: Run to verify pass**
 
 Run: `npm run build && npm run smoke`
 Expected: **ALL PASS** — rewritten section 6, untouched section 6b, and all earlier sections.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
+  (Deviation: `src/_data/assets.json` included too — it's tracked and gained the `checkout` bundle entry.)
 
 ```bash
 git add src/assets/js/payments.js src/assets/js/checkout.js src/assets/js/main.js src/index.html src/assets/css/styles.css scripts/smoke.mjs
