@@ -36,15 +36,16 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   the index checkout modal is **gone**. **Supabase config is set in `checkout.js`**
   (2026-07-07: project URL + `sb_publishable_…` key; email+password sign-in QA'd E2E
   headlessly against the real project — wrong-password error, sign-in → pay stage,
-  prefill readonly, session persists, sign-out). **Pending (Task 4, user-gated):**
-  Google/GitHub/Discord providers are still DISABLED in the Supabase dashboard
-  (verified via `/auth/v1/settings`) — clicking them would land on a raw 400 JSON page,
-  so the deploy **push is HELD** until the user enables the provider OAuth apps + URL
-  Configuration (README → Sign-in). Recommend **Confirm email OFF**: it's currently ON
-  and the default Supabase SMTP allows ~2 confirmation mails/hour ("email rate limit
-  exceeded" otherwise). Then: push, live sign-in check, ₹5 purchase verification above.
-  Never commit the `sb_secret_…` key (admin/service key, used only for transient local
-  QA; user was advised to rotate it).
+  prefill readonly, session persists, sign-out). **Pushed live 2026-07-07:** Google
+  provider ENABLED in Supabase (verified: `/auth/v1/authorize?provider=google` 302s to
+  a real consent screen) so the hold was released; GitHub/Discord are still DISABLED
+  in the dashboard, so their buttons ship `disabled` with a `payauth__soon` "soon"
+  badge (checkout.html + styles.css) — when the user enables those providers, remove
+  the `disabled` attrs + badges and repush. **Still recommend Confirm email OFF**:
+  it's ON and the default Supabase SMTP allows ~2 confirmation mails/hour ("email rate
+  limit exceeded" otherwise). Remaining user-gated steps: live Google sign-in spot
+  check, then the ₹5 purchase verification above. Never commit the `sb_secret_…` key
+  (admin/service key, used only for transient local QA; user was advised to rotate it).
 
 ## Standing decisions
 
