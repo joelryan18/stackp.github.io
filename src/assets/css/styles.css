@@ -588,7 +588,8 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 /* ============================================================
    ANIME (community tracker — /anime.html)
    ============================================================ */
-.page main.ani { max-width: var(--maxw); }
+/* full-page browse surface (enma-style) — wider than the site's article column */
+.page main.ani { max-width: none; padding-left: clamp(1.4rem, 3.5vw, 3.4rem); padding-right: clamp(1.4rem, 3.5vw, 3.4rem); }
 .ani__head { margin-bottom: 2.4rem; }
 .ani__title { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(2.2rem, 6vw, 3.8rem); margin: .6rem 0 1rem; }
 .ani__title em { font-style: normal; color: var(--signal); }
@@ -600,11 +601,17 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .ani__tab:hover { color: var(--text); }
 .ani__tab[aria-current="page"] { color: var(--signal); border-bottom-color: var(--signal); }
 .ani__controls { display: flex; gap: .6rem; flex-wrap: wrap; }
-.ani__controls input, .ani__controls select, .ani__field select, .ani__field input, #aniSearch {
+.ani__controls input, .ani__controls select, .ani__field select, .ani__field input, #aniSearch, .ani__browsebar input, .ani__browsebar select {
   background: var(--bg-soft); border: 1px solid var(--line-strong); border-radius: 4px;
   padding: .65rem 1rem; color: var(--text); font-family: var(--mono); font-size: .82rem;
 }
-.ani__controls input:focus, .ani__controls select:focus, .ani__field select:focus, .ani__field input:focus, #aniSearch:focus { outline: none; border-color: var(--signal); }
+.ani__controls input:focus, .ani__controls select:focus, .ani__field select:focus, .ani__field input:focus, #aniSearch:focus, .ani__browsebar input:focus, .ani__browsebar select:focus { outline: none; border-color: var(--signal); }
+
+/* browse-all view */
+.ani__browsebar { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.ani__browsebar input[type="search"] { flex: 1; min-width: 220px; }
+.ani__browsegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .9rem; }
+.ani__more { display: block; margin: 1.6rem auto 0; }
 
 .ani__status { font-family: var(--mono); font-size: .8rem; color: var(--faint); padding: 1rem 0; }
 .ani__back { background: none; border: 0; cursor: pointer; font-family: var(--mono); font-size: .78rem; color: var(--muted); padding: 0 0 1.2rem; }
@@ -682,8 +689,8 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
      glow-pulses, then the overlay fades out (enma.lol-style) — */
 .ani-intro { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1.2rem; cursor: pointer; opacity: 1; transition: opacity .5s ease-in-out; }
 .ani-intro.is-done { opacity: 0; pointer-events: none; }
-.ani-intro__svg { width: min(92vw, 1100px); height: auto; display: block; overflow: visible; }
-.ani-intro__word { font-family: var(--display); font-weight: 700; font-size: 185px; letter-spacing: .02em; }
+.ani-intro__svg { width: min(97vw, 1400px); height: auto; display: block; overflow: visible; }
+.ani-intro__word { font-family: var(--display); font-weight: 700; font-size: 240px; letter-spacing: .01em; }
 .ani-intro__word--draw {
   fill: transparent; stroke: var(--signal); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round;
   stroke-dasharray: 1600; stroke-dashoffset: 1600;
@@ -693,7 +700,7 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
    (pan + zoom) for the length of the splash, like enma's clipped <video> */
 .ani-intro__art {
   opacity: 0; transform-box: fill-box; transform-origin: 50% 50%;
-  filter: saturate(1.15) brightness(.85); will-change: opacity, transform;
+  filter: saturate(1.15) brightness(.95); will-change: opacity, transform;
 }
 .ani-intro__art--1 { animation: aniIntroArt1 1.7s ease-in-out .3s forwards; }
 .ani-intro__art--2 { animation: aniIntroArt2 1.5s ease-in-out 1.8s forwards; }
@@ -717,25 +724,25 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 }
 /* the clipped <video> (enma's intro-video): brightens in over the draw;
    sits above the fallback banner frames, below the sheen + outline */
-.ani-intro__video { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; animation: aniIntroVideoReveal 3s ease-out .3s forwards; }
+.ani-intro__video { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; filter: saturate(1.22) brightness(1.12) contrast(1.04); animation: aniIntroVideoReveal 3s ease-out .3s forwards; }
 @keyframes aniIntroVideoReveal { to { opacity: 1; } }
 
 /* light sweep through the letters right after the outline finishes drawing */
-.ani-intro__sheen { opacity: 0; transform: translateX(-320px) skewX(-14deg); animation: aniIntroSheen .9s ease-in-out 2.4s forwards; }
+.ani-intro__sheen { opacity: 0; transform: translateX(-360px) skewX(-14deg); animation: aniIntroSheen .9s ease-in-out 2.4s forwards; }
 @keyframes aniIntroSheen {
-  0%   { opacity: 0;  transform: translateX(-320px) skewX(-14deg); }
+  0%   { opacity: 0;  transform: translateX(-360px) skewX(-14deg); }
   15%  { opacity: .8; }
   85%  { opacity: .8; }
-  100% { opacity: 0;  transform: translateX(1480px) skewX(-14deg); }
+  100% { opacity: 0;  transform: translateX(1720px) skewX(-14deg); }
 }
 .ani-intro__svg { transition: transform .6s var(--ease); }
 .ani-intro.is-done .ani-intro__svg { transform: scale(1.04); }
 .ani-intro__tag { font-family: var(--mono); font-size: .74rem; letter-spacing: .3em; text-transform: uppercase; color: var(--faint); opacity: 0; animation: aniIntroTag .9s ease-out 1.8s forwards; }
 @keyframes aniIntroDraw { to { stroke-dashoffset: 0; } }
-@keyframes aniIntroGlow {
-  0%   { stroke-width: 2;   fill: rgba(184, 255, 60, 0);    filter: drop-shadow(0 0 0 rgba(184, 255, 60, 0)); }
-  50%  { stroke-width: 2.6; fill: rgba(184, 255, 60, .09);  filter: drop-shadow(0 0 18px rgba(184, 255, 60, .6)); }
-  100% { stroke-width: 2.2; fill: rgba(184, 255, 60, .06);  filter: drop-shadow(0 0 8px rgba(184, 255, 60, .35)); }
+@keyframes aniIntroGlow { /* no fill tint — the clipped video owns the letter interiors */
+  0%   { stroke-width: 2;   filter: drop-shadow(0 0 0 rgba(184, 255, 60, 0)); }
+  50%  { stroke-width: 2.6; filter: drop-shadow(0 0 18px rgba(184, 255, 60, .6)); }
+  100% { stroke-width: 2.2; filter: drop-shadow(0 0 8px rgba(184, 255, 60, .35)); }
 }
 @keyframes aniIntroTag { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .ani-intro { display: none; } }

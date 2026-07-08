@@ -40,7 +40,7 @@ for _ in range(96):
         "speed": rng.uniform(26, 78),
         "length": rng.uniform(90, 420),
         "width": rng.choice([1, 1, 2, 2, 3]),
-        "alpha": rng.randint(36, 150),
+        "alpha": rng.randint(52, 190),
         "color": color,
     })
 
@@ -52,7 +52,7 @@ for _ in range(6):
         "x": rng.uniform(0, W),
         "speed": rng.uniform(1.5, 4.5),
         "r": rng.uniform(60, 130),
-        "alpha": rng.randint(26, 48),
+        "alpha": rng.randint(36, 62),
         "color": rng.choice([LIME, TEAL]),
     })
 
@@ -118,7 +118,7 @@ def draw_frame(i: int) -> Image.Image:
 
     # vignette bands top/bottom so the letters read as a lit core
     for k in range(40):
-        a = int(120 * (1 - k / 40) ** 2)
+        a = int(70 * (1 - k / 40) ** 2)
         d.line([(0, k), (W, k)], fill=(0, 0, 0, a))
         d.line([(0, H - 1 - k), (W, H - 1 - k)], fill=(0, 0, 0, a))
 

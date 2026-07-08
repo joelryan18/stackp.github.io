@@ -13,6 +13,7 @@ permalink: "anime.html"
     <section class="ani__bar" aria-label="Catalog controls">
       <nav class="ani__tabs" aria-label="Views">
         <a href="#catalog" class="ani__tab" data-view="catalog" aria-current="page">Catalog</a>
+        <a href="#browse" class="ani__tab" data-view="browse">Browse all</a>
         <a href="#mine" class="ani__tab" data-view="mine" id="aniTabMine" hidden>My list</a>
       </nav>
       <div class="ani__controls">
@@ -31,6 +32,30 @@ permalink: "anime.html"
       <div class="ani__grid" id="aniGrid" hidden></div>
       <!-- AniList discover rails (trending / new & airing / upcoming) — filled by anime.js -->
       <div class="ani__discover" id="aniDiscover" hidden></div>
+    </section>
+
+    <!-- browse-all: the entire AniList catalog, filterable + paginated -->
+    <section class="ani__view" data-view="browse" hidden>
+      <div class="ani__browsebar" aria-label="Browse controls">
+        <input type="search" id="aniBrowseQ" placeholder="Search all anime…" aria-label="Search all anime" autocomplete="off" />
+        <select id="aniBrowseGenre" aria-label="Genre">
+          <option value="">All genres</option>
+          <option>Action</option><option>Adventure</option><option>Comedy</option><option>Drama</option>
+          <option>Fantasy</option><option>Horror</option><option>Mahou Shoujo</option><option>Mecha</option>
+          <option>Music</option><option>Mystery</option><option>Psychological</option><option>Romance</option>
+          <option>Sci-Fi</option><option>Slice of Life</option><option>Sports</option><option>Supernatural</option>
+          <option>Thriller</option>
+        </select>
+        <select id="aniBrowseSort" aria-label="Sort">
+          <option value="TRENDING_DESC">Trending</option>
+          <option value="POPULARITY_DESC">Most popular</option>
+          <option value="SCORE_DESC">Top rated</option>
+          <option value="START_DATE_DESC">Newest</option>
+        </select>
+      </div>
+      <p class="ani__status" id="aniBrowseStatus" role="status" hidden></p>
+      <div class="ani__browsegrid" id="aniBrowseGrid"></div>
+      <button type="button" class="btn btn--ghost ani__more" id="aniBrowseMore" hidden>Load more</button>
     </section>
 
     <section class="ani__view" data-view="detail" hidden>

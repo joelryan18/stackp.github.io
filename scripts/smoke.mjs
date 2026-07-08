@@ -285,7 +285,7 @@ const ANI_ME = "99999999-9999-4999-8999-999999999999";
 const ANI_U1 = "11111111-1111-4111-8111-111111111111";
 const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `
   window.__writes = [];
-  try { sessionStorage.removeItem("stackime-discover-v2"); } catch {} // earlier un-stubbed visits cached REAL AniList data
+  try { sessionStorage.removeItem("stackime-discover-v3"); } catch {} // earlier un-stubbed visits cached REAL AniList data
   const FIX = {
     catalog: [
       { id: 101, title: "Frieren: Beyond Journey's End", title_romaji: "Sousou no Frieren", cover_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg", episodes: 28, year: 2023, format: "TV", genres: ["Adventure","Fantasy"], created_at: "2026-07-01T00:00:00Z", watchers: 2, avg_score: 9.5, last_activity: "2026-07-07T10:00:00Z" },
@@ -316,6 +316,7 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
       // discover rails query (aliased) vs. title search — told apart by the body
       if (String(init.body || "").includes("trending:")) return reply(200, JSON.stringify({ data: {
         trending: { media: FIX.media }, latest: { media: FIX.media.slice(0, 1) }, upcoming: { media: FIX.media.slice(1) },
+        topRated: { media: FIX.media.slice(0, 1) }, popular: { media: FIX.media.slice(1) },
       } }));
       return reply(200, JSON.stringify({ data: { Page: { media: FIX.media } } }));
     }
@@ -352,11 +353,11 @@ check("anime: sorted by recent activity", (await evalJs(`document.querySelector(
 check("anime: card shows watchers + avg", (await evalJs(`document.querySelector(".ani__card .ani__cardstats")?.textContent.replace(/\\s+/g, " ")`)).includes("watchers 2"));
 check("anime: signed out hides My list tab", await evalJs(`document.getElementById("aniTabMine").hidden`));
 check("anime: signed out shows nav Sign in", !(await evalJs(`document.getElementById("aniNavAuth").hidden`)));
-check("anime: discover rails render", (await evalJs(`document.querySelectorAll(".ani__rail").length`)) === 3);
-check("anime: rail cards from AniList", (await evalJs(`document.querySelectorAll(".ani__railcard").length`)) === 4, String(await evalJs(`document.querySelectorAll(".ani__railcard").length`)));
+check("anime: discover rails render", (await evalJs(`document.querySelectorAll(".ani__rail").length`)) === 5);
+check("anime: rail cards from AniList", (await evalJs(`document.querySelectorAll(".ani__railcard").length`)) === 6, String(await evalJs(`document.querySelectorAll(".ani__railcard").length`)));
 check("anime: spotlight renders top trending", (await evalJs(`document.querySelector(".ani__spottitle")?.textContent`)) === "Steins;Gate");
 check("anime: spotlight meta has score", String(await evalJs(`document.querySelector(".ani__spotmeta")?.textContent`)).includes("★ 8.8"));
-check("anime: rail scroll arrows wired", (await evalJs(`document.querySelectorAll(".ani__railbtn").length`)) === 6);
+check("anime: rail scroll arrows wired", (await evalJs(`document.querySelectorAll(".ani__railbtn").length`)) === 10);
 await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = "cowboy"; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
 await sleep(300);
 check("anime: filter narrows catalog", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 1);

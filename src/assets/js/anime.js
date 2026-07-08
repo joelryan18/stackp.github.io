@@ -22,6 +22,8 @@ const DISCOVER_QUERY = `query {
   trending: Page(perPage: 12) { media(type: ANIME, sort: TRENDING_DESC, isAdult: false) { ...card } }
   latest: Page(perPage: 12) { media(type: ANIME, status: RELEASING, sort: START_DATE_DESC, isAdult: false) { ...card } }
   upcoming: Page(perPage: 12) { media(type: ANIME, status: NOT_YET_RELEASED, sort: POPULARITY_DESC, isAdult: false) { ...card } }
+  topRated: Page(perPage: 12) { media(type: ANIME, sort: SCORE_DESC, isAdult: false) { ...card } }
+  popular: Page(perPage: 12) { media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) { ...card } }
 }
 fragment card on Media {
   id title { english romaji } coverImage { large }
@@ -32,8 +34,23 @@ const DISCOVER_RAILS = [
   ["trending", "Trending now"],
   ["latest", "New & airing"],
   ["upcoming", "Coming soon"],
+  ["topRated", "Top rated ever"],
+  ["popular", "All-time popular"],
 ];
-const DISCOVER_CACHE_KEY = "stackime-discover-v2"; // v2: + banner/score/description (stale v1 shape would blank the spotlight)
+const DISCOVER_CACHE_KEY = "stackime-discover-v3"; // v3: + topRated/popular rails (v2 lacked them)
+
+// browse-all: the entire AniList catalog, filterable + paginated
+const BROWSE_QUERY = `query ($page: Int, $search: String, $genre: String, $sort: [MediaSort]) {
+  browse: Page(page: $page, perPage: 24) {
+    pageInfo { hasNextPage }
+    media(type: ANIME, search: $search, genre: $genre, sort: $sort, isAdult: false) { ...card }
+  }
+}
+fragment card on Media {
+  id title { english romaji } coverImage { large }
+  episodes seasonYear format genres
+  bannerImage averageScore description
+}`;
 const DISCOVER_TTL = 30 * 60 * 1000;
 
 // AniList banner art revealed inside the intro letters (one picked per load)
@@ -62,10 +79,21 @@ const STATUS_LABEL = {
       const frame = document.getElementById("aniIntroArt" + n);
       if (frame) frame.setAttribute("href", deck[(n - 1) % deck.length]);
     });
-    const dismiss = () => { intro.classList.add("is-done"); setTimeout(() => intro.remove(), 600); };
+    // opening cue — best-effort: browsers gate audio autoplay on a prior
+    // gesture, so this plays when allowed and hooks the first tap otherwise
+    const sfx = new window.Audio("/assets/video/intro-sound.m4a");
+    sfx.volume = 0.45;
+    const playSfx = () => {
+      if (!document.getElementById("aniIntro")) return;
+      const p = sfx.play();
+      if (p && p.catch) p.catch(() => {});
+    };
+    const dismiss = () => { intro.classList.add("is-done"); try { sfx.pause(); } catch { /* not started */ } setTimeout(() => intro.remove(), 600); };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       intro.remove();
     } else {
+      playSfx();
+      window.addEventListener("pointerdown", playSfx, { once: true });
       intro.addEventListener("click", dismiss, { once: true });
       const fallback = setTimeout(dismiss, 3800); // video stalled/blocked → frames carried the splash
       const video = document.getElementById("aniIntroVideo");
@@ -100,6 +128,9 @@ const STATUS_LABEL = {
   let pendingAdd = false; // reopen the add modal after a successful sign-in
   let pendingPick = null; // discover card picked while signed out — restored after sign-in
   let discoverReady = false; // rails rendered (filter toggles their visibility)
+  let browseInit = false; // browse view fetches lazily on first open
+  let browsePage = 1;
+  let browseSeq = 0;
 
   function applySession(session) {
     if (!session || !session.user) {
@@ -167,6 +198,11 @@ const STATUS_LABEL = {
     if (hash === "#mine") {
       if (!identity) { setView("catalog"); openAuth(); return; }
       setView("mine"); renderMine(); return;
+    }
+    if (hash === "#browse") {
+      setView("browse");
+      if (!browseInit) { browseInit = true; browseFetch(true); }
+      return;
     }
     setView("catalog");
   }
@@ -375,6 +411,51 @@ const STATUS_LABEL = {
     card.addEventListener("click", () => discoverPick(m));
     return card;
   }
+
+  // ============================================================
+  // browse-all — every anime on AniList, filter + load more
+  // ============================================================
+  async function browseFetch(reset) {
+    const status = $("aniBrowseStatus");
+    const more = $("aniBrowseMore");
+    const grid2 = $("aniBrowseGrid");
+    if (reset) { browsePage = 1; grid2.replaceChildren(); more.hidden = true; }
+    const seq = ++browseSeq;
+    status.textContent = "Loading AniList…"; status.hidden = false;
+    more.disabled = true;
+    let page = null;
+    try {
+      const res = await fetch(ANILIST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query: BROWSE_QUERY, variables: {
+          page: browsePage,
+          search: $("aniBrowseQ").value.trim() || null,
+          genre: $("aniBrowseGenre").value || null,
+          sort: [$("aniBrowseSort").value],
+        } }),
+      });
+      const json = await res.json();
+      page = (json.data && json.data.browse) || null;
+    } catch { /* fall through to the retry message */ }
+    more.disabled = false;
+    if (seq !== browseSeq) return; // superseded by newer input
+    if (!page) { status.textContent = "AniList didn't answer — try again in a moment."; return; }
+    const media = page.media || [];
+    if (!media.length && browsePage === 1) { status.textContent = "No matches."; return; }
+    status.hidden = true;
+    media.forEach((m) => grid2.appendChild(railCard(m)));
+    more.hidden = !(page.pageInfo && page.pageInfo.hasNextPage);
+  }
+
+  let browseTimer = 0;
+  $("aniBrowseQ").addEventListener("input", () => {
+    window.clearTimeout(browseTimer);
+    browseTimer = window.setTimeout(() => browseFetch(true), 350);
+  });
+  $("aniBrowseGenre").addEventListener("change", () => browseFetch(true));
+  $("aniBrowseSort").addEventListener("change", () => browseFetch(true));
+  $("aniBrowseMore").addEventListener("click", () => { browsePage += 1; browseFetch(false); });
 
   // ============================================================
   // detail — one title, everyone tracking it

@@ -9,10 +9,10 @@ bodyClass: no3d page
      the mask while the outline stroke-draws, then a sheen sweeps through.
      anime.js shuffles the frames + dismisses the overlay) -->
 <div class="ani-intro" id="aniIntro" aria-hidden="true">
-  <svg class="ani-intro__svg" viewBox="0 0 1200 260">
+  <svg class="ani-intro__svg" viewBox="0 0 1400 320">
     <defs>
-      <mask id="aniIntroMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="260">
-        <text class="ani-intro__word" x="600" y="185" text-anchor="middle" fill="#fff">STACKIME</text>
+      <mask id="aniIntroMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1400" height="320">
+        <text class="ani-intro__word" x="700" y="225" text-anchor="middle" fill="#fff">STACKIME</text>
       </mask>
       <linearGradient id="aniIntroSheenGrad" x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stop-color="#fff" stop-opacity="0"/>
@@ -20,31 +20,31 @@ bodyClass: no3d page
         <stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </linearGradient>
       <clipPath id="aniIntroClip">
-        <text class="ani-intro__word" x="600" y="185" text-anchor="middle">STACKIME</text>
+        <text class="ani-intro__word" x="700" y="225" text-anchor="middle">STACKIME</text>
       </clipPath>
     </defs>
     <g mask="url(#aniIntroMask)">
-      <image class="ani-intro__art ani-intro__art--1" id="aniIntroArt1" x="0" y="0" width="1200" height="260"
+      <image class="ani-intro__art ani-intro__art--1" id="aniIntroArt1" x="0" y="0" width="1400" height="320"
              preserveAspectRatio="xMidYMid slice"
              href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/178789-9nHWmoRLlcLu.jpg"/>
-      <image class="ani-intro__art ani-intro__art--2" id="aniIntroArt2" x="0" y="0" width="1200" height="260"
+      <image class="ani-intro__art ani-intro__art--2" id="aniIntroArt2" x="0" y="0" width="1400" height="320"
              preserveAspectRatio="xMidYMid slice"
              href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJmZqs.jpg"/>
-      <image class="ani-intro__art ani-intro__art--3" id="aniIntroArt3" x="0" y="0" width="1200" height="260"
+      <image class="ani-intro__art ani-intro__art--3" id="aniIntroArt3" x="0" y="0" width="1400" height="320"
              preserveAspectRatio="xMidYMid slice"
              href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/182205-fRUoKv6f2JAq.jpg"/>
     </g>
     <!-- the real video, clipped into the letters exactly like enma's /intro.mp4
          (self-generated signal-rush clip — royalty-free because we own it);
          the banner frames above remain as the no-video fallback -->
-    <foreignObject x="0" y="0" width="1200" height="260" clip-path="url(#aniIntroClip)">
+    <foreignObject x="0" y="0" width="1400" height="320" clip-path="url(#aniIntroClip)">
       <video class="ani-intro__video" id="aniIntroVideo" src="/assets/video/intro-signal.mp4"
              autoplay muted playsinline preload="auto"></video>
     </foreignObject>
     <g mask="url(#aniIntroMask)">
-      <rect class="ani-intro__sheen" x="0" y="0" width="280" height="260" fill="url(#aniIntroSheenGrad)"/>
+      <rect class="ani-intro__sheen" x="0" y="0" width="320" height="320" fill="url(#aniIntroSheenGrad)"/>
     </g>
-    <text class="ani-intro__word ani-intro__word--draw" x="600" y="185" text-anchor="middle">STACKIME</text>
+    <text class="ani-intro__word ani-intro__word--draw" x="700" y="225" text-anchor="middle">STACKIME</text>
   </svg>
   <p class="ani-intro__tag">スタッキメ · anime list × stackwith.me</p>
 </div>
