@@ -4,6 +4,7 @@ export default function (eleventyConfig) {
   // hashed bundles (Task 4 populates dist-assets/)
   eleventyConfig.addPassthroughCopy({ "dist-assets": "assets" });
   eleventyConfig.addPassthroughCopy({ "src/assets/fonts": "assets/fonts" });
+  eleventyConfig.addPassthroughCopy({ "src/assets/video": "assets/video" });
 
   // static files
   for (const f of ["src/og.png", "src/robots.txt", "src/ads.txt", "src/CNAME", "src/sitemap.xml", "src/404.html", "src/blog"]) {

@@ -13,7 +13,7 @@ const CDP_PORT = 9333;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const BASE = process.env.SMOKE_BASE || `http://localhost:${PORT}`;
 
-const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".xml": "application/xml", ".txt": "text/plain", ".json": "application/json" };
+const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".xml": "application/xml", ".txt": "text/plain", ".json": "application/json", ".mp4": "video/mp4" };
 const server = createServer(async (req, res) => {
   let p = decodeURIComponent(new URL(req.url, BASE).pathname);
   if (p.endsWith("/")) p += "index.html";
@@ -340,7 +340,8 @@ await go(BASE + "/anime.html", 3000);
 check("anime: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
 // Stackime intro splash: still playing at 3.0s, gone (fade + remove) by ~4.4s
 check("anime: stackime intro painted", await evalJs(`!!document.getElementById("aniIntro") && document.querySelector(".ani-intro__word")?.textContent === "STACKIME"`));
-check("anime: intro has 3 video frames", (await evalJs(`document.querySelectorAll(".ani-intro__art").length`)) === 3);
+check("anime: intro has 3 fallback frames", (await evalJs(`document.querySelectorAll(".ani-intro__art").length`)) === 3);
+check("anime: intro video clipped into letters", await evalJs(`(() => { const v = document.querySelector("foreignObject .ani-intro__video"); return !!v && v.getAttribute("src") === "/assets/video/intro-signal.mp4" && v.muted; })()`));
 await sleep(1700);
 check("anime: intro auto-dismisses", await evalJs(`!document.getElementById("aniIntro")`));
 check("anime: nav Home/Blog/Anime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Blog,Anime");

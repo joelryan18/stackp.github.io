@@ -715,6 +715,11 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
   35%  { opacity: .95; }
   100% { opacity: .95; transform: scale(1.18); }
 }
+/* the clipped <video> (enma's intro-video): brightens in over the draw;
+   sits above the fallback banner frames, below the sheen + outline */
+.ani-intro__video { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; animation: aniIntroVideoReveal 3s ease-out .3s forwards; }
+@keyframes aniIntroVideoReveal { to { opacity: 1; } }
+
 /* light sweep through the letters right after the outline finishes drawing */
 .ani-intro__sheen { opacity: 0; transform: translateX(-320px) skewX(-14deg); animation: aniIntroSheen .9s ease-in-out 2.4s forwards; }
 @keyframes aniIntroSheen {

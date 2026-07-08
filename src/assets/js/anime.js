@@ -63,8 +63,19 @@ const STATUS_LABEL = {
       if (frame) frame.setAttribute("href", deck[(n - 1) % deck.length]);
     });
     const dismiss = () => { intro.classList.add("is-done"); setTimeout(() => intro.remove(), 600); };
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) intro.remove();
-    else { intro.addEventListener("click", dismiss, { once: true }); setTimeout(dismiss, 3800); }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      intro.remove();
+    } else {
+      intro.addEventListener("click", dismiss, { once: true });
+      const fallback = setTimeout(dismiss, 3800); // video stalled/blocked → frames carried the splash
+      const video = document.getElementById("aniIntroVideo");
+      if (video) {
+        video.muted = true; // property, not just attribute — some browsers gate autoplay on it
+        video.addEventListener("ended", () => { clearTimeout(fallback); dismiss(); }, { once: true });
+        const p = video.play();
+        if (p && p.catch) p.catch(() => {}); // autoplay refused → fallback frames + timer take over
+      }
+    }
   }
 
   const grid = document.getElementById("aniGrid");

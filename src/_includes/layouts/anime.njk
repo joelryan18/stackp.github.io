@@ -19,6 +19,9 @@ bodyClass: no3d page
         <stop offset=".5" stop-color="#fff" stop-opacity=".5"/>
         <stop offset="1" stop-color="#fff" stop-opacity="0"/>
       </linearGradient>
+      <clipPath id="aniIntroClip">
+        <text class="ani-intro__word" x="600" y="185" text-anchor="middle">STACKIME</text>
+      </clipPath>
     </defs>
     <g mask="url(#aniIntroMask)">
       <image class="ani-intro__art ani-intro__art--1" id="aniIntroArt1" x="0" y="0" width="1200" height="260"
@@ -30,6 +33,15 @@ bodyClass: no3d page
       <image class="ani-intro__art ani-intro__art--3" id="aniIntroArt3" x="0" y="0" width="1200" height="260"
              preserveAspectRatio="xMidYMid slice"
              href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/182205-fRUoKv6f2JAq.jpg"/>
+    </g>
+    <!-- the real video, clipped into the letters exactly like enma's /intro.mp4
+         (self-generated signal-rush clip — royalty-free because we own it);
+         the banner frames above remain as the no-video fallback -->
+    <foreignObject x="0" y="0" width="1200" height="260" clip-path="url(#aniIntroClip)">
+      <video class="ani-intro__video" id="aniIntroVideo" src="/assets/video/intro-signal.mp4"
+             autoplay muted playsinline preload="auto"></video>
+    </foreignObject>
+    <g mask="url(#aniIntroMask)">
       <rect class="ani-intro__sheen" x="0" y="0" width="280" height="260" fill="url(#aniIntroSheenGrad)"/>
     </g>
     <text class="ani-intro__word ani-intro__word--draw" x="600" y="185" text-anchor="middle">STACKIME</text>
