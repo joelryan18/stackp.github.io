@@ -470,6 +470,18 @@ const STATUS_LABEL = {
     if (!anime) { box.replaceChildren(el("p", "ani__status", "Title not found.")); return; }
     const names = await profileNames((entries || []).map((e) => e.user_id));
 
+    // fetch full metadata from AniList (trailer, episodes, description)
+    let aniMeta = null;
+    try {
+      const res = await fetch(ANILIST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ query: `query { Media(id: ${animeId}, type: ANIME) { trailer { id site } episodes description } }` }),
+      });
+      const json = await res.json();
+      aniMeta = (json.data && json.data.Media) || null;
+    } catch { /* fall through — detail renders without trailer/description */ }
+
     box.replaceChildren();
     if (anime.cover_url) {
       const img = el("img", "ani__cover"); img.src = anime.cover_url; img.alt = "";
@@ -479,8 +491,27 @@ const STATUS_LABEL = {
     }
     const info = el("div");
     info.appendChild(el("h2", "ani__detailtitle", anime.title));
+    const episodes = (aniMeta && aniMeta.episodes) || anime.episodes;
     info.appendChild(el("p", "ani__detailmeta",
-      [anime.title_romaji, anime.year, anime.format, anime.episodes ? anime.episodes + " episodes" : null, (anime.genres || []).join(" / ")].filter(Boolean).join(" · ")));
+      [anime.title_romaji, anime.year, anime.format, episodes ? episodes + " episodes" : null, (anime.genres || []).join(" / ")].filter(Boolean).join(" · ")));
+
+    // trailer embed (YouTube only for now)
+    if (aniMeta && aniMeta.trailer && aniMeta.trailer.site === "youtube" && aniMeta.trailer.id) {
+      const frame = el("iframe", "ani__trailer");
+      frame.src = "https://www.youtube-nocookie.com/embed/" + aniMeta.trailer.id;
+      frame.width = "560"; frame.height = "315"; frame.frameBorder = "0";
+      frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      frame.allowFullscreen = true; frame.loading = "lazy";
+      info.appendChild(frame);
+    }
+
+    // description
+    if (aniMeta && aniMeta.description) {
+      const desc = el("div", "ani__description");
+      desc.innerHTML = aniMeta.description; // AniList returns HTML
+      info.appendChild(desc);
+    }
+
     const list = el("div", "ani__watchers");
     if (!(entries || []).length) list.appendChild(el("p", "ani__status", "Nobody has logged this yet."));
     (entries || []).forEach((e) => {
@@ -489,7 +520,7 @@ const STATUS_LABEL = {
       a.href = "#u/" + e.user_id;
       row.appendChild(a);
       row.appendChild(statusChip(e.status));
-      if (anime.episodes && e.progress) row.appendChild(el("span", "ani__rowmeta", e.progress + "/" + anime.episodes + " ep"));
+      if (episodes && e.progress) row.appendChild(el("span", "ani__rowmeta", e.progress + "/" + episodes + " ep"));
       if (e.score != null) row.appendChild(el("span", "ani__score", "★ " + e.score));
       list.appendChild(row);
     });

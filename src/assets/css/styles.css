@@ -631,6 +631,9 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 .ani__detail .ani__cover { border: 1px solid var(--line); border-radius: 10px; }
 .ani__detailtitle { font-family: var(--display); font-weight: 600; font-size: 1.6rem; letter-spacing: -0.02em; margin-bottom: .3rem; }
 .ani__detailmeta { font-family: var(--mono); font-size: .76rem; color: var(--faint); margin-bottom: 1.2rem; }
+.ani__trailer { width: 100%; max-width: 560px; aspect-ratio: 16/9; border: 0; border-radius: 8px; margin: 1.2rem 0; }
+.ani__description { font-size: .88rem; line-height: 1.6; color: var(--muted); margin: 1rem 0 1.5rem; max-width: 620px; }
+.ani__description p { margin-bottom: .8rem; }
 .ani__watchers { display: flex; flex-direction: column; gap: .5rem; margin-top: 1rem; }
 .ani__watcher { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: .7rem 1rem; font-size: .88rem; }
 .ani__watcher a { color: var(--text); font-weight: 600; }

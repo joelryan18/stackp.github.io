@@ -307,17 +307,20 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
       { id: 909, title: { english: "Steins;Gate", romaji: "Steins;Gate" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253.jpg" }, episodes: 24, seasonYear: 2011, format: "TV", genres: ["Sci-Fi","Thriller"], bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/9253.jpg", averageScore: 88, description: "<p>A self-proclaimed mad scientist discovers time travel.</p>" },
       { id: 910, title: { english: null, romaji: "Sousou no Frieren" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg" }, episodes: 28, seasonYear: 2023, format: "TV", genres: ["Fantasy"], bannerImage: null, averageScore: 91, description: null },
     ],
+    detail101: { trailer: { id: "dQw4w9WgXcQ", site: "youtube" }, episodes: 28, description: "<p>After the party of heroes defeated the Demon King, they restored peace to the land and returned to lives of solitude.</p>" },
   };
   const reply = (status, body) => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
   window.fetch = (url, init) => {
     url = String(url); init = init || {};
     const method = (init.method || "GET").toUpperCase();
     if (url.includes("graphql.anilist.co")) {
-      // discover rails query (aliased) vs. title search — told apart by the body
-      if (String(init.body || "").includes("trending:")) return reply(200, JSON.stringify({ data: {
+      // discover rails query (aliased) vs. title search vs. detail query (Media by ID)
+      const body = String(init.body || "");
+      if (body.includes("trending:")) return reply(200, JSON.stringify({ data: {
         trending: { media: FIX.media }, latest: { media: FIX.media.slice(0, 1) }, upcoming: { media: FIX.media.slice(1) },
         topRated: { media: FIX.media.slice(0, 1) }, popular: { media: FIX.media.slice(1) },
       } }));
+      if (body.includes("Media(id:") && body.includes("trailer")) return reply(200, JSON.stringify({ data: { Media: FIX.detail101 } }));
       return reply(200, JSON.stringify({ data: { Page: { media: FIX.media } } }));
     }
     if (url.includes("/rest/v1/")) {
@@ -376,6 +379,8 @@ await evalJs(`location.hash = "#a/101"`);
 await sleep(700);
 check("anime: detail view shown", !(await evalJs(`document.querySelector('.ani__view[data-view="detail"]').hidden`)));
 check("anime: detail title", (await evalJs(`document.querySelector(".ani__detailtitle")?.textContent`)) === "Frieren: Beyond Journey's End");
+check("anime: detail trailer embed", (await evalJs(`document.querySelector(".ani__trailer")?.src`)).includes("youtube-nocookie.com/embed/dQw4w9WgXcQ"));
+check("anime: detail description rendered", (await evalJs(`document.querySelector(".ani__description")?.textContent`)).includes("After the party of heroes"));
 check("anime: detail lists watchers", (await evalJs(`document.querySelectorAll(".ani__watcher").length`)) === 2);
 check("anime: watcher named via profile", (await evalJs(`document.querySelector(".ani__watcher a")?.textContent`)) === "Aki");
 check("anime: watcher links to user list", (await evalJs(`document.querySelector(".ani__watcher a")?.getAttribute("href")`)) === "#u/" + ANI_U1);
