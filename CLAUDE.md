@@ -45,6 +45,16 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   un-stubbed → real AniList data lands in the sessionStorage cache → section 7
   stub preload must `sessionStorage.removeItem("stackime-discover-v2")` (it
   does; keep key in sync).
+  **Round 4 (same day):** intro now clips a REAL `<video>` into the letters
+  (enma's exact foreignObject + clipPath structure): self-generated royalty-free
+  clip `src/assets/video/intro-signal.mp4` (455 KB, 1280×288, 3.4s — anime
+  speed-lines + AXON heartbeat pulse in --signal lime), regenerable via
+  `scripts/gen-intro-video.py` (venv: pillow + imageio + imageio-ffmpeg;
+  deterministic seed). Passthrough `src/assets/video` added to
+  eleventy.config.js; smoke server MIME map has .mp4. Video `ended` → dismiss
+  (enma pattern) with the 3.8s timer as fallback; autoplay-refusal is caught and
+  the 3 Ken-Burns banner frames underneath carry the splash (they stay in the
+  markup as the no-video fallback).
 
 - **Anime list community tracker SHIPPED 2026-07-08** (Tasks 1–9, 11 of
   `docs/superpowers/plans/2026-07-07-anime-list-community-tracker.md`): public
