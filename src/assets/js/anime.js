@@ -17,6 +17,32 @@ const ANILIST_QUERY = `query ($search: String) {
   }
 }`;
 
+// discover rails — one aliased query, rendered under the community catalog
+const DISCOVER_QUERY = `query {
+  trending: Page(perPage: 12) { media(type: ANIME, sort: TRENDING_DESC, isAdult: false) { ...card } }
+  latest: Page(perPage: 12) { media(type: ANIME, status: RELEASING, sort: START_DATE_DESC, isAdult: false) { ...card } }
+  upcoming: Page(perPage: 12) { media(type: ANIME, status: NOT_YET_RELEASED, sort: POPULARITY_DESC, isAdult: false) { ...card } }
+}
+fragment card on Media {
+  id title { english romaji } coverImage { large }
+  episodes seasonYear format genres
+}`;
+const DISCOVER_RAILS = [
+  ["trending", "Trending now"],
+  ["latest", "New & airing"],
+  ["upcoming", "Coming soon"],
+];
+const DISCOVER_CACHE_KEY = "stackime-discover";
+const DISCOVER_TTL = 30 * 60 * 1000;
+
+// AniList banner art revealed inside the intro letters (one picked per load)
+const INTRO_BANNERS = [
+  "https://s4.anilist.co/file/anilistcdn/media/anime/banner/178789-9nHWmoRLlcLu.jpg",
+  "https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJmZqs.jpg",
+  "https://s4.anilist.co/file/anilistcdn/media/anime/banner/182205-fRUoKv6f2JAq.jpg",
+  "https://s4.anilist.co/file/anilistcdn/media/anime/banner/195600-UxHvDXwzJxlP.jpg",
+];
+
 const STATUSES = ["watching", "completed", "plan_to_watch", "paused", "dropped"];
 const STATUS_LABEL = {
   watching: "Watching", completed: "Completed", plan_to_watch: "Plan to watch",
@@ -30,6 +56,8 @@ const STATUS_LABEL = {
   //   overlay out and drop it from the DOM. Click skips; reduced motion opts out.
   const intro = document.getElementById("aniIntro");
   if (intro) {
+    const art = document.getElementById("aniIntroArt");
+    if (art) art.setAttribute("href", INTRO_BANNERS[(Math.random() * INTRO_BANNERS.length) | 0]);
     const dismiss = () => { intro.classList.add("is-done"); setTimeout(() => intro.remove(), 600); };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) intro.remove();
     else { intro.addEventListener("click", dismiss, { once: true }); setTimeout(dismiss, 3400); }
@@ -55,6 +83,8 @@ const STATUS_LABEL = {
   let identity = null; // { uid, email, name } — null while signed out
   let catalog = []; // cached anime_catalog rows
   let pendingAdd = false; // reopen the add modal after a successful sign-in
+  let pendingPick = null; // discover card picked while signed out — restored after sign-in
+  let discoverReady = false; // rails rendered (filter toggles their visibility)
 
   function applySession(session) {
     if (!session || !session.user) {
@@ -71,7 +101,11 @@ const STATUS_LABEL = {
     $("aniNavAuth").hidden = !!identity;
     if (identity) {
       $("aniAuth").hidden = true;
-      if (pendingAdd) { pendingAdd = false; openModal(); }
+      if (pendingAdd) {
+        pendingAdd = false;
+        openModal();
+        if (pendingPick) { pick(pendingPick); pendingPick = null; }
+      }
       if (location.hash === "#mine") renderMine();
     } else if (location.hash === "#mine") {
       location.hash = "#catalog";
@@ -141,6 +175,7 @@ const STATUS_LABEL = {
   function renderCatalog() {
     const q = $("aniFilter").value.trim().toLowerCase();
     const sort = $("aniSort").value;
+    if (discoverReady) $("aniDiscover").hidden = !!q; // rails are noise while filtering
     let rows = catalog.filter((a) =>
       !q || a.title.toLowerCase().includes(q) || (a.title_romaji || "").toLowerCase().includes(q));
     rows = rows.slice().sort((a, b) => {
@@ -186,6 +221,70 @@ const STATUS_LABEL = {
 
   $("aniFilter").addEventListener("input", renderCatalog);
   $("aniSort").addEventListener("change", renderCatalog);
+
+  // ============================================================
+  // discover — AniList rails: trending / new & airing / upcoming
+  // ============================================================
+  async function loadDiscover() {
+    const box = $("aniDiscover");
+    let data = null;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(DISCOVER_CACHE_KEY) || "null");
+      if (cached && Date.now() - cached.t < DISCOVER_TTL) data = cached.data;
+    } catch { /* bad cache → refetch */ }
+    if (!data) {
+      try {
+        const res = await fetch(ANILIST_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ query: DISCOVER_QUERY }),
+        });
+        const json = await res.json();
+        data = json.data || null;
+        if (data) try { sessionStorage.setItem(DISCOVER_CACHE_KEY, JSON.stringify({ t: Date.now(), data })); } catch { /* quota — skip cache */ }
+      } catch { return; } // AniList down → the page simply skips the rails
+    }
+    if (!data) return;
+    box.replaceChildren();
+    DISCOVER_RAILS.forEach(([key, label]) => {
+      const media = (data[key] && data[key].media) || [];
+      if (!media.length) return;
+      const head = el("h3", "ani__railhead");
+      head.append(label + " · ");
+      head.appendChild(el("b", null, "AniList"));
+      box.appendChild(head);
+      const rail = el("div", "ani__rail");
+      media.forEach((m) => rail.appendChild(railCard(m)));
+      box.appendChild(rail);
+    });
+    if (box.children.length) {
+      discoverReady = true;
+      box.hidden = !!$("aniFilter").value.trim();
+    }
+  }
+
+  function railCard(m) {
+    const card = el("button", "ani__railcard");
+    card.type = "button";
+    if (m.coverImage && m.coverImage.large) {
+      const img = el("img", "ani__cover");
+      img.src = m.coverImage.large; img.alt = ""; img.loading = "lazy";
+      card.appendChild(img);
+    } else {
+      card.appendChild(el("div", "ani__cover"));
+    }
+    const body = el("div", "ani__railbody");
+    body.appendChild(el("div", "ani__railtitle", (m.title && (m.title.english || m.title.romaji)) || "Untitled"));
+    body.appendChild(el("div", "ani__railmeta", [m.seasonYear, m.format, m.episodes ? m.episodes + " ep" : null].filter(Boolean).join(" · ")));
+    card.appendChild(body);
+    card.addEventListener("click", () => {
+      if (catalog.some((a) => a.id === m.id)) { location.hash = "#a/" + m.id; return; } // already tracked → detail
+      if (!identity) { pendingAdd = true; pendingPick = m; openAuth(); return; }
+      openModal();
+      pick(m);
+    });
+    return card;
+  }
 
   // ============================================================
   // detail — one title, everyone tracking it
@@ -576,5 +675,6 @@ const STATUS_LABEL = {
 
   // — boot
   loadCatalog();
+  loadDiscover();
   route();
 })();

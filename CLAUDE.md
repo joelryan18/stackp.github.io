@@ -20,6 +20,18 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   auto-dismisses". Headless screenshot QA confirmed draw/glow/reveal; the live
   Supabase `anime_catalog` call returned 200 empty ("No titles yet") — the anime
   SQL migration appears to have been applied.
+  **Round 2 (same day, user-requested):** (a) anime banner art now reveals
+  INSIDE the letters (SVG `<mask>` + `<image>`, `.ani-intro__art` settle-zoom;
+  anime.js picks 1 of 4 hardcoded AniList CDN banners per load — `INTRO_BANNERS`);
+  (b) AniList discover rails on the catalog view (`#aniDiscover`): Trending now /
+  New & airing / Coming soon via one aliased GraphQL query (`DISCOVER_QUERY`,
+  30-min sessionStorage cache `stackime-discover`, silent-skip on failure, rails
+  hidden while the filter has text). Rail cards use `.ani__railcard` (NOT
+  `.ani__card` — smoke counts depend on that). Click: in catalog → `#a/<id>`;
+  signed-in → add-modal entry stage prefilled (`pick(m)`); signed-out → sign-in,
+  then `pendingPick` restores the picked title. Smoke: rails ===3, railcards
+  ===4 (stub branches on body containing "trending:"), filter hide/restore,
+  rail-click → entry form.
 
 - **Anime list community tracker SHIPPED 2026-07-08** (Tasks 1–9, 11 of
   `docs/superpowers/plans/2026-07-07-anime-list-community-tracker.md`): public

@@ -4,10 +4,19 @@ bodyClass: no3d page
 ---
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- Stackime intro splash (enma.lol-style stroke-draw reveal; anime.js dismisses it) -->
+<!-- Stackime intro splash (enma.lol-style: anime art reveals inside the letters
+     while the outline stroke-draws; anime.js picks the banner + dismisses it) -->
 <div class="ani-intro" id="aniIntro" aria-hidden="true">
   <svg class="ani-intro__svg" viewBox="0 0 1200 260">
-    <text class="ani-intro__word" x="600" y="185" text-anchor="middle">STACKIME</text>
+    <defs>
+      <mask id="aniIntroMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="260">
+        <text class="ani-intro__word" x="600" y="185" text-anchor="middle" fill="#fff">STACKIME</text>
+      </mask>
+    </defs>
+    <image class="ani-intro__art" id="aniIntroArt" x="0" y="0" width="1200" height="260"
+           preserveAspectRatio="xMidYMid slice" mask="url(#aniIntroMask)"
+           href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/178789-9nHWmoRLlcLu.jpg"/>
+    <text class="ani-intro__word ani-intro__word--draw" x="600" y="185" text-anchor="middle">STACKIME</text>
   </svg>
   <p class="ani-intro__tag">スタッキメ · anime list × stackwith.me</p>
 </div>

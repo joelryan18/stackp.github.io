@@ -311,7 +311,13 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
   window.fetch = (url, init) => {
     url = String(url); init = init || {};
     const method = (init.method || "GET").toUpperCase();
-    if (url.includes("graphql.anilist.co")) return reply(200, JSON.stringify({ data: { Page: { media: FIX.media } } }));
+    if (url.includes("graphql.anilist.co")) {
+      // discover rails query (aliased) vs. title search — told apart by the body
+      if (String(init.body || "").includes("trending:")) return reply(200, JSON.stringify({ data: {
+        trending: { media: FIX.media }, latest: { media: FIX.media.slice(0, 1) }, upcoming: { media: FIX.media.slice(1) },
+      } }));
+      return reply(200, JSON.stringify({ data: { Page: { media: FIX.media } } }));
+    }
     if (url.includes("/rest/v1/")) {
       if (method === "GET") {
         if (url.includes("anime_catalog")) return reply(200, JSON.stringify(FIX.catalog));
@@ -343,10 +349,14 @@ check("anime: sorted by recent activity", (await evalJs(`document.querySelector(
 check("anime: card shows watchers + avg", (await evalJs(`document.querySelector(".ani__card .ani__cardstats")?.textContent.replace(/\\s+/g, " ")`)).includes("watchers 2"));
 check("anime: signed out hides My list tab", await evalJs(`document.getElementById("aniTabMine").hidden`));
 check("anime: signed out shows nav Sign in", !(await evalJs(`document.getElementById("aniNavAuth").hidden`)));
+check("anime: discover rails render", (await evalJs(`document.querySelectorAll(".ani__rail").length`)) === 3);
+check("anime: rail cards from AniList", (await evalJs(`document.querySelectorAll(".ani__railcard").length`)) === 4, String(await evalJs(`document.querySelectorAll(".ani__railcard").length`)));
 await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = "cowboy"; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
 await sleep(300);
 check("anime: filter narrows catalog", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 1);
+check("anime: filter hides discover rails", await evalJs(`document.getElementById("aniDiscover").hidden`));
 await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = ""; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
+check("anime: cleared filter restores rails", !(await evalJs(`document.getElementById("aniDiscover").hidden`)));
 await evalJs(`document.getElementById("aniAdd").click()`);
 await sleep(300);
 check("anime: signed-out add opens sign-in", await evalJs(`!document.getElementById("aniAuth").hidden && getComputedStyle(document.getElementById("aniAuth")).display !== "none"`));
@@ -376,6 +386,13 @@ const { identifier: aniAuthPreload } = await S("Page.addScriptToEvaluateOnNewDoc
 await go(BASE + "/anime.html", 3000);
 check("anime: signed in shows My list tab", !(await evalJs(`document.getElementById("aniTabMine").hidden`)));
 check("anime: signed in hides nav Sign in", await evalJs(`document.getElementById("aniNavAuth").hidden`));
+// a discover rail card not yet in the catalog jumps straight to the entry form
+await evalJs(`document.querySelector(".ani__railcard").click()`);
+await sleep(300);
+check("anime: rail card opens entry form", !(await evalJs(`document.getElementById("aniModal").hidden`)) && !(await evalJs(`document.querySelector('.ani__modalstage[data-stage="entry"]').hidden`)));
+check("anime: rail pick shows title", (await evalJs(`document.querySelector("#aniPick .ani__picktitle")?.textContent`)) === "Steins;Gate");
+await evalJs(`document.getElementById("aniModalClose").click()`);
+await sleep(200);
 await evalJs(`document.getElementById("aniAdd").click()`);
 await sleep(300);
 check("anime: add opens search modal", !(await evalJs(`document.getElementById("aniModal").hidden`)));
