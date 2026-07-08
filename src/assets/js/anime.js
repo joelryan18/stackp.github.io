@@ -26,13 +26,14 @@ const DISCOVER_QUERY = `query {
 fragment card on Media {
   id title { english romaji } coverImage { large }
   episodes seasonYear format genres
+  bannerImage averageScore description
 }`;
 const DISCOVER_RAILS = [
   ["trending", "Trending now"],
   ["latest", "New & airing"],
   ["upcoming", "Coming soon"],
 ];
-const DISCOVER_CACHE_KEY = "stackime-discover";
+const DISCOVER_CACHE_KEY = "stackime-discover-v2"; // v2: + banner/score/description (stale v1 shape would blank the spotlight)
 const DISCOVER_TTL = 30 * 60 * 1000;
 
 // AniList banner art revealed inside the intro letters (one picked per load)
@@ -56,11 +57,14 @@ const STATUS_LABEL = {
   //   overlay out and drop it from the DOM. Click skips; reduced motion opts out.
   const intro = document.getElementById("aniIntro");
   if (intro) {
-    const art = document.getElementById("aniIntroArt");
-    if (art) art.setAttribute("href", INTRO_BANNERS[(Math.random() * INTRO_BANNERS.length) | 0]);
+    const deck = INTRO_BANNERS.slice().sort(() => Math.random() - 0.5);
+    [1, 2, 3].forEach((n) => {
+      const frame = document.getElementById("aniIntroArt" + n);
+      if (frame) frame.setAttribute("href", deck[(n - 1) % deck.length]);
+    });
     const dismiss = () => { intro.classList.add("is-done"); setTimeout(() => intro.remove(), 600); };
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) intro.remove();
-    else { intro.addEventListener("click", dismiss, { once: true }); setTimeout(dismiss, 3400); }
+    else { intro.addEventListener("click", dismiss, { once: true }); setTimeout(dismiss, 3800); }
   }
 
   const grid = document.getElementById("aniGrid");
@@ -246,6 +250,9 @@ const STATUS_LABEL = {
     }
     if (!data) return;
     box.replaceChildren();
+    box.appendChild(el("p", "eyebrow ani__discovereyebrow", "[ DISCOVER · POWERED BY ANILIST ]"));
+    const spotlight = buildSpotlight(((data.trending && data.trending.media) || []).filter((m) => m.bannerImage).slice(0, 5));
+    if (spotlight) box.appendChild(spotlight);
     DISCOVER_RAILS.forEach(([key, label]) => {
       const media = (data[key] && data[key].media) || [];
       if (!media.length) return;
@@ -253,14 +260,89 @@ const STATUS_LABEL = {
       head.append(label + " · ");
       head.appendChild(el("b", null, "AniList"));
       box.appendChild(head);
+      const wrap = el("div", "ani__railwrap");
       const rail = el("div", "ani__rail");
       media.forEach((m) => rail.appendChild(railCard(m)));
-      box.appendChild(rail);
+      wrap.appendChild(rail);
+      [["‹", "back", -1], ["›", "forward", 1]].forEach(([glyph, dir, sign]) => {
+        const btn = el("button", "ani__railbtn ani__railbtn--" + (sign < 0 ? "prev" : "next"), glyph);
+        btn.type = "button";
+        btn.setAttribute("aria-label", "Scroll " + label + " " + dir);
+        btn.addEventListener("click", () => rail.scrollBy({ left: sign * rail.clientWidth * 0.8, behavior: "smooth" }));
+        wrap.appendChild(btn);
+      });
+      box.appendChild(wrap);
     });
-    if (box.children.length) {
+    if (box.children.length > 1) {
       discoverReady = true;
       box.hidden = !!$("aniFilter").value.trim();
     }
+  }
+
+  // shared by rail cards + spotlight CTA: detail if tracked, else the add flow
+  function discoverPick(m) {
+    if (catalog.some((a) => a.id === m.id)) { location.hash = "#a/" + m.id; return; }
+    if (!identity) { pendingAdd = true; pendingPick = m; openAuth(); return; }
+    openModal();
+    pick(m);
+  }
+
+  function mediaTitle(m) { return (m.title && (m.title.english || m.title.romaji)) || "Untitled"; }
+
+  function buildSpotlight(items) {
+    if (!items.length) return null;
+    const spot = el("section", "ani__spot");
+    const bg = el("img", "ani__spotbg"); bg.alt = "";
+    const info = el("div", "ani__spotinfo");
+    const eyebrow = el("p", "ani__spoteyebrow");
+    const title = el("h3", "ani__spottitle");
+    const meta = el("p", "ani__spotmeta");
+    const desc = el("p", "ani__spotdesc");
+    const acts = el("div", "ani__spotacts");
+    const add = el("button", "btn btn--signal ani__spotadd", "+ Track this");
+    add.type = "button";
+    const dots = el("div", "ani__spotdots");
+    acts.append(add, dots);
+    info.append(eyebrow, title, meta, desc, acts);
+    spot.append(bg, el("div", "ani__spotshade"), info);
+
+    let idx = 0, timer = 0;
+    const show = (i) => {
+      idx = (i + items.length) % items.length;
+      const m = items[idx];
+      if (!bg.getAttribute("src")) { bg.src = m.bannerImage; } // first paint — no fade dance
+      else {
+        bg.style.opacity = "0";
+        window.setTimeout(() => { bg.src = m.bannerImage; bg.style.opacity = ""; }, 450);
+      }
+      eyebrow.textContent = "[ SPOTLIGHT · #" + (idx + 1) + " TRENDING ]";
+      title.textContent = mediaTitle(m);
+      meta.textContent = [
+        m.seasonYear, m.format, m.episodes ? m.episodes + " ep" : null,
+        m.averageScore ? "★ " + (m.averageScore / 10).toFixed(1) : null,
+        (m.genres || []).slice(0, 3).join(" / ") || null,
+      ].filter(Boolean).join(" · ");
+      desc.textContent = String(m.description || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
+      [...dots.children].forEach((d, di) => d.setAttribute("aria-current", di === idx ? "true" : "false"));
+    };
+    const restart = () => {
+      window.clearInterval(timer);
+      if (items.length > 1) timer = window.setInterval(() => show(idx + 1), 7000);
+    };
+    items.forEach((_, i) => {
+      const dot = el("button", "ani__spotdot");
+      dot.type = "button";
+      dot.setAttribute("aria-label", "Spotlight " + (i + 1));
+      dot.addEventListener("click", () => { show(i); restart(); });
+      dots.appendChild(dot);
+    });
+    spot.addEventListener("mouseenter", () => window.clearInterval(timer));
+    spot.addEventListener("mouseleave", restart);
+    add.addEventListener("click", () => discoverPick(items[idx]));
+    // AniList preloads the rotation so crossfades never flash
+    items.slice(1).forEach((m) => { const pre = new Image(); pre.src = m.bannerImage; });
+    show(0); restart();
+    return spot;
   }
 
   function railCard(m) {
@@ -273,16 +355,13 @@ const STATUS_LABEL = {
     } else {
       card.appendChild(el("div", "ani__cover"));
     }
+    if (m.averageScore) card.appendChild(el("span", "ani__railscore", "★ " + (m.averageScore / 10).toFixed(1)));
+    card.appendChild(el("span", "ani__railhint", "+ Track"));
     const body = el("div", "ani__railbody");
-    body.appendChild(el("div", "ani__railtitle", (m.title && (m.title.english || m.title.romaji)) || "Untitled"));
+    body.appendChild(el("div", "ani__railtitle", mediaTitle(m)));
     body.appendChild(el("div", "ani__railmeta", [m.seasonYear, m.format, m.episodes ? m.episodes + " ep" : null].filter(Boolean).join(" · ")));
     card.appendChild(body);
-    card.addEventListener("click", () => {
-      if (catalog.some((a) => a.id === m.id)) { location.hash = "#a/" + m.id; return; } // already tracked → detail
-      if (!identity) { pendingAdd = true; pendingPick = m; openAuth(); return; }
-      openModal();
-      pick(m);
-    });
+    card.addEventListener("click", () => discoverPick(m));
     return card;
   }
 

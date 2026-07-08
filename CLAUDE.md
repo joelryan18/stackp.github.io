@@ -21,17 +21,30 @@ via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
   Supabase `anime_catalog` call returned 200 empty ("No titles yet") — the anime
   SQL migration appears to have been applied.
   **Round 2 (same day, user-requested):** (a) anime banner art now reveals
-  INSIDE the letters (SVG `<mask>` + `<image>`, `.ani-intro__art` settle-zoom;
-  anime.js picks 1 of 4 hardcoded AniList CDN banners per load — `INTRO_BANNERS`);
-  (b) AniList discover rails on the catalog view (`#aniDiscover`): Trending now /
-  New & airing / Coming soon via one aliased GraphQL query (`DISCOVER_QUERY`,
-  30-min sessionStorage cache `stackime-discover`, silent-skip on failure, rails
-  hidden while the filter has text). Rail cards use `.ani__railcard` (NOT
+  INSIDE the letters (SVG `<mask>`; anime.js shuffles hardcoded AniList CDN
+  banners — `INTRO_BANNERS`); (b) AniList discover rails on the catalog view
+  (`#aniDiscover`): Trending now / New & airing / Coming soon via one aliased
+  GraphQL query (`DISCOVER_QUERY`, sessionStorage cache, silent-skip on failure,
+  rails hidden while the filter has text). Rail cards use `.ani__railcard` (NOT
   `.ani__card` — smoke counts depend on that). Click: in catalog → `#a/<id>`;
   signed-in → add-modal entry stage prefilled (`pick(m)`); signed-out → sign-in,
-  then `pendingPick` restores the picked title. Smoke: rails ===3, railcards
-  ===4 (stub branches on body containing "trending:"), filter hide/restore,
-  rail-click → entry form.
+  then `pendingPick` restores the picked title.
+  **Round 3 (same day, user compared to enma and wanted video-feel + pro
+  discover):** enma actually clips a real `<video src="/intro.mp4">` into its
+  letters via foreignObject+clipPath (verified in their bundle). Asset-free
+  equivalent shipped: THREE `<image>` frames Ken-Burns-crossfade inside the mask
+  (`.ani-intro__art--1/2/3`, shuffled per load), a light sheen sweeps the
+  letters after the outline draw (~2.4s), overlay scale-out on exit; dismiss at
+  3.8s (remove 4.4s — smoke sleeps 1700ms before the dismissal check).
+  Discover got: rotating SPOTLIGHT hero (top-5 trending w/ bannerImage, 7s
+  interval + dots + hover-pause, "+ Track this" CTA → same `discoverPick()`
+  flow), rail scroll arrows (`.ani__railbtn`, hidden on hover:none), hover
+  "+ Track" overlay + ★ score badges on rail cards; fragment now fetches
+  bannerImage/averageScore/description; cache key bumped to
+  `stackime-discover-v2`. GOTCHA: smoke section 1 visits /anime.html
+  un-stubbed → real AniList data lands in the sessionStorage cache → section 7
+  stub preload must `sessionStorage.removeItem("stackime-discover-v2")` (it
+  does; keep key in sync).
 
 - **Anime list community tracker SHIPPED 2026-07-08** (Tasks 1–9, 11 of
   `docs/superpowers/plans/2026-07-07-anime-list-community-tracker.md`): public

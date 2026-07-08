@@ -4,18 +4,34 @@ bodyClass: no3d page
 ---
 <a class="skip-link" href="#main">Skip to content</a>
 
-<!-- Stackime intro splash (enma.lol-style: anime art reveals inside the letters
-     while the outline stroke-draws; anime.js picks the banner + dismisses it) -->
+<!-- Stackime intro splash (enma.lol clips a real <video> inside its letters;
+     this is the asset-free cut — three banner frames Ken-Burns-crossfade inside
+     the mask while the outline stroke-draws, then a sheen sweeps through.
+     anime.js shuffles the frames + dismisses the overlay) -->
 <div class="ani-intro" id="aniIntro" aria-hidden="true">
   <svg class="ani-intro__svg" viewBox="0 0 1200 260">
     <defs>
       <mask id="aniIntroMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1200" height="260">
         <text class="ani-intro__word" x="600" y="185" text-anchor="middle" fill="#fff">STACKIME</text>
       </mask>
+      <linearGradient id="aniIntroSheenGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#fff" stop-opacity=".5"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
     </defs>
-    <image class="ani-intro__art" id="aniIntroArt" x="0" y="0" width="1200" height="260"
-           preserveAspectRatio="xMidYMid slice" mask="url(#aniIntroMask)"
-           href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/178789-9nHWmoRLlcLu.jpg"/>
+    <g mask="url(#aniIntroMask)">
+      <image class="ani-intro__art ani-intro__art--1" id="aniIntroArt1" x="0" y="0" width="1200" height="260"
+             preserveAspectRatio="xMidYMid slice"
+             href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/178789-9nHWmoRLlcLu.jpg"/>
+      <image class="ani-intro__art ani-intro__art--2" id="aniIntroArt2" x="0" y="0" width="1200" height="260"
+             preserveAspectRatio="xMidYMid slice"
+             href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/21-wf37VakJmZqs.jpg"/>
+      <image class="ani-intro__art ani-intro__art--3" id="aniIntroArt3" x="0" y="0" width="1200" height="260"
+             preserveAspectRatio="xMidYMid slice"
+             href="https://s4.anilist.co/file/anilistcdn/media/anime/banner/182205-fRUoKv6f2JAq.jpg"/>
+      <rect class="ani-intro__sheen" x="0" y="0" width="280" height="260" fill="url(#aniIntroSheenGrad)"/>
+    </g>
     <text class="ani-intro__word ani-intro__word--draw" x="600" y="185" text-anchor="middle">STACKIME</text>
   </svg>
   <p class="ani-intro__tag">スタッキメ · anime list × stackwith.me</p>

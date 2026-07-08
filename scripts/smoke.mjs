@@ -285,6 +285,7 @@ const ANI_ME = "99999999-9999-4999-8999-999999999999";
 const ANI_U1 = "11111111-1111-4111-8111-111111111111";
 const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDocument", { source: `
   window.__writes = [];
+  try { sessionStorage.removeItem("stackime-discover-v2"); } catch {} // earlier un-stubbed visits cached REAL AniList data
   const FIX = {
     catalog: [
       { id: 101, title: "Frieren: Beyond Journey's End", title_romaji: "Sousou no Frieren", cover_url: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg", episodes: 28, year: 2023, format: "TV", genres: ["Adventure","Fantasy"], created_at: "2026-07-01T00:00:00Z", watchers: 2, avg_score: 9.5, last_activity: "2026-07-07T10:00:00Z" },
@@ -303,8 +304,8 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
       { user_id: "22222222-2222-4222-8222-222222222222", display_name: "Rei" },
     ],
     media: [
-      { id: 909, title: { english: "Steins;Gate", romaji: "Steins;Gate" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253.jpg" }, episodes: 24, seasonYear: 2011, format: "TV", genres: ["Sci-Fi","Thriller"] },
-      { id: 910, title: { english: null, romaji: "Sousou no Frieren" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg" }, episodes: 28, seasonYear: 2023, format: "TV", genres: ["Fantasy"] },
+      { id: 909, title: { english: "Steins;Gate", romaji: "Steins;Gate" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253.jpg" }, episodes: 24, seasonYear: 2011, format: "TV", genres: ["Sci-Fi","Thriller"], bannerImage: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/9253.jpg", averageScore: 88, description: "<p>A self-proclaimed mad scientist discovers time travel.</p>" },
+      { id: 910, title: { english: null, romaji: "Sousou no Frieren" }, coverImage: { large: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587.jpg" }, episodes: 28, seasonYear: 2023, format: "TV", genres: ["Fantasy"], bannerImage: null, averageScore: 91, description: null },
     ],
   };
   const reply = (status, body) => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
@@ -337,9 +338,10 @@ const { identifier: aniStubPreload } = await S("Page.addScriptToEvaluateOnNewDoc
 await metrics(1440, 900);
 await go(BASE + "/anime.html", 3000);
 check("anime: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
-// Stackime intro splash: still drawing at 3.0s, gone (fade + remove) by ~4.0s
+// Stackime intro splash: still playing at 3.0s, gone (fade + remove) by ~4.4s
 check("anime: stackime intro painted", await evalJs(`!!document.getElementById("aniIntro") && document.querySelector(".ani-intro__word")?.textContent === "STACKIME"`));
-await sleep(1500);
+check("anime: intro has 3 video frames", (await evalJs(`document.querySelectorAll(".ani-intro__art").length`)) === 3);
+await sleep(1700);
 check("anime: intro auto-dismisses", await evalJs(`!document.getElementById("aniIntro")`));
 check("anime: nav Home/Blog/Anime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Blog,Anime");
 check("anime: nav marks Anime current", (await evalJs(`document.querySelector('.nav__links a[aria-current="page"]')?.getAttribute("href")`)) === "/anime.html");
@@ -351,6 +353,9 @@ check("anime: signed out hides My list tab", await evalJs(`document.getElementBy
 check("anime: signed out shows nav Sign in", !(await evalJs(`document.getElementById("aniNavAuth").hidden`)));
 check("anime: discover rails render", (await evalJs(`document.querySelectorAll(".ani__rail").length`)) === 3);
 check("anime: rail cards from AniList", (await evalJs(`document.querySelectorAll(".ani__railcard").length`)) === 4, String(await evalJs(`document.querySelectorAll(".ani__railcard").length`)));
+check("anime: spotlight renders top trending", (await evalJs(`document.querySelector(".ani__spottitle")?.textContent`)) === "Steins;Gate");
+check("anime: spotlight meta has score", String(await evalJs(`document.querySelector(".ani__spotmeta")?.textContent`)).includes("★ 8.8"));
+check("anime: rail scroll arrows wired", (await evalJs(`document.querySelectorAll(".ani__railbtn").length`)) === 6);
 await evalJs(`(() => { const f = document.getElementById("aniFilter"); f.value = "cowboy"; f.dispatchEvent(new Event("input", { bubbles: true })); })()`);
 await sleep(300);
 check("anime: filter narrows catalog", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 1);
@@ -391,6 +396,12 @@ await evalJs(`document.querySelector(".ani__railcard").click()`);
 await sleep(300);
 check("anime: rail card opens entry form", !(await evalJs(`document.getElementById("aniModal").hidden`)) && !(await evalJs(`document.querySelector('.ani__modalstage[data-stage="entry"]').hidden`)));
 check("anime: rail pick shows title", (await evalJs(`document.querySelector("#aniPick .ani__picktitle")?.textContent`)) === "Steins;Gate");
+await evalJs(`document.getElementById("aniModalClose").click()`);
+await sleep(200);
+// the spotlight CTA runs the same pick flow
+await evalJs(`document.querySelector(".ani__spotadd").click()`);
+await sleep(300);
+check("anime: spotlight CTA opens entry form", !(await evalJs(`document.getElementById("aniModal").hidden`)) && (await evalJs(`document.querySelector("#aniPick .ani__picktitle")?.textContent`)) === "Steins;Gate");
 await evalJs(`document.getElementById("aniModalClose").click()`);
 await sleep(200);
 await evalJs(`document.getElementById("aniAdd").click()`);
