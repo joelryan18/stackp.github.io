@@ -15,7 +15,7 @@ const FALLBACK_HANDLE = "https://razorpay.me/@stackwith";
 
   const planKey = new URLSearchParams(location.search).get("plan");
   const plan = PLANS[planKey];
-  if (!plan) { location.replace("/#plans"); return; }
+  if (!plan) { location.replace("/axon.html#plans"); return; }
 
   // — plan header (visible in every stage)
   document.getElementById("payPlanName").textContent = plan.name;

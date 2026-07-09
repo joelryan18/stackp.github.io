@@ -796,6 +796,29 @@ body.anim [data-reveal] { opacity: 0; transform: translateY(22px); }
 }
 
 /* ============================================================
+   HUB (stackwith.me portal homepage)
+   ============================================================ */
+.hub-body main.hub { max-width: 1180px; padding: 9.5rem var(--pad) 5rem; }
+.hub__hero { margin-bottom: 3.2rem; }
+.hub__title { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; font-size: clamp(2.6rem, 7vw, 4.6rem); margin: 0.9rem 0 1rem; }
+.hub__sub { color: var(--text-dim); max-width: 52ch; }
+.hub__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
+.hubcard { position: relative; display: flex; flex-direction: column; gap: .9rem; padding: 1.7rem 1.5rem 1.5rem; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; overflow: hidden; transition: transform .35s cubic-bezier(.22,1,.36,1), border-color .35s, box-shadow .35s; }
+.hubcard::after { content: ""; position: absolute; inset: 0; background: radial-gradient(420px 200px at 85% -10%, rgba(184,255,60,.10), transparent 70%); opacity: 0; transition: opacity .35s; pointer-events: none; }
+.hubcard:hover, .hubcard:focus-visible { transform: translateY(-6px); border-color: rgba(184,255,60,.45); box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+.hubcard:hover::after, .hubcard:focus-visible::after { opacity: 1; }
+.hubcard__index { font-family: var(--mono); font-size: .72rem; letter-spacing: .14em; color: var(--faint); }
+.hubcard__mark { width: 52px; color: var(--signal); }
+.hubcard__mark svg { width: 100%; height: auto; display: block; }
+.hubcard__name { font-family: var(--display); font-weight: 600; letter-spacing: .02em; font-size: 1.35rem; margin: 0; }
+.hubcard__desc { color: var(--text-dim); font-size: .92rem; line-height: 1.55; flex: 1; }
+.hubcard__cta { font-family: var(--mono); font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--signal); }
+.hubcard__cta b { display: inline-block; transition: transform .3s; }
+.hubcard:hover .hubcard__cta b { transform: translateX(5px); }
+@media (max-width: 900px) { .hub__grid { grid-template-columns: 1fr; } .hub-body main.hub { padding-top: 7.5rem; } }
+@media (prefers-reduced-motion: reduce) { .hubcard, .hubcard__cta b { transition: none; } .hubcard:hover { transform: none; } }
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {

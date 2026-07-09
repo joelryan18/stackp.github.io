@@ -72,7 +72,7 @@ let failed = 0;
 const check = (name, ok, extra = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  " + extra}`); if (!ok) failed++; };
 
 /* ---- 1 · every page loads clean, correct head, no ads before consent ---- */
-for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
+for (const p of ["/", "/axon.html", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
   await metrics(1440, 900);
   await go(BASE + p, 3200);
   check(`${p} no JS exceptions`, exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -84,13 +84,22 @@ for (const p of ["/", "/about.html", "/contact.html", "/privacy.html", "/terms.h
   await evalJs("localStorage.clear()");
 }
 
-/* ---- 2 · index runtime ---- */
-await go(BASE + "/", 4000);
-check("index lenis active", await evalJs("!!window.__lenis"));
-check("index gsap anim armed", await evalJs(`document.body.classList.contains("anim")`));
-check("index hero decoded", (await evalJs(`document.querySelector(".hero__title").innerText.replace(/\\s+/g," ").trim()`)) === "The nervous system for your software.");
-check("index no3d not triggered", !(await evalJs(`document.body.classList.contains("no3d")`)));
-check("index --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
+/* ---- 2 · hub homepage ---- */
+await go(BASE + "/", 3000);
+check("hub: 3 cards with correct hrefs", (await evalJs(`[...document.querySelectorAll(".hubcard")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/anime.html,/blog/");
+check("hub: title brand", (await evalJs("document.title")).includes("stackwith.me"));
+check("hub: no nerve canvas", !(await evalJs(`!!document.querySelector(".nerve")`)));
+check("hub: no AXON hero", !(await evalJs(`!!document.querySelector(".hero__title")`)));
+check("hub: nav brand is stackwith.me", (await evalJs(`document.querySelector(".nav__word")?.textContent`)) === "STACKWITH.ME");
+
+/* ---- 2b · axon page runtime ---- */
+await go(BASE + "/axon.html", 4000);
+check("axon lenis active", await evalJs("!!window.__lenis"));
+check("axon gsap anim armed", await evalJs(`document.body.classList.contains("anim")`));
+check("axon hero decoded", (await evalJs(`document.querySelector(".hero__title").innerText.replace(/\\s+/g," ").trim()`)) === "The nervous system for your software.");
+check("axon no3d not triggered", !(await evalJs(`document.body.classList.contains("no3d")`)));
+check("axon --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
+check("axon nav has Home + Stackime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Platform,Process,Pricing,Stackime");
 
 /* ---- 3 · consent gating ---- */
 await evalJs("localStorage.clear()");
@@ -113,7 +122,7 @@ await evalJs("localStorage.clear()");
 
 /* ---- 4 · mobile menu a11y ---- */
 await metrics(390, 844, true);
-await go(BASE + "/", 3000);
+await go(BASE + "/axon.html", 3000);
 check("mobile: burger visible", await evalJs(`getComputedStyle(document.getElementById("burger")).display !== "none"`));
 check("mobile: closed menu hidden", (await evalJs(`getComputedStyle(document.getElementById("menu")).visibility`)) === "hidden");
 await evalJs(`document.getElementById("burger").click()`);
@@ -127,7 +136,7 @@ check("mobile: focus returned to burger", await evalJs(`document.activeElement =
 
 /* ---- 5 · form (endpoint unset → honest inline success) ---- */
 await metrics(1440, 900);
-await go(BASE + "/", 3000);
+await go(BASE + "/axon.html", 3000);
 await evalJs(`(() => { const f = document.querySelector(".engage__form"); f.querySelector("input").value = "smoke@test.dev"; f.requestSubmit(); })()`);
 await sleep(1200);
 const okText = await evalJs(`document.querySelector(".engage__ok")?.textContent || ""`);
@@ -136,7 +145,7 @@ check("form: no inbox promise", !okText.toLowerCase().includes("inbox"), okText)
 
 /* ---- 6 · plans → checkout page purchase flow ---- */
 await metrics(1440, 900);
-await go(BASE + "/", 3000);
+await go(BASE + "/axon.html", 3000);
 check("pay: heading says Start for ₹5", (await evalJs(`document.querySelector(".plans .section__title")?.textContent.replace(/\\s+/g, " ").trim() || ""`)).includes("Start for ₹5"));
 check("pay: hobby CTA links to checkout", (await evalJs(`document.querySelector('a[data-plan="hobby"]')?.getAttribute("href")`)) === "/checkout.html?plan=hobby");
 check("pay: studio CTA links to checkout", (await evalJs(`document.querySelector('a[data-plan="studio"]')?.getAttribute("href")`)) === "/checkout.html?plan=studio");
@@ -195,7 +204,7 @@ check("pay: pass id shown", (await evalJs(`document.getElementById("okPassId").t
 check("pay: plan named on success", (await evalJs(`document.getElementById("okPlan").textContent`)) === "Studio");
 check("pay: pass canvas painted", (await evalJs(`document.getElementById("passCanvas").getContext("2d").getImageData(100, 100, 1, 1).data.join()`)) === "7,8,10,255");
 check("pay: download button visible", await evalJs(`!document.getElementById("payDownload").hidden`));
-check("pay: done links to plans", (await evalJs(`document.getElementById("payDone").getAttribute("href")`)) === "/#plans");
+check("pay: done links to plans", (await evalJs(`document.getElementById("payDone").getAttribute("href")`)) === "/axon.html#plans");
 
 // EmailJS request captured by the fetch stub
 const mail = await evalJs(`window.__fetches.find((f) => f.url.includes("api.emailjs.com"))`);
@@ -239,7 +248,7 @@ await S("Page.removeScriptToEvaluateOnNewDocument", { identifier: payPreload });
 await metrics(1440, 900);
 // invalid plan bounces to the plans section
 await go(BASE + "/checkout.html?plan=nope", 2500);
-check("gate: invalid plan redirects", (await evalJs("location.pathname + location.hash")) === "/#plans");
+check("gate: invalid plan redirects", (await evalJs("location.pathname + location.hash")) === "/axon.html#plans");
 // signed out → auth stage
 await go(BASE + "/checkout.html?plan=studio", 3000);
 check("gate: no JS exceptions", exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -348,7 +357,7 @@ check("anime: intro has 3 fallback frames", (await evalJs(`document.querySelecto
 check("anime: intro video clipped into letters", await evalJs(`(() => { const v = document.querySelector("foreignObject .ani-intro__video"); return !!v && v.getAttribute("src") === "/assets/video/intro-signal.mp4" && v.muted; })()`));
 await sleep(1700);
 check("anime: intro auto-dismisses", await evalJs(`!document.getElementById("aniIntro")`));
-check("anime: nav Home/Blog/Anime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Blog,Anime");
+check("anime: nav Home/Axon/Blog/Stackime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Axon,Blog,Stackime");
 check("anime: nav marks Anime current", (await evalJs(`document.querySelector('.nav__links a[aria-current="page"]')?.getAttribute("href")`)) === "/anime.html");
 check("anime: overlays not painted on load", await evalJs(`getComputedStyle(document.getElementById("aniAuth")).display === "none" && getComputedStyle(document.getElementById("aniModal")).display === "none"`));
 check("anime: catalog renders fixtures", (await evalJs(`document.querySelectorAll(".ani__card").length`)) === 2);
