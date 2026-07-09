@@ -12,8 +12,9 @@ bodyClass: no3d page hub-body
     <span class="nav__word">STACKWITH.ME</span>
   </a>
   <nav class="nav__links" aria-label="Primary">
-    <a href="/about.html" data-index="01">About</a>
-    <a href="/contact.html" data-index="02">Contact</a>
+    <a href="/blog/" data-index="01">Blog</a>
+    <a href="/about.html" data-index="02">About</a>
+    <a href="/contact.html" data-index="03">Contact</a>
   </nav>
 </header>
 
@@ -21,7 +22,32 @@ bodyClass: no3d page hub-body
 {{ content | safe }}
 </main>
 
-<footer class="footer">
+<footer class="footer hubfoot">
+  <div class="hubfoot__cols">
+    <div class="hubfoot__brand">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <b>STACKWITH.ME</b>
+      <p>One stack, many signals — an autonomous-agent instrument, a community anime tracker, and the notes written while building them.</p>
+    </div>
+    <div class="hubfoot__col">
+      <h4>SECTIONS</h4>
+      <a href="/axon.html">AXON</a>
+      <a href="/anime.html">Stackime</a>
+      <a href="/blog/">Blog</a>
+    </div>
+    <div class="hubfoot__col">
+      <h4>COMPANY</h4>
+      <a href="/about.html">About</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+    <div class="hubfoot__col">
+      <h4>LEGAL</h4>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
   <div class="footer__base">
     <span>© <span id="year">2026</span> stackwith.me</span>
     <span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a></span>
@@ -29,5 +55,14 @@ bodyClass: no3d page hub-body
   </div>
 </footer>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "stackwith.me",
+  "url": "{{ site.url }}/",
+  "description": "One stack, many signals: AXON the autonomous agent instrument, Stackime anime tracking, and the Signal Log blog."
+}
+</script>
 <script src="{{ assets.consent }}" defer></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>

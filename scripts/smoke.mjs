@@ -91,6 +91,10 @@ check("hub: title brand", (await evalJs("document.title")).includes("stackwith.m
 check("hub: no nerve canvas", !(await evalJs(`!!document.querySelector(".nerve")`)));
 check("hub: no AXON hero", !(await evalJs(`!!document.querySelector(".hero__title")`)));
 check("hub: nav brand is stackwith.me", (await evalJs(`document.querySelector(".nav__word")?.textContent`)) === "STACKWITH.ME");
+check("hub: hero CTAs", (await evalJs(`[...document.querySelectorAll(".hub__hero .hub__actions a")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/blog/");
+check("hub: about section has substantive copy", (await evalJs(`document.querySelector(".hub__aboutcopy")?.textContent.trim().length`)) >= 400);
+check("hub: 3 blog post cards", (await evalJs(`document.querySelectorAll(".postcard").length`)) === 3 && (await evalJs(`[...document.querySelectorAll(".postcard")].every((a) => a.getAttribute("href").startsWith("/blog/"))`)));
+check("hub: footer sitemap links", await evalJs(`["/privacy.html","/terms.html","/about.html","/contact.html","/axon.html","/anime.html","/blog/"].every((h) => !!document.querySelector('.hubfoot a[href="' + h + '"]'))`));
 
 /* ---- 2b · axon page runtime ---- */
 await go(BASE + "/axon.html", 4000);
