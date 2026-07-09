@@ -1,11 +1,27 @@
-# AXON site — project context (read this, skip re-exploration)
+# stackwith.me — project context (read this, skip re-exploration)
 
-Landing site for AXON ("signal instrument" design), live at https://stackwith.me
-via GitHub Pages, repo `joelryan18/stackp.github.io`, branch `main`.
+Multi-section site live at https://stackwith.me via GitHub Pages, repo
+`joelryan18/stackp.github.io`, branch `main`.
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-08)
+## Current state (2026-07-09)
+
+- **Homepage is now a portal hub; AXON is a subsection SHIPPED 2026-07-09**
+  (user-requested): `/` = single-screen hub (`layouts/hub.njk` + new
+  `src/index.html` + `/* HUB */` CSS) with cards → `/axon.html`, `/anime.html`,
+  `/blog/`. The AXON landing moved **verbatim** to `src/axon.html`
+  (`permalink: axon.html`; home.njk nav gained a `Home → /` link). Nav label
+  "Anime" → **"Stackime"** site-wide; page/checkout navs gained an Axon link.
+  All `/#plans`+`/#engage` anchors now → `/axon.html#…` (incl. checkout.js
+  invalid-plan redirect + `#payDone`). Sitemap has /axon.html (0.9). Smoke
+  reworked: section 2 = hub checks (`hub:`), 2b = ex-index runtime (`axon:`),
+  sections 4–6 visit /axon.html, consent tests stay on `/`; label assertions
+  updated ("Home,Axon,Blog,Stackime" on anime page) — ALL PASS. Verified live:
+  hub at `/`, 200 on /axon.html, Stackime label on anime nav. Plan:
+  `docs/superpowers/plans/2026-07-09-hub-homepage-axon-subsection.md`.
+  NOTE for older notes below: anything that says "index" / homepage about the
+  AXON landing now means **/axon.html**.
 
 - **Anime page rebranded "Stackime" + intro splash SHIPPED 2026-07-08**
   (user-requested): /anime.html brand is now **Stackime** — user asked for a
