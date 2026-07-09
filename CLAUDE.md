@@ -7,8 +7,24 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-09)
 
-- **Homepage is now a portal hub; AXON is a subsection SHIPPED 2026-07-09**
-  (user-requested): `/` = single-screen hub (`layouts/hub.njk` + new
+- **Homepage redesigned as full modern landing page SHIPPED 2026-07-09**
+  (user-requested): single-screen hub → multi-section professional landing with
+  hero (eyebrow blip, display h1, CTA buttons, stat strip), 3 upgraded section
+  cards (tag chips, gradient borders, larger marks), "What is stackwith.me?"
+  about section (400+ char substantive copy + 3 value-prop tiles), latest blog
+  posts section (3 hardcoded post cards w/ dates + summaries), closing CTA band,
+  full sitemap footer (hubfoot__ classes: brand + 3 cols for Sections/Company/Legal).
+  hub.njk nav gained Blog link; WebSite JSON-LD added. CSS: full `/* HUB */`
+  rewrite (radial bg glow, new hero/cards/tiles/footer grid, mobile responsive).
+  Smoke: 9 hub checks (5 existing + hero CTAs + about copy ≥400 + 3 postcards +
+  footer sitemap links) ALL PASS. Design tokens unchanged; AXON/anime/blog untouched.
+  QA'd headless 1440 + 390 screenshots; live at https://stackwith.me/.
+  **AdSense readiness:** substantial original content, complete nav/footer with
+  Privacy/Terms/About/Contact, blog posts, no thin "under construction" signals.
+  Plan: `docs/superpowers/plans/2026-07-09-homepage-redesign-adsense.md`.
+
+- **Homepage became a portal hub; AXON moved to subsection SHIPPED 2026-07-09**
+  (earlier same day, user-requested): `/` = single-screen hub (`layouts/hub.njk` +
   `src/index.html` + `/* HUB */` CSS) with cards → `/axon.html`, `/anime.html`,
   `/blog/`. The AXON landing moved **verbatim** to `src/axon.html`
   (`permalink: axon.html`; home.njk nav gained a `Home → /` link). Nav label
