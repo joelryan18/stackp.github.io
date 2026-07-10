@@ -1,0 +1,81 @@
+---
+layout: layouts/base.njk
+bodyClass: page ab-body
+---
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas class="aboutfx" id="aboutfx" aria-hidden="true"></canvas>
+<div class="aboutfx-scrim" aria-hidden="true"></div>
+
+<div class="ab-intro" id="abIntro" aria-hidden="true">
+  <div class="ab-intro__inner">
+    <span class="nav__mark" aria-hidden="true">
+      <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </span>
+    <b class="ab-intro__word">STACKWITH.ME</b>
+    <span class="ab-intro__pct">000</span>
+  </div>
+</div>
+
+<noscript><style>
+  .ab-intro { display: none !important; }
+  [data-abreveal] { opacity: 1 !important; transform: none !important; }
+  .aboutfx { display: none !important; }
+</style></noscript>
+
+<header class="nav is-scrolled">
+  <a href="/" class="nav__brand" aria-label="stackwith.me home">
+    <span class="nav__mark" aria-hidden="true">
+      <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </span>
+    <span class="nav__word">STACKWITH.ME</span>
+  </a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="/blog/" data-index="01">Blog</a>
+    <a href="/about.html" data-index="02" aria-current="page">About</a>
+    <a href="/contact.html" data-index="03">Contact</a>
+  </nav>
+</header>
+
+<div class="ab-rail" id="abRail" aria-hidden="true"></div>
+
+<main id="main" class="ab">
+{{ content | safe }}
+</main>
+
+<footer class="footer hubfoot">
+  <div class="hubfoot__cols">
+    <div class="hubfoot__brand">
+      <span class="nav__mark" aria-hidden="true">
+        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      </span>
+      <b>STACKWITH.ME</b>
+      <p>A one-person studio shipping real software in public: an agent platform, an anime tracker, and the notes that explain how.</p>
+    </div>
+    <div class="hubfoot__col">
+      <h4>SECTIONS</h4>
+      <a href="/axon.html">AXON</a>
+      <a href="/anime.html">Stackime</a>
+      <a href="/blog/">Blog</a>
+    </div>
+    <div class="hubfoot__col">
+      <h4>COMPANY</h4>
+      <a href="/about.html">About</a>
+      <a href="/contact.html">Contact</a>
+    </div>
+    <div class="hubfoot__col">
+      <h4>LEGAL</h4>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+    </div>
+  </div>
+  <div class="footer__base">
+    <span>© <span id="year">2026</span> stackwith.me</span>
+    <span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a></span>
+    <span>MADE&nbsp;WITH&nbsp;INTENT</span>
+  </div>
+</footer>
+
+<script type="module" src="{{ assets.about3d }}"></script>
+<script src="{{ assets.consent }}" defer></script>
+<script>document.getElementById("year").textContent = new Date().getFullYear();</script>

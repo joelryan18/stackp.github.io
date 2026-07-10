@@ -109,6 +109,20 @@ check("axon no3d not triggered", !(await evalJs(`document.body.classList.contain
 check("axon --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
 check("axon nav has Home + Stackime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Platform,Process,Pricing,Stackime");
 
+/* ---- 2c · about page (Active-Theory-style field) ---- */
+await go(BASE + "/about.html", 6500);
+check("about: fx canvas present", await evalJs(`!!document.querySelector("canvas.aboutfx")`));
+check("about: field 3d booted", await evalJs(`document.body.classList.contains("fx-on")`));
+check("about: choreography armed", await evalJs(`document.body.classList.contains("fx-dom")`));
+check("about: boot loader auto-dismisses", !(await evalJs(`!!document.getElementById("abIntro")`)) || (await evalJs(`document.getElementById("abIntro").classList.contains("is-done")`)));
+check("about: hero manifesto present", (await evalJs(`document.querySelector(".ab-hero .ab-display")?.innerText.replace(/\\s+/g," ").trim()`)) === "We build software with a pulse.");
+check("about: 3 work rows with correct hrefs", (await evalJs(`[...document.querySelectorAll(".ab-row")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/anime.html,/blog/");
+check("about: 4 principles", (await evalJs(`document.querySelectorAll(".ab-principle").length`)) === 4);
+check("about: substantive copy", (await evalJs(`[...document.querySelectorAll(".ab-copy, .ab-sub")].map((n) => n.textContent).join("").trim().length`)) >= 400);
+check("about: chapter rail built", (await evalJs(`document.querySelectorAll(".ab-rail__dot").length`)) === 6);
+check("about: contact CTA", (await evalJs(`document.querySelector(".ab-cta__btn")?.getAttribute("href")`)) === "/contact.html");
+check("about: footer sitemap links", await evalJs(`["/privacy.html","/terms.html","/about.html","/contact.html","/axon.html","/anime.html","/blog/"].every((h) => !!document.querySelector('.hubfoot a[href="' + h + '"]'))`));
+
 /* ---- 3 · consent gating ---- */
 await evalJs("localStorage.clear()");
 await go(BASE + "/", 2500);
