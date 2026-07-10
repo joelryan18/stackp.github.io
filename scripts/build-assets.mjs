@@ -46,9 +46,9 @@ const builds = [
   },
   {
     ...common,
-    entryPoints: ["src/assets/js/neural3d.js"],
+    entryPoints: ["src/assets/js/neural3d.js", "src/assets/js/hub3d.js"],
     format: "esm",
-    plugins: [manifestPlugin({ "src/assets/js/neural3d.js": "neural3d" })],
+    plugins: [manifestPlugin({ "src/assets/js/neural3d.js": "neural3d", "src/assets/js/hub3d.js": "hub3d" })],
   },
   {
     ...common,

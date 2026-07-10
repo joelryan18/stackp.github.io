@@ -6,23 +6,26 @@ ogTitle: "stackwith.me — one stack, many signals"
 permalink: "index.html"
 ---
     <section class="hub__hero">
-      <p class="eyebrow">[ <span class="eyebrow__blip"></span> ONE STACK · MANY SIGNALS ]</p>
-      <h1 class="hub__title">Everything I'm building,<br>in one place.</h1>
-      <p class="hub__sub">stackwith.me is a working studio, not a brochure. Each section below is a real, live project — an autonomous-agent instrument, a community anime tracker, and the engineering notes written while building both.</p>
-      <div class="hub__actions">
-        <a class="btn btn--signal" href="/axon.html">Explore AXON <b>→</b></a>
-        <a class="btn btn--ghost" href="/blog/">Read the Signal Log</a>
+      <div class="hub__herocore">
+        <p class="eyebrow">[ <span class="eyebrow__blip"></span> STACKWITH.ME · INDEPENDENT SOFTWARE STUDIO ]</p>
+        <h1 class="hub__title"><span class="ln"><span>One stack.</span></span><span class="ln"><span>Many <em class="hub__spectrum">signals</em>.</span></span></h1>
+        <p class="hub__sub">Everything I'm building, live in one place — an autonomous-agent instrument, a community anime tracker, and the engineering notes written while building both. A working studio, not a brochure.</p>
+        <div class="hub__actions">
+          <a class="btn btn--signal" href="/axon.html">Explore AXON <b>→</b></a>
+          <a class="btn btn--ghost" href="/blog/">Read the Signal Log</a>
+        </div>
       </div>
-      <ul class="hub__stats" aria-label="Site at a glance">
-        <li><b>03</b><span>live sections</span></li>
-        <li><b>&lt;40ms</b><span>orchestration target</span></li>
-        <li><b>100%</b><span>honest copy</span></li>
-      </ul>
+      <div class="hub__tuner" aria-label="Channels">
+        <span class="hub__tunerlabel">TUNE&nbsp;IN&nbsp;/</span>
+        <a class="tuner__chip" href="#ch-axon" data-ch="0"><i></i>CH·01 <b>AXON</b></a>
+        <a class="tuner__chip" href="#ch-kime" data-ch="1"><i></i>CH·02 <b>STACKIME</b></a>
+        <a class="tuner__chip" href="#ch-log" data-ch="2"><i></i>CH·03 <b>LOG</b></a>
+      </div>
     </section>
 
     <section class="hub__grid" aria-label="Sections">
-      <a class="hubcard" href="/axon.html" data-hub="axon">
-        <span class="hubcard__top"><span class="hubcard__index">01</span><span class="hubcard__tag">PRODUCT</span></span>
+      <a class="hubcard" href="/axon.html" data-hub="axon" data-ch="0" id="ch-axon" data-hubreveal>
+        <span class="hubcard__top"><span class="hubcard__index">CH·01</span><span class="hubcard__tag">PRODUCT</span></span>
         <span class="hubcard__mark" aria-hidden="true">
           <svg viewBox="0 0 48 28"><path d="M2 14h9l4-10 9 20 4-10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
         </span>
@@ -31,8 +34,8 @@ permalink: "index.html"
         <span class="hubcard__cta">Enter the instrument <b>→</b></span>
       </a>
 
-      <a class="hubcard" href="/anime.html" data-hub="stackime">
-        <span class="hubcard__top"><span class="hubcard__index">02</span><span class="hubcard__tag">COMMUNITY</span></span>
+      <a class="hubcard" href="/anime.html" data-hub="stackime" data-ch="1" id="ch-kime" data-hubreveal>
+        <span class="hubcard__top"><span class="hubcard__index">CH·02</span><span class="hubcard__tag">COMMUNITY</span></span>
         <span class="hubcard__mark" aria-hidden="true">
           <svg viewBox="0 0 48 28"><path d="M6 3v22l18-11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M30 7h14M30 14h14M30 21h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </span>
@@ -41,36 +44,36 @@ permalink: "index.html"
         <span class="hubcard__cta">Open the catalog <b>→</b></span>
       </a>
 
-      <a class="hubcard" href="/blog/" data-hub="blog">
-        <span class="hubcard__top"><span class="hubcard__index">03</span><span class="hubcard__tag">WRITING</span></span>
+      <a class="hubcard" href="/blog/" data-hub="blog" data-ch="2" id="ch-log" data-hubreveal>
+        <span class="hubcard__top"><span class="hubcard__index">CH·03</span><span class="hubcard__tag">WRITING</span></span>
         <span class="hubcard__mark" aria-hidden="true">
           <svg viewBox="0 0 48 28"><path d="M4 5h40M4 12h40M4 19h26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="41" cy="22" r="2.4" fill="currentColor" stroke="none"/></svg>
         </span>
-        <h2 class="hubcard__name">BLOG</h2>
-        <p class="hubcard__desc">The Signal Log — field notes on agents, guardrails, latency, and the engineering of trustworthy automation.</p>
+        <h2 class="hubcard__name">SIGNAL LOG</h2>
+        <p class="hubcard__desc">Field notes on agents, guardrails, latency, and the engineering of trustworthy automation.</p>
         <span class="hubcard__cta">Read the notes <b>→</b></span>
       </a>
     </section>
 
     <section class="hub__about" aria-labelledby="about-title">
-      <p class="eyebrow">[ WHAT THIS IS ]</p>
-      <h2 class="hub__h2" id="about-title">A studio you can watch working.</h2>
+      <p class="eyebrow" data-hubreveal>[ WHAT THIS IS ]</p>
+      <h2 class="hub__h2" id="about-title" data-hubreveal>A studio you can watch working.</h2>
       <div class="hub__aboutcols">
-        <div class="hub__aboutcopy">
+        <div class="hub__aboutcopy" data-hubreveal>
           <p>Most personal sites are portfolios of finished things. stackwith.me is the opposite: every section here is a live project that keeps evolving, and the seams are left visible on purpose. When AXON's orchestration latency improves, the datasheet on its page changes. When Stackime gains a discovery rail, it ships to the same URL you visited yesterday.</p>
           <p>The connecting thread is a single engineering philosophy: <b>autonomy needs an audit trail, guardrails are a feature, and marketing copy should be held to product tolerance.</b> The numbers published here are design targets we hold ourselves to — never inflated, never rounded in our favor. If a feature isn't finished, the page says so.</p>
           <p>Everything runs on one deliberately boring, verifiable stack — a static Eleventy site, hand-written CSS on a small set of design tokens, esbuild bundles, Supabase for auth and community data, and a CDP smoke harness that must pass before anything deploys. No trackers beyond consent-gated ads, no dark patterns, no third-party fonts phoning home.</p>
         </div>
         <ul class="hub__values">
-          <li class="hub__value">
+          <li class="hub__value" data-ch="0" data-hubreveal>
             <b>Transparent engineering</b>
             <p>Plans, specs, and trade-offs are written down before code ships — and the blog documents what actually happened, including the mistakes.</p>
           </li>
-          <li class="hub__value">
+          <li class="hub__value" data-ch="1" data-hubreveal>
             <b>Honest copy, exact numbers</b>
             <p>Prices are exact, limits are stated, and "coming soon" means the button is disabled — not a mailing-list trap.</p>
           </li>
-          <li class="hub__value">
+          <li class="hub__value" data-ch="2" data-hubreveal>
             <b>One consistent stack</b>
             <p>The same tokens, tooling, and quality bar power every section, so improvements in one place lift all of them.</p>
           </li>
@@ -79,7 +82,7 @@ permalink: "index.html"
     </section>
 
     <section class="hub__posts" aria-labelledby="posts-title">
-      <div class="hub__postshead">
+      <div class="hub__postshead" data-hubreveal>
         <div>
           <p class="eyebrow">[ SIGNAL LOG ]</p>
           <h2 class="hub__h2" id="posts-title">Latest from the blog.</h2>
@@ -87,19 +90,19 @@ permalink: "index.html"
         <a class="hub__postsall" href="/blog/">All posts <b>→</b></a>
       </div>
       <div class="hub__postgrid">
-        <a class="postcard" href="/blog/why-automation-needs-an-audit-trail.html">
+        <a class="postcard" href="/blog/why-automation-needs-an-audit-trail.html" data-hubreveal>
           <time class="postcard__date" datetime="2026-06-24">JUN 24, 2026</time>
           <h3 class="postcard__title">Your automation is only as good as its audit trail</h3>
           <p class="postcard__desc">An agent that can't explain itself is a liability wearing a productivity costume. How reasoning traces turn "it did something" into "it did exactly this, for exactly this reason."</p>
           <span class="postcard__cta">Read <b>→</b></span>
         </a>
-        <a class="postcard" href="/blog/engineering-sub-40ms-orchestration.html">
+        <a class="postcard" href="/blog/engineering-sub-40ms-orchestration.html" data-hubreveal>
           <time class="postcard__date" datetime="2026-06-10">JUN 10, 2026</time>
           <h3 class="postcard__title">Engineering sub-40ms orchestration: reflexes, not workflows</h3>
           <p class="postcard__desc">A nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.</p>
           <span class="postcard__cta">Read <b>→</b></span>
         </a>
-        <a class="postcard" href="/blog/guardrails-are-a-feature.html">
+        <a class="postcard" href="/blog/guardrails-are-a-feature.html" data-hubreveal>
           <time class="postcard__date" datetime="2026-05-28">MAY 28, 2026</time>
           <h3 class="postcard__title">Guardrails are a feature, not friction</h3>
           <p class="postcard__desc">The fastest way to lose an ops team's trust is an agent with root and no rules. Scoped permissions, approval gates, and why constraints make autonomy shippable.</p>
@@ -108,7 +111,7 @@ permalink: "index.html"
       </div>
     </section>
 
-    <section class="hub__cta" aria-label="Start exploring">
+    <section class="hub__cta" aria-label="Start exploring" data-hubreveal>
       <h2 class="hub__ctatitle">Pick a signal and follow it.</h2>
       <p class="hub__ctasub">Start with the instrument, browse the catalog, or read how it's all built — and if you want to talk, there's a human on the other end.</p>
       <div class="hub__actions">

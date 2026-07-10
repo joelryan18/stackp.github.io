@@ -1,8 +1,11 @@
 ---
 layout: layouts/base.njk
-bodyClass: no3d page hub-body
+bodyClass: page hub-body
 ---
 <a class="skip-link" href="#main">Skip to content</a>
+
+<canvas class="hubfx" id="hubfx" aria-hidden="true"></canvas>
+<div class="hubfx-scrim" aria-hidden="true"></div>
 
 <header class="nav is-scrolled">
   <a href="/" class="nav__brand" aria-label="stackwith.me home">
@@ -64,5 +67,6 @@ bodyClass: no3d page hub-body
   "description": "One stack, many signals: AXON the autonomous agent instrument, Stackime anime tracking, and the Signal Log blog."
 }
 </script>
+<script type="module" src="{{ assets.hub3d }}"></script>
 <script src="{{ assets.consent }}" defer></script>
 <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
