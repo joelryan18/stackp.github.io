@@ -7,6 +7,30 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-10)
 
+- **About page "The Field" — Active Theory-style immersive rebuild SHIPPED
+  2026-07-10** (user top-priority ask: activetheory.net design language;
+  axon/homepage redesigns to be briefed later): `/about.html` is now the
+  **stackwith.me studio page** (was AXON-only doc page). New
+  `src/assets/js/about3d.js` ESM bundle (registered in build-assets esm build):
+  full-viewport curl-noise particle field on fixed `canvas#aboutfx` (pointer
+  repulsion, scroll lerps hues lime→magenta→cyan via the CH channel colors,
+  bloom+ACES), Lenis smooth scroll, `#abIntro` boot loader (wordmark+counter
+  ~1.65s, click-skip), IO reveals `[data-abreveal]`, chapter dot rail
+  `#abRail` (6 chapters), `.ab-row[data-ch]` work-row hover tints the field.
+  New `layouts/about.njk` (hub nav STACKWITH.ME brand + hubfoot footer),
+  7-chapter copy in `src/about.html` (manifesto "We build software with a
+  pulse." / who / work rows → axon+anime+blog / 3:14am origin / 4 principles
+  / contact CTA — old AXON copy folded in, not deleted), `/* ABOUT */` CSS
+  (`.ab-*`; `.ab-body::before{display:none}` since the loader replaces the
+  boot veil). Fallbacks: <680px / reduced-motion / GL-fail → `body.about-no3d`
+  static tri-hue scrim; no-JS unhides all. Smoke section 2c: 12 `about:`
+  checks ALL PASS (manifesto check uses `innerText` — `<br>` breaks
+  textContent). Verified live: /about.html 200, hashed about3d 200, hub/axon
+  untouched. Plan: `docs/superpowers/plans/2026-07-10-about-activetheory-redesign.md`.
+  GOTCHA: uncommitted homepage-gem WIP (index.html/hub3d.js/hub.njk/smoke
+  hub-check edits + `/* HUB v4 Studio */` CSS rewrite) pre-existed in the
+  worktree; it was stashed for the ship and restored after — still uncommitted.
+
 - **Homepage v3 "The Spectrum" — WebGL 3D hero SHIPPED 2026-07-10**
   (user-requested "award-winning / 3D"): new `src/assets/js/hub3d.js` ESM bundle
   (three.js, added to build-assets esm build alongside neural3d) renders three
