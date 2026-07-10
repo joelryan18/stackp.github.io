@@ -5,7 +5,24 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-09)
+## Current state (2026-07-10)
+
+- **Homepage v3 "The Spectrum" — WebGL 3D hero SHIPPED 2026-07-10**
+  (user-requested "award-winning / 3D"): new `src/assets/js/hub3d.js` ESM bundle
+  (three.js, added to build-assets esm build alongside neural3d) renders three
+  braided signal ribbons — channel colors **AXON lime #B8FF3C / Stackime magenta
+  #FF4FA3 / Log cyan #4FC4FF** (`--ch0/1/2` tokens scoped to `.hub-body`) — plus
+  particle dust through UnrealBloom+ACES on fixed `canvas#hubfx` (NOT `.nerve`;
+  smoke's "no nerve canvas" still passes). Hover on any `[data-ch]` card/tuner-chip
+  excites that ribbon (uniform lerp). Same bundle does DOM choreography: `fx-dom`/
+  `hub-in` body classes gate hero line-rise + `[data-hubreveal]` IO reveals
+  (no-JS = everything visible), pointer card tilt. Fallback `<680px`/reduced-motion/
+  GL-fail → `body.hub-no3d` static tri-hue scrim. Hero: "One stack. Many signals."
+  w/ animated gradient word + CH·01/02/03 tuner chips (replaced stat strip); cards
+  per-channel accents (color-mix); ALL AdSense content sections kept verbatim.
+  Smoke: 13 hub checks incl. "spectrum 3d booted" (WebGL works in smoke Chrome)
+  ALL PASS. GOTCHA: smoke's static server binds **port 8123** — kill any QA
+  http.server on 8123 first. Verified live: hub3d asset 200, axon.html untouched.
 
 - **Homepage redesigned as full modern landing page SHIPPED 2026-07-09**
   (user-requested): single-screen hub → multi-section professional landing with
