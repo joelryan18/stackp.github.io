@@ -109,11 +109,14 @@ check("axon no3d not triggered", !(await evalJs(`document.body.classList.contain
 check("axon --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
 check("axon nav has Home + Stackime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Platform,Process,Pricing,Stackime");
 
-/* ---- 2c · about page (Active-Theory-style field) ---- */
+/* ---- 2c · about page (Signal Field v2 instrument journey) ---- */
 await go(BASE + "/about.html", 6500);
 check("about: fx canvas present", await evalJs(`!!document.querySelector("canvas.aboutfx")`));
 check("about: field 3d booted", await evalJs(`document.body.classList.contains("fx-on")`));
 check("about: choreography armed", await evalJs(`document.body.classList.contains("fx-dom")`));
+check("about: verbs marquee present", await evalJs(`!!document.querySelector(".ab-marquee__track")`));
+check("about: HUD readout mounted", await evalJs(`/^0[1-6] \\//.test(document.getElementById("abReadout")?.textContent || "")`));
+check("about: pulse underline drawn", await evalJs(`!!document.querySelector(".ab-pulsesvg path")`));
 check("about: boot loader auto-dismisses", !(await evalJs(`!!document.getElementById("abIntro")`)) || (await evalJs(`document.getElementById("abIntro").classList.contains("is-done")`)));
 check("about: hero manifesto present", (await evalJs(`document.querySelector(".ab-hero .ab-display")?.innerText.replace(/\\s+/g," ").trim()`)) === "We build software with a pulse.");
 check("about: 3 work rows with correct hrefs", (await evalJs(`[...document.querySelectorAll(".ab-row")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/anime.html,/blog/");
