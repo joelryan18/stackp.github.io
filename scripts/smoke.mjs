@@ -109,7 +109,7 @@ check("axon no3d not triggered", !(await evalJs(`document.body.classList.contain
 check("axon --faint token", (await evalJs(`getComputedStyle(document.documentElement).getPropertyValue("--faint").trim().toUpperCase()`)) === "#78828E");
 check("axon nav has Home + Stackime", (await evalJs(`[...document.querySelectorAll(".nav__links a")].map((a) => a.textContent).join(",")`)) === "Home,Platform,Process,Pricing,Stackime");
 
-/* ---- 2c · about page (Signal Field v2 instrument journey) ---- */
+/* ---- 2c · about page (Signal Field v3 in-world instrument journey) ---- */
 await go(BASE + "/about.html", 6500);
 check("about: fx canvas present", await evalJs(`!!document.querySelector("canvas.aboutfx")`));
 check("about: field 3d booted", await evalJs(`document.body.classList.contains("fx-on")`));
@@ -125,6 +125,9 @@ check("about: substantive copy", (await evalJs(`[...document.querySelectorAll(".
 check("about: chapter rail built", (await evalJs(`document.querySelectorAll(".ab-rail__dot").length`)) === 6);
 check("about: contact CTA", (await evalJs(`document.querySelector(".ab-cta__btn")?.getAttribute("href")`)) === "/contact.html");
 check("about: footer sitemap links", await evalJs(`["/privacy.html","/terms.html","/about.html","/contact.html","/axon.html","/anime.html","/blog/"].every((h) => !!document.querySelector('.hubfoot a[href="' + h + '"]'))`));
+check("about: sound toggle mounted", await evalJs(`!!document.getElementById("abSound")`));
+check("about: sound toggle flips", await evalJs(`(() => { const b = document.getElementById("abSound"); b.click(); const on = b.getAttribute("aria-pressed") === "true"; b.click(); return on; })()`));
+check("about: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("ab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 
 /* ---- 3 · consent gating ---- */
 await evalJs("localStorage.clear()");

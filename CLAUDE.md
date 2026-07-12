@@ -5,31 +5,83 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-10)
+## Current state (2026-07-12)
 
-- **About page "The Field" — Active Theory-style immersive rebuild SHIPPED
-  2026-07-10** (user top-priority ask: activetheory.net design language;
-  axon/homepage redesigns to be briefed later): `/about.html` is now the
-  **stackwith.me studio page** (was AXON-only doc page). New
-  `src/assets/js/about3d.js` ESM bundle (registered in build-assets esm build):
-  full-viewport curl-noise particle field on fixed `canvas#aboutfx` (pointer
-  repulsion, scroll lerps hues lime→magenta→cyan via the CH channel colors,
-  bloom+ACES), Lenis smooth scroll, `#abIntro` boot loader (wordmark+counter
-  ~1.65s, click-skip), IO reveals `[data-abreveal]`, chapter dot rail
-  `#abRail` (6 chapters), `.ab-row[data-ch]` work-row hover tints the field.
-  New `layouts/about.njk` (hub nav STACKWITH.ME brand + hubfoot footer),
-  7-chapter copy in `src/about.html` (manifesto "We build software with a
-  pulse." / who / work rows → axon+anime+blog / 3:14am origin / 4 principles
-  / contact CTA — old AXON copy folded in, not deleted), `/* ABOUT */` CSS
-  (`.ab-*`; `.ab-body::before{display:none}` since the loader replaces the
-  boot veil). Fallbacks: <680px / reduced-motion / GL-fail → `body.about-no3d`
-  static tri-hue scrim; no-JS unhides all. Smoke section 2c: 12 `about:`
-  checks ALL PASS (manifesto check uses `innerText` — `<br>` breaks
-  textContent). Verified live: /about.html 200, hashed about3d 200, hub/axon
-  untouched. Plan: `docs/superpowers/plans/2026-07-10-about-activetheory-redesign.md`.
-  GOTCHA: uncommitted homepage-gem WIP (index.html/hub3d.js/hub.njk/smoke
-  hub-check edits + `/* HUB v4 Studio */` CSS rewrite) pre-existed in the
-  worktree; it was stashed for the ship and restored after — still uncommitted.
+- **About page v3 "Signal Field — In-World" SHIPPED 2026-07-12** (user asked
+  for activetheory.net "similar but better, award-winning performance" using
+  the freshly installed award toolkit): built ON TOP of v2 in
+  `src/assets/js/about3d.js` (~1100 lines). New in v3: (1) **in-world SDF
+  typography** — troika-three-text ghost numerals 01–05 (outlined, fill .03 /
+  stroke .34) standing at each chapter's camera stop; font is
+  `src/assets/fonts/ClashDisplay-700.woff` (woff1 converted FROM the woff2
+  via fonttools — troika can't parse woff2; digits verified present); fade =
+  `cpEff = chapterProgress − 0.42` (probe sits 42% down the viewport — without
+  this offset "01" bleeds into the hero) with slope 2.0 and per-glyph `at`
+  (05 uses at:4.6, last chapter never reaches 5.42); body gets `ab-type-on`
+  on first sync; ALL wrapped try/catch = numerals are optional. (2) **master
+  grade pass** (WIP finished): fullscreen ShaderPass after OutputPass — CA,
+  cnoise corner glow tinted per chapter (CH_TINT/CH_BLOOM lerp), split-tone,
+  vignette, grain, breathing zoom, transition warp. (3) **fluid pointer
+  trail** — 128² 2D canvas wake → CanvasTexture (`tTrail`) sampled in the
+  grade pass; image warps along the trail's gradient + tint luminesce
+  (AT's fluid sim without float FBOs, swiftshader-safe). (4) **hero
+  instrument core** — vertex-noise-displaced icosahedron w/ thin-film fresnel
+  inside the torus, pointer proximity (NDC, no raycaster) ripples it.
+  **FIXED a live v2 bug found via DOM-dimmed QA shot: the loop assigned
+  `uOp.value = uOp.value * (1-heroBlend)` — self-multiplying uniform decayed
+  exponentially → the hero torus NEVER actually showed on v2.** Boot opacity
+  now lives in `bootState` {ring,core}, uniform = bootState × blend.
+  (5) **synth WebAudio sound design** — drone bed + bandpass shimmer,
+  channel-pitched hover blips (D5/F#5/A5), noise whoosh on `ab:chapter`
+  (markChapter now dispatches it), behind HUD pill `#abSound` (aria-pressed,
+  sits OUTSIDE aria-hidden `.ab-hud`, fixed bottom-center z13); default OFF,
+  pref in localStorage `ab-sound`, stored-on only ARMS until first
+  pointerdown (autoplay policy). DOM-level: works in no3d/reduced-motion.
+  (6) **adaptive quality governor** — frame-time EMA steps DPR through
+  QCAPS tiers w/ hysteresis+cooldown (`applyQ` also re-syncs uPx/uResolution;
+  resize handler must use `dprNow` not the boot DPR). Bundle 723KB min /
+  209KB gz (troika +~50KB gz). Smoke 2c = 18 `about:` checks (+sound
+  mounted/flips, in-world type booted via ab-type-on poll) — 211 PASS, only
+  standing failure is the pre-existing uncommitted HUB v4 WIP chip check.
+  QA driver: `/tmp/ab-qa3.mjs` (+`-mobile` variant); trick worth keeping:
+  dim `#main` + hide scrim before a shot to photograph the raw world.
+  Blender MCP was checked — addon still not connected in Blender, so the
+  core is procedural (no asset). v2 foundation below still accurate:
+
+- **About page v2 "Signal Field" — full morphing-world rebuild SHIPPED
+  2026-07-11** (user: v1 "looked old", wanted true activetheory.net level;
+  studied their live site + delivered bundle first — key insight: they run ONE
+  persistent 3D world whose camera travels between chapter scenes, content is
+  IN the world, not wallpaper behind it). `src/assets/js/about3d.js` fully
+  rewritten (~700 lines): one 62k-particle field (26k below 1100px/coarse)
+  morphs through SIX formations tied to chapters — ECG heartbeat wave →
+  core+tilted orbit → three braided channel strands → "3:14" glyphs (canvas
+  text sampling, JetBrains Mono via document.fonts.ready) → cubic lattice →
+  ∿ pulse mark. Morphing is vertex-attribute based (aT1..aT5 vec4 attrs =
+  pos+hue, per-particle staggered flight + mid-flight curl swarm) — NO
+  float-texture/GPGPU dependency, works on swiftshader. Keyframed Catmull-Rom
+  camera rig (KEYS per chapter; lookAt.x biased +2ish on copy chapters so the
+  formation sits screen-LEFT of the right-hand text column), shader DOF
+  (coc from uFocus, alpha/coc² so defocus dims — critical, else washout),
+  bokeh dust layer, iridescent fresnel torus in hero (rises away on scroll),
+  UnrealBloom 0.22. DOM chrome: shutter loader (big counter + scaleY panels,
+  GSAP char-stagger wordmark), corner-bracket HUD (`#abReadout` chapter +
+  `#abPct` scroll %), custom cursor (dot + lagging labelled ring,
+  `[data-cursor]`), outlined-text verbs marquee (scroll-velocity driven),
+  masked line-rise hero (`.ab-lnmask/.ab-ln`, JS-set initial states so no-JS
+  is safe) + stroke-drawn pulse underline SVG, scroll-velocity skewY on main,
+  magnetic CTA. Layout: chapters are `230px kicker | body` grid w/ sticky
+  kickers + `::before` radial vignette behind body text (legibility over
+  bright formations); principles = ledger rows; work-row hover dims siblings
+  + excites that channel's strand (uEx). Smoke 2c now 15 `about:` checks
+  (added marquee/HUD-readout/pulse-path) — suite 209/209 PASS. QA driver kept
+  at `/tmp/ab-qa.mjs`. Verified LIVE: body classes fx-on/ab-in, hero+origin
+  screenshots good, homepage untouched (hub3d.5XGXAZ7X). GOTCHAS: (a) global
+  `.page main{max-width:860px}` must be beaten by `.ab-body main.ab` (v1's
+  bare `.ab` selector silently lost → squeezed layout); (b) hero uses
+  Fable-set `white-space:nowrap` per line, dropped <680px; (c) the HUB v4
+  WIP was stashed during ship — `git checkout --theirs` conflict on generated
+  assets.json, resolved by rebuild; WIP restored, STILL uncommitted.
 
 - **Homepage v3 "The Spectrum" — WebGL 3D hero SHIPPED 2026-07-10**
   (user-requested "award-winning / 3D"): new `src/assets/js/hub3d.js` ESM bundle

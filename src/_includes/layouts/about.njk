@@ -22,7 +22,7 @@ bodyClass: page ab-body
 </div>
 
 <noscript><style>
-  .ab-intro, .ab-cursor, .ab-cursor-dot, .ab-hud, .ab-rail { display: none !important; }
+  .ab-intro, .ab-cursor, .ab-cursor-dot, .ab-hud, .ab-hud__sound, .ab-rail { display: none !important; }
   [data-abreveal], .ab-ln { opacity: 1 !important; transform: none !important; clip-path: none !important; }
   .ab-hero .ab-eyebrow, .ab-hero .ab-sub, .ab-hero .ab-cue { opacity: 1 !important; transform: none !important; }
   .aboutfx { display: none !important; }
@@ -48,6 +48,10 @@ bodyClass: page ab-body
   <span class="ab-hud__readout" id="abReadout">01 / MANIFESTO</span>
   <span class="ab-hud__pct"><b id="abPct">000</b> %</span>
 </div>
+<button class="ab-hud__sound" id="abSound" type="button" aria-pressed="false" aria-label="Toggle sound" data-cursor="SOUND">
+  <span class="ab-hud__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <span>SND</span>
+</button>
 
 <div class="ab-rail" id="abRail" aria-hidden="true"></div>
 

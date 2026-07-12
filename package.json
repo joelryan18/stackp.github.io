@@ -13,14 +13,22 @@
     "qa": "node scripts/qa-shots.mjs"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.19.3",
     "@studio-freight/lenis": "1.0.42",
     "@supabase/supabase-js": "2.110.0",
     "gsap": "3.12.5",
-    "three": "0.160.0"
+    "postprocessing": "^6.37.0",
+    "three": "0.160.0",
+    "three-mesh-bvh": "^0.9.11",
+    "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
+    "@gltf-transform/cli": "^4.4.1",
     "esbuild": "^0.21.5",
-    "html-minifier-terser": "^7.2.0"
+    "html-minifier-terser": "^7.2.0",
+    "lil-gui": "^0.21.0",
+    "lygia": "^1.4.1",
+    "stats-gl": "^4.2.3"
   }
 }
