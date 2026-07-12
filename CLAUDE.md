@@ -46,7 +46,21 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   QA driver: `/tmp/ab-qa3.mjs` (+`-mobile` variant); trick worth keeping:
   dim `#main` + hide scrim before a shot to photograph the raw world.
   Blender MCP was checked — addon still not connected in Blender, so the
-  core is procedural (no asset). v2 foundation below still accurate:
+  core is procedural (no asset). **Ship completed 2026-07-12 in a follow-up
+  session** (prior session ended after writing this note but before commit):
+  commit `9ce58aa`, HUB WIP stashed for the ship (smoke 212/212 ALL PASS with
+  it stashed), pushed, live-verified in a real browser (fx-on + ab-type-on
+  boot on https://stackwith.me/about.html, font/bundle 200, console clean,
+  homepage still Spectrum `hub3d.5XGXAZ7X`), WIP restored after.
+  **HUB v4 WIP WARNING (verified 2026-07-12): the WIP's CSS layer is GONE.**
+  `src/index.html` markup uses `hub__stack/hubchips/hubcard__viz/hub__sechead/
+  hub__grad/hub__hint` — zero rules for any of them in styles.css (the
+  "/* HUB v4 Studio */ CSS rewrite" from the 2026-07-10 note was lost in a
+  stash/conflict cycle). The WIP = new hero copy ("Build in public. Ship for
+  real."), sticky-stack cards, gem-polyhedron hub3d.js ("The Gem"), hub.njk
+  copy tweaks — but it renders UNSTYLED and fails smoke's chip check; the
+  CSS + smoke updates must be rebuilt before it can ship. v2 foundation
+  below still accurate:
 
 - **About page v2 "Signal Field" — full morphing-world rebuild SHIPPED
   2026-07-11** (user: v1 "looked old", wanted true activetheory.net level;
