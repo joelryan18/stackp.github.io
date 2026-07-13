@@ -5,7 +5,46 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-12)
+## Current state (2026-07-13)
+
+- **/lab.html "Deep Signal" SHIPPED 2026-07-13** (user pointed at igloo.inc:
+  "add this type of workflow, make it extreme"): commit `4e1d7cd`, live-verified
+  in a real browser (fx-on/lab-type-on boot, all 5 chapters advance, console
+  clean, homepage untouched on hub3d.5XGXAZ7X). The igloo formula: near-empty
+  DOM, ONE WebGL world — a five-chapter camera descent (SURFACE → DESCENT →
+  THE VEIN → THE CORE → RESURFACE) down a crystal shaft; ~1.6k instanced
+  shards GROW in per-instance as scroll passes their birth depth (uGrow =
+  0.6·boot + cp·0.9 vs aBirth attr). **First authored-asset pipeline on the
+  site** (everything else is procedural): `assets-src/lab/gen_crystals.py`
+  runs in headless Blender (6 convex-hull shard variants + bevelled gem, and
+  a Cycles-baked studio matcap) → `scripts/build-3d.mjs` (NOT part of npm
+  build; Blender+toktx are machine deps) → Draco glb 7.3KB + UASTC KTX2
+  232KB + Draco/Basis decoder runtimes, ALL COMMITTED under `src/assets/3d/`
+  (new eleventy passthrough). `lab3d.js` (~700 lines, new esm entry): matcap
+  ShaderMaterial w/ instanceMatrix + aTint/aBirth/aSeed attrs, near-camera
+  silhouette fade (`mix(0.12,1,smoothstep(0.9,3.4,length(vV)))` kills lens-
+  crossing flares), vein = 3 azimuth sectors tinted --ch0/1/2 at y −13..−27,
+  troika chapter names (fill .07/stroke .55, prox slope 2.2), REAL-progress
+  loader (LoadingManager), grade pass + governor + synth sound (drone filter
+  darkens with depth, key `lab-sound`) reused from about3d. Fallbacks:
+  <680/reduced/GL-or-asset-fail → `lab-no3d` styled reading article
+  (`.lab-fallback`, also the crawlable copy; noscript unhides). Smoke:
+  /lab.html in the section-1 page loop + section 2d (16 `lab:` checks incl.
+  glb/ktx2/decoder serving — use arrayBuffer().byteLength, the smoke server
+  sends no content-length) — suite ALL PASS with HUB WIP stashed. Sitemap
+  +lab.html. QA drivers `/tmp/lab-qa.mjs` (+`-live` variant, `--mobile`).
+  No hub card links to /lab yet (index.html is WIP-locked) — add one when
+  HUB v4 ships.
+  **CRITICAL BUG FIXED in the same ship (found reviewing lab, also live on
+  about): three's ShaderPass CLONES the uniforms of a plain shader object
+  (`UniformsUtils.clone`), so every render-loop write to the outer
+  gradeUniforms hit a dead copy — about v3's grade dynamics (uTime grain/
+  cnoise drift, uWarp, uTint chapter lerp, uMouse wake, tTrail fluid trail)
+  shipped FROZEN at boot values; stills looked right because static uniforms
+  (vignette/grain amount/initial tint) survive the clone. Fix: pass a real
+  `new THREE.ShaderMaterial({...})` to ShaderPass (adopted by reference).
+  Same silent-visual-no-op class as the v2 self-multiplying-uniform bug —
+  when a ShaderPass "works in stills", check the uniforms are actually live.**
 
 - **About page v3 "Signal Field — In-World" SHIPPED 2026-07-12** (user asked
   for activetheory.net "similar but better, award-winning performance" using
