@@ -1,10 +1,11 @@
 {
-  "styles": "/assets/styles.NUHM2ZJM.css",
+  "styles": "/assets/styles.CA2NAQXR.css",
   "main": "/assets/main.HJXOA52E.js",
   "consent": "/assets/consent.2ZTCJWOF.js",
   "checkout": "/assets/checkout.GUQWHE6B.js",
   "anime": "/assets/anime.DLDCLZAW.js",
   "neural3d": "/assets/neural3d.IMCOE7JC.js",
   "hub3d": "/assets/hub3d.5XGXAZ7X.js",
-  "about3d": "/assets/about3d.T43UFG7C.js"
+  "about3d": "/assets/about3d.ZHP2PCOJ.js",
+  "lab3d": "/assets/lab3d.PKEN34XC.js"
 }

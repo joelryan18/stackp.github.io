@@ -1,0 +1,68 @@
+---
+layout: layouts/base.njk
+bodyClass: page lab-body
+---
+<a class="skip-link" href="#main">Skip to content</a>
+
+<canvas class="labfx" id="labfx" aria-hidden="true"></canvas>
+
+<div class="lab-intro" id="labIntro" aria-hidden="true">
+  <div class="lab-intro__core">
+    <b class="lab-intro__word">DEEP&nbsp;SIGNAL</b>
+    <span class="lab-intro__tag">[ LAB · A DESCENT IN FIVE CHAPTERS ]</span>
+  </div>
+  <div class="lab-intro__meta">
+    <span class="lab-intro__pct">000</span>
+    <i class="lab-intro__bar"><b></b></i>
+    <em class="lab-intro__skip">CLICK TO SKIP</em>
+  </div>
+</div>
+
+<noscript><style>
+  .lab-intro, .lab-hud, .lab-hud__sound, .lab-cue, .labfx, .lab-end { display: none !important; }
+  .lab-fallback { display: block !important; }
+  .lab-track { display: none !important; }
+</style></noscript>
+
+<header class="nav is-scrolled lab-nav">
+  <a href="/" class="nav__brand" aria-label="stackwith.me home">
+    <span class="nav__mark" aria-hidden="true">
+      <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+    </span>
+    <span class="nav__word">STACKWITH.ME</span>
+  </a>
+  <nav class="nav__links" aria-label="Primary">
+    <a href="/blog/" data-index="01">Blog</a>
+    <a href="/about.html" data-index="02">About</a>
+    <a href="/contact.html" data-index="03">Contact</a>
+  </nav>
+</header>
+
+<div class="lab-hud" aria-hidden="true">
+  <i class="lab-hud__c lab-hud__c--tl"></i><i class="lab-hud__c lab-hud__c--tr"></i>
+  <i class="lab-hud__c lab-hud__c--bl"></i><i class="lab-hud__c lab-hud__c--br"></i>
+  <span class="lab-hud__readout" id="labReadout">00 / SURFACE</span>
+  <span class="lab-hud__pct">DEPTH <b id="labPct">000</b> %</span>
+</div>
+<button class="lab-hud__sound" id="labSound" type="button" aria-pressed="false" aria-label="Toggle sound">
+  <span class="lab-hud__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  <span>SND</span>
+</button>
+
+<div class="lab-cue" id="labCue" aria-hidden="true"><span></span>SCROLL TO DESCEND</div>
+
+<main id="main" class="lab">
+{{ content | safe }}
+</main>
+
+<div class="lab-end" id="labEnd">
+  <p class="lab-end__kicker">[ END OF DESCENT ]</p>
+  <h2>Built in the open,<br />like everything here.</h2>
+  <div class="lab-end__actions">
+    <a class="btn btn--signal" href="/about.html">Meet the studio</a>
+    <a class="btn btn--ghost" href="/">Back to the surface</a>
+  </div>
+</div>
+
+<script type="module" src="{{ assets.lab3d }}"></script>
+<script src="{{ assets.consent }}" defer></script>

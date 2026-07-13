@@ -1,0 +1,22 @@
+---
+layout: layouts/lab.njk
+title: "Lab · Deep Signal — stackwith.me"
+description: "Deep Signal: a WebGL descent through a growing crystal shaft — the stackwith.me lab experiment built with baked Blender assets, Draco geometry and KTX2 textures."
+permalink: "lab.html"
+navCurrent: lab
+---
+<!-- scroll track — five chapters of world; the WebGL layer is the content -->
+<div class="lab-track" aria-hidden="true"></div>
+
+<!-- DOM fallback + crawlable content: shown on no-JS, reduced-motion,
+     small screens, or any GL/asset failure -->
+<article class="lab-fallback">
+  <p class="lab-fallback__eyebrow">[ LAB · 01 ]</p>
+  <h1>Deep Signal</h1>
+  <p class="lab-fallback__lede">A descent through a growing crystal shaft — five chapters straight down, from the frozen surface to a beating core and back up into the light. This is the stackwith.me lab: one WebGL world, no page around it.</p>
+  <div class="lab-fallback__body">
+    <p>Unlike everything else on this domain, Deep Signal is built from <b>authored, baked assets</b> rather than procedural geometry. Six crystal shard variants and a bevelled hero gem are modelled headlessly in Blender, exported to glTF, and Draco-compressed to seven kilobytes. The entire lighting model is a single studio matcap baked in Cycles and shipped as a KTX2 texture. At runtime, ~1,600 instanced shards grow out of the shaft wall as you scroll past their birth depth — the same trick that makes igloo.inc's crystals feel alive.</p>
+    <p>The rest of the instrument panel is shared with the <a href="/about.html">About journey</a>: a keyframed camera on a Catmull-Rom rail, in-world SDF typography, a filmic master grade with per-chapter color, a synthesized soundscape behind the SND toggle, and an adaptive quality governor that trades resolution for frame time on whatever machine is in front of it.</p>
+    <p>Your browser is showing the reading version — the full descent needs WebGL, motion, and a viewport wider than 680px. The engineering notes behind this build land on <a href="/blog/">the blog</a>.</p>
+  </div>
+</article>

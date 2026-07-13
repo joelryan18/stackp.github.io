@@ -883,7 +883,11 @@ function start() {
     uContact: { value: 0.0 },
     uTint: { value: new THREE.Color(0.42, 0.62, 0.32) },
   };
-  const gradePass = new ShaderPass({
+  /* NOTE: ShaderPass CLONES the uniforms of a plain shader object —
+     every loop write (uTime/uWarp/uTint/uMouse/tTrail…) would hit a
+     dead copy and the grade would freeze at boot values. A real
+     ShaderMaterial is adopted by reference instead. */
+  const gradePass = new ShaderPass(new THREE.ShaderMaterial({
     uniforms: gradeUniforms,
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
     fragmentShader: /* glsl */ `
@@ -966,7 +970,7 @@ function start() {
 
         gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
       }`,
-  });
+  }));
   gradePass.renderToScreen = true;
 
   const composer = new EffectComposer(renderer);

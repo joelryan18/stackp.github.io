@@ -1245,3 +1245,139 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
   .ab-hud__sound.is-on .ab-hud__eq i { animation: none; height: 8px; }
   .ab-pulsesvg path { stroke-dashoffset: 0 !important; }
 }
+
+/* ============================================================
+   LAB — "Deep Signal" (/lab.html): the igloo-style empty-body
+   experience. The DOM is chrome only (loader, HUD, end card);
+   the content IS the WebGL world. .lab-track supplies scroll
+   length; .lab-fallback is the crawlable reading version shown
+   on no-JS / reduced-motion / <680px / GL-or-asset failure.
+   ============================================================ */
+.lab-body {
+  --lbg: #030509; --link: #EFF4FA; --ldim: #A9B6C6; --lfaint: #64707F;
+  --ch0: #B8FF3C; --ch1: #FF4FA3; --ch2: #4FC4FF;
+  --lline: rgba(210,228,248,.10); --lline2: rgba(210,228,248,.2);
+  --lease: cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--lbg); color: var(--link);
+}
+.lab-body::before { display: none; } /* the lab-intro loader owns the entrance */
+/* film grain */
+.lab-body::after { content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); }
+.lab-body ::selection { background: var(--ch2); color: #041018; }
+.lab-body .nav { background: transparent; border-bottom-color: transparent; }
+.lab-body .nav__mark { color: var(--ch2); }
+/* .page main sets max-width:860px — the lab must escape it */
+.lab-body main.lab { max-width: none; padding: 0; margin: 0; }
+.lab-body .nav { position: fixed; z-index: 12; }
+
+.labfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.lab-no3d .labfx { display: none; }
+.lab-no3d.lab-body {
+  background:
+    radial-gradient(60% 45% at 20% 10%, rgba(79,196,255,.09), transparent 60%),
+    radial-gradient(55% 40% at 80% 45%, rgba(255,79,163,.06), transparent 60%),
+    radial-gradient(60% 45% at 50% 95%, rgba(184,255,60,.07), transparent 60%),
+    var(--lbg);
+}
+
+/* scroll track — pure length, one viewport per chapter + slack */
+.lab-track { height: 520vh; }
+.lab-no3d .lab-track { display: none; }
+
+/* boot loader */
+.lab-intro { position: fixed; inset: 0; z-index: 500; cursor: pointer; background: #04060B;
+  transition: opacity .9s var(--lease), visibility 0s 1.1s; }
+.lab-intro.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.lab-intro__core { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center;
+  gap: 1.1rem; text-align: center; transition: opacity .45s var(--lease); }
+.lab-intro.is-done .lab-intro__core, .lab-intro.is-done .lab-intro__meta { opacity: 0; }
+.lab-intro__word { font-family: var(--display); font-weight: 600; letter-spacing: .34em; text-indent: .34em;
+  font-size: clamp(1.15rem, 3vw, 1.9rem); color: var(--link); overflow: hidden; display: block; }
+.lab-intro__word i { display: inline-block; font-style: normal; will-change: transform; }
+.lab-intro__tag { font-family: var(--mono); font-size: .6rem; letter-spacing: .3em; color: var(--lfaint); }
+.lab-intro__meta { position: absolute; left: clamp(1.2rem, 4vw, 3rem); right: clamp(1.2rem, 4vw, 3rem); bottom: clamp(1.2rem, 4vh, 2.6rem);
+  display: flex; align-items: baseline; gap: 1.6rem; transition: opacity .45s var(--lease); }
+.lab-intro__pct { font-family: var(--display); font-weight: 600; font-size: clamp(2.6rem, 7vw, 5rem);
+  letter-spacing: -0.02em; color: var(--link); font-variant-numeric: tabular-nums; line-height: 1; }
+.lab-intro__bar { flex: 1; height: 1px; background: var(--lline); position: relative; }
+.lab-intro__bar b { position: absolute; inset: 0; background: var(--ch2); transform: scaleX(0); transform-origin: 0 50%;
+  box-shadow: 0 0 12px rgba(79,196,255,.6); }
+.lab-intro__skip { font-family: var(--mono); font-style: normal; font-size: .58rem; letter-spacing: .26em; color: var(--lfaint); }
+
+/* HUD chrome */
+.lab-hud { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
+.lab-hud__c { position: absolute; width: 15px; height: 15px; border: 0 solid var(--lline2); opacity: .9; }
+.lab-hud__c--tl { top: 74px; left: 20px; border-top-width: 1px; border-left-width: 1px; }
+.lab-hud__c--tr { top: 74px; right: 20px; border-top-width: 1px; border-right-width: 1px; }
+.lab-hud__c--bl { bottom: 20px; left: 20px; border-bottom-width: 1px; border-left-width: 1px; }
+.lab-hud__c--br { bottom: 20px; right: 20px; border-bottom-width: 1px; border-right-width: 1px; }
+.lab-hud__readout { position: absolute; left: 44px; bottom: 22px; font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .22em; color: var(--ldim); }
+.lab-hud__pct { position: absolute; right: 44px; bottom: 22px; font-family: var(--mono); font-size: .6rem;
+  letter-spacing: .22em; color: var(--lfaint); }
+.lab-hud__pct b { color: var(--ldim); font-weight: 500; font-variant-numeric: tabular-nums; }
+.lab-no3d .lab-hud { display: none; }
+
+/* sound pill — OUTSIDE the aria-hidden HUD (it's interactive) */
+.lab-hud__sound { position: fixed; left: 50%; bottom: 15px; transform: translateX(-50%); z-index: 13;
+  display: inline-flex; align-items: center; gap: .5rem; padding: .42rem .8rem;
+  background: rgba(6,10,16,.55); border: 1px solid var(--lline); border-radius: 999px;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .24em; color: var(--lfaint);
+  cursor: pointer; backdrop-filter: blur(6px); transition: color .3s, border-color .3s; }
+.lab-hud__sound:hover { border-color: var(--lline2); color: var(--ldim); }
+.lab-hud__sound.is-on { color: var(--ch2); border-color: rgba(79,196,255,.4); }
+.lab-hud__sound.is-armed { color: var(--ldim); }
+.lab-hud__eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
+.lab-hud__eq i { width: 2px; height: 3px; background: currentColor; }
+.lab-hud__sound.is-on .lab-hud__eq i { animation: labEq 1s ease-in-out infinite; }
+.lab-hud__sound.is-on .lab-hud__eq i:nth-child(2) { animation-delay: .15s; }
+.lab-hud__sound.is-on .lab-hud__eq i:nth-child(3) { animation-delay: .3s; }
+.lab-hud__sound.is-on .lab-hud__eq i:nth-child(4) { animation-delay: .45s; }
+@keyframes labEq { 0%, 100% { height: 3px; } 50% { height: 10px; } }
+.lab-no3d .lab-hud__sound { display: none; }
+
+/* scroll cue */
+.lab-cue { position: fixed; left: 50%; bottom: 54px; transform: translateX(-50%); z-index: 12; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: .55rem;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .3em; color: var(--ldim);
+  transition: opacity .6s var(--lease); }
+.lab-cue span { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, var(--ch2));
+  animation: labCue 1.8s ease-in-out infinite; }
+@keyframes labCue { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; }
+  55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+.lab-cue.is-gone { opacity: 0; }
+.lab-no3d .lab-cue { display: none; }
+
+/* end card — fades in over the final chapter */
+.lab-end { position: fixed; inset: 0; z-index: 11; display: grid; place-content: center; justify-items: center;
+  gap: 1.1rem; text-align: center; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .9s var(--lease), visibility 0s .9s; }
+.lab-end.is-live { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .9s var(--lease); }
+.lab-end__kicker { font-family: var(--mono); font-size: .6rem; letter-spacing: .3em; color: var(--ch0); }
+.lab-end h2 { font-family: var(--display); font-weight: 600; font-size: clamp(1.8rem, 4.6vw, 3.4rem);
+  line-height: 1.08; letter-spacing: -0.02em; text-shadow: 0 2px 30px rgba(3,5,9,.9); }
+.lab-end__actions { display: flex; gap: .9rem; flex-wrap: wrap; justify-content: center; margin-top: .4rem; }
+.lab-no3d .lab-end { display: none; }
+
+/* fallback article — the reading version */
+.lab-fallback { display: none; position: relative; z-index: 3; max-width: 720px; margin: 0 auto;
+  padding: 9rem clamp(1.2rem, 4vw, 2rem) 5rem; }
+.lab-no3d .lab-fallback { display: block; }
+.lab-fallback__eyebrow { font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; color: var(--ch2); margin-bottom: 1rem; }
+.lab-fallback h1 { font-family: var(--display); font-weight: 600; font-size: clamp(2.4rem, 6vw, 4.4rem);
+  letter-spacing: -0.02em; line-height: 1.04; margin-bottom: 1.2rem; }
+.lab-fallback__lede { font-size: 1.12rem; color: var(--ldim); line-height: 1.6; margin-bottom: 2rem; }
+.lab-fallback__body p { color: var(--ldim); margin-bottom: 1.2rem; }
+.lab-fallback__body a { color: var(--ch2); border-bottom: 1px solid rgba(79,196,255,.35); }
+.lab-fallback__body b { color: var(--link); }
+
+@media (max-width: 680px) {
+  .lab-hud { display: none; }
+  .lab-hud__sound { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lab-intro { display: none; }
+  .lab-cue span { animation: none; }
+  .lab-hud__sound.is-on .lab-hud__eq i { animation: none; height: 8px; }
+}

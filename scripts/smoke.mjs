@@ -13,7 +13,7 @@ const CDP_PORT = 9333;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const BASE = process.env.SMOKE_BASE || `http://localhost:${PORT}`;
 
-const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".xml": "application/xml", ".txt": "text/plain", ".json": "application/json", ".mp4": "video/mp4" };
+const MIME = { ".html": "text/html", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript", ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".woff": "font/woff", ".xml": "application/xml", ".txt": "text/plain", ".json": "application/json", ".mp4": "video/mp4", ".glb": "model/gltf-binary", ".ktx2": "image/ktx2", ".wasm": "application/wasm" };
 const server = createServer(async (req, res) => {
   let p = decodeURIComponent(new URL(req.url, BASE).pathname);
   if (p.endsWith("/")) p += "index.html";
@@ -72,7 +72,7 @@ let failed = 0;
 const check = (name, ok, extra = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  " + extra}`); if (!ok) failed++; };
 
 /* ---- 1 · every page loads clean, correct head, no ads before consent ---- */
-for (const p of ["/", "/axon.html", "/about.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
+for (const p of ["/", "/axon.html", "/about.html", "/lab.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
   await metrics(1440, 900);
   await go(BASE + p, 3200);
   check(`${p} no JS exceptions`, exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -128,6 +128,29 @@ check("about: footer sitemap links", await evalJs(`["/privacy.html","/terms.html
 check("about: sound toggle mounted", await evalJs(`!!document.getElementById("abSound")`));
 check("about: sound toggle flips", await evalJs(`(() => { const b = document.getElementById("abSound"); b.click(); const on = b.getAttribute("aria-pressed") === "true"; b.click(); return on; })()`));
 check("about: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("ab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+
+/* ---- 2d · lab page (Deep Signal — baked-asset WebGL descent) ---- */
+await go(BASE + "/lab.html", 4000);
+check("lab: fx canvas present", await evalJs(`!!document.querySelector("canvas.labfx")`));
+// glb + ktx2 load async — poll for the boot class instead of a fixed sleep
+check("lab: world booted from baked assets", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("fx-on") ? res(true) : (document.body.classList.contains("lab-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("lab: boot loader auto-dismisses", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => { const i = document.getElementById("labIntro"); (!i || i.classList.contains("is-done")) ? res(true) : (Date.now() - t0 > 12000 ? res(false) : setTimeout(poll, 250)); }; poll(); })`));
+check("lab: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("lab: HUD readout mounted", await evalJs(`/^0[0-4] \\//.test(document.getElementById("labReadout")?.textContent || "")`));
+check("lab: scroll track is a descent", await evalJs(`document.documentElement.scrollHeight >= innerHeight * 4.5`));
+check("lab: draco glb served", await evalJs(`fetch("/assets/3d/lab-crystals.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 4000)`));
+check("lab: ktx2 matcap served", await evalJs(`fetch("/assets/3d/lab-matcap.ktx2").then((r) => r.ok)`));
+check("lab: draco decoder served", await evalJs(`fetch("/assets/3d/draco/draco_decoder.wasm").then((r) => r.ok)`));
+check("lab: basis transcoder served", await evalJs(`fetch("/assets/3d/basis/basis_transcoder.wasm").then((r) => r.ok)`));
+check("lab: sound toggle mounted", await evalJs(`!!document.getElementById("labSound")`));
+check("lab: sound toggle flips", await evalJs(`(() => { const b = document.getElementById("labSound"); b.click(); const on = b.getAttribute("aria-pressed") === "true"; b.click(); return on; })()`));
+check("lab: fallback article substantive", (await evalJs(`document.querySelector(".lab-fallback")?.textContent.trim().length`)) >= 400);
+check("lab: end card links", (await evalJs(`[...document.querySelectorAll(".lab-end a")].map((a) => a.getAttribute("href")).join(",")`)) === "/about.html,/");
+await evalJs(`(() => { const y = document.documentElement.scrollHeight - innerHeight; scrollTo(0, y); window.__labLenis && window.__labLenis.scrollTo(y, { immediate: true }); })()`);
+await sleep(1800);
+check("lab: descent reaches RESURFACE", (await evalJs(`document.getElementById("labReadout")?.textContent`)) === "04 / RESURFACE", String(await evalJs(`document.getElementById("labReadout")?.textContent`)));
+check("lab: end card goes live", await evalJs(`document.getElementById("labEnd").classList.contains("is-live")`));
+await evalJs(`scrollTo(0, 0); window.__labLenis && window.__labLenis.scrollTo(0, { immediate: true })`);
 
 /* ---- 3 · consent gating ---- */
 await evalJs("localStorage.clear()");
