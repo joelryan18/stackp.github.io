@@ -5,7 +5,57 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-13)
+## Current state (2026-07-15)
+
+- **About page v4 "Signal Field — Calibrated" SHIPPED 2026-07-15** (user:
+  "professional god level peak, add more detailing"): commit `fe690cd`, built
+  ON TOP of v3 — additive detailing chosen by a 4-designer/2-judge workflow
+  (saved: `.claude/workflows/about-v4-design-panel.js`; killed: hero char
+  physics [smoke-pinned string], in-world specimen plaques [illegible behind
+  DOF], scramble-everywhere, fake threshold-mapped loader lines). Shipped:
+  (a) WORLD — signal-life packets per formation in the points vertex shader
+  (`life(k, target)` evaluated on BOTH hand-off endpoints, blended by e, else
+  it flickers; colon of "3:14" blinks at 1Hz at x≈−0.97 — derived from
+  JetBrains Mono 0.6em advance, verify visually if font changes), global
+  heartbeat `beatState` sampled from the SAME `ecgY()` the particles form
+  (peak-hold decay; drives ring rim-flash/bloom/backdrop shaft/field sway,
+  ~50BPM at t*9.2), per-chapter backdrop relighting (uShaftY per chapter +
+  grade tint shared), reformation shockwave (uWaveT reset on hand-off),
+  rack-focus overshoot (`focus + chapterPulse*?` — folded into bloom target,
+  never self-multiplied), ring bezel graduations (smoothstep-on-cos, no
+  moiré; needle idea dropped — parented to a spinning ring it would LIE).
+  (b) HUD — real boot log (`bootLog()` dispatches `ab:boot` at true init
+  milestones w/ real ms + GPU name via WEBGL_debug_renderer_info; loader
+  prints last 3, no-ops after is-done), live telemetry `#abTelem` (real
+  N/FPS/Q-tier @2Hz — honestly reads 12 FPS · Q:LO on swiftshader, that IS
+  the P·04 brand), formation plaque `#abPlaque` + readout scramble (ONE
+  shared `scramble()` util = single decode locus; first markChapter paint is
+  INSTANT — smoke pins `/^0[1-6] \//`; plaque gated on fx-on so no3d never
+  claims a formation it isn't rendering, seeded at end of start()),
+  chapter-tinted bracket flash + rail accent via `--abAccent` on :root,
+  spooling % (gsap.ticker lerp; instant under reduced) + hairline
+  `#abHair` w/ ticks at REAL chTops offsets (placed in measureChapters),
+  rail depth-gauge spine + hover labels. (c) SOUND — AnalyserNode inserted
+  master→analyser→destination drives the 4 EQ bars for real (`.is-live`
+  disables the CSS-keyframe fake meter; rAF stops when off), per-chapter
+  drone key (`setTargetAtTime` ratios), stereo-panned channel blips.
+  (d) CONTENT — work-row ship ledger (`.ab-row__meta`; Stackime date
+  2026-07-08 verified in git; ≤860px grid-template-areas gained a "meta"
+  row), principle proof links (3 blog posts map 1:1 by name + axon
+  #datasheet — smoke asserts exact hrefs), rail marginalia
+  (`.ab-kicker__note`, sticky under kickers), colophon `.ab-colophon`
+  (plain div — [data-abchapter] count stays 6; static copy says "UP TO
+  62,000", JS refines to exact N only when the world boots — stays true
+  no-JS/no3d), marquee ink fill (`--mink` written in the SAME ticker as the
+  x transform; span color `rgb(244 245 247 / var(--mink,0))`), exit-and-
+  return underline on .ab-copy links. Desktop `.ab-row` gap became
+  `.8rem 1.6rem` (row-gap for the meta line). Smoke 2c = 26 `about:` checks
+  (+8 v4) — suite ALL PASS with HUB WIP stashed. Live-verified in real
+  Chrome (fx-on/ab-type-on on stackwith.me, console clean, colophon shows
+  exact 62,000, homepage untouched hub3d.5XGXAZ7X). QA driver
+  `/tmp/ab-qa4.mjs` (`--mobile`/`--live`/`--dim`). HUB WIP stash-popped
+  after ship (assets.json conflict → rebuild, same as v3 ship) — WIP still
+  uncommitted, its CSS layer still MISSING (see warning below).
 
 - **/lab.html "Deep Signal" SHIPPED 2026-07-13** (user pointed at igloo.inc:
   "add this type of workflow, make it extreme"): commit `4e1d7cd`, live-verified
