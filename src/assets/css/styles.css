@@ -995,11 +995,14 @@ body.fx-dom [data-hubreveal].in { opacity: 1; transform: none; }
 }
 
 /* ============================================================
-   ABOUT (stackwith.me studio page) · "The Signal Field v2"
-   Instrument-journey page: morphing particle world (about3d.js),
-   shutter boot loader, HUD chrome, custom cursor, velocity
-   marquee, masked line-rise hero, sticky kickers, ledger
-   principles. Fallback: body.about-no3d static tri-hue scrim.
+   ABOUT (stackwith.me studio page) · "The Signal Field v4 —
+   Calibrated". Instrument-journey page: morphing particle world
+   (about3d.js), shutter boot loader w/ real boot log, HUD chrome
+   (live telemetry, formation plaque, chapter hairline, rail scale),
+   custom cursor w/ channel tint, velocity marquee w/ ink fill,
+   sticky kickers + engraved marginalia, ledger principles w/ proof
+   receipts, work-row ship ledger, self-measuring colophon.
+   Fallback: body.about-no3d static tri-hue scrim.
    ============================================================ */
 .ab-body {
   --abg: #07080A; --aink: #F4F5F7; --adim: #A9B1BD; --afaint: #6B7380;
@@ -1164,14 +1167,16 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .ab-marquee__track { display: flex; white-space: nowrap; width: max-content; will-change: transform;
   animation: abMarq 36s linear infinite; }
 .ab-marquee.is-js .ab-marquee__track { animation: none; }
+/* verbs are outlined at rest; the reader's real scroll energy floods
+   them with ink (--mink is written by the same ticker that moves x) */
 .ab-marquee__track span { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 4.6vw, 3.6rem);
-  letter-spacing: .04em; line-height: 1.1; color: transparent; -webkit-text-stroke: 1px rgba(244,245,247,.30); }
+  letter-spacing: .04em; line-height: 1.1; color: rgb(244 245 247 / var(--mink, 0)); -webkit-text-stroke: 1px rgba(244,245,247,.30); }
 @keyframes abMarq { to { transform: translateX(-50%); } }
 
 /* ---------- work rows ---------- */
 .ab-chapter--work .ab-chapter__body { min-width: 0; }
 .ab-rows { border-top: 1px solid var(--aline); }
-.ab-row { display: grid; grid-template-columns: 5.5rem minmax(200px, 1fr) 1.35fr 3.4rem; align-items: center; gap: 1.6rem;
+.ab-row { display: grid; grid-template-columns: 5.5rem minmax(200px, 1fr) 1.35fr 3.4rem; align-items: center; gap: .8rem 1.6rem;
   padding: 2.6rem .6rem; border-bottom: 1px solid var(--aline); text-decoration: none; color: inherit;
   position: relative; transition: padding .45s var(--aease), opacity .45s var(--aease); }
 .ab-row::before { content: ""; position: absolute; inset: 0; opacity: 0;
@@ -1220,17 +1225,110 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .ab-body .btn--signal { background: var(--ch0); border-color: var(--ch0); color: #0A0E04; }
 .ab-body .btn--signal:hover { box-shadow: 0 0 38px rgba(184,255,60,.45); }
 
+/* ---------- v4 "Calibrated" detailing ---------- */
+/* loader boot log — real init milestones, real timestamps */
+.ab-intro__log { position: absolute; left: clamp(1.2rem, 4vw, 3rem); right: clamp(1.2rem, 4vw, 3rem);
+  bottom: calc(clamp(1.2rem, 4vh, 2.6rem) + 5.6rem); display: flex; flex-direction: column; gap: .34rem;
+  font-family: var(--mono); font-size: .56rem; letter-spacing: .18em; color: var(--afaint);
+  text-align: left; min-height: 2.4rem; justify-content: flex-end; transition: opacity .45s var(--aease); }
+.ab-intro__log span { opacity: .45; }
+.ab-intro__log span:last-child { opacity: 1; color: var(--adim); }
+.ab-intro.is-done .ab-intro__log { opacity: 0; }
+
+/* HUD second line: formation plaque (left) + live telemetry (right) */
+.ab-hud__plaque { position: absolute; left: 44px; bottom: 40px; font-family: var(--mono);
+  font-size: .56rem; letter-spacing: .24em; color: var(--afaint); }
+.ab-hud__telem { position: absolute; right: 44px; bottom: 40px; font-family: var(--mono);
+  font-size: .56rem; letter-spacing: .24em; color: var(--afaint); font-variant-numeric: tabular-nums; text-align: right; }
+.about-no3d .ab-hud__plaque, .about-no3d .ab-hud__telem { display: none; }
+
+/* HUD hairline — the loader bar reborn as permanent chrome; the tick
+   marks sit at the REAL chapter offsets (JS-measured, not even) */
+.ab-hud__hair { position: absolute; left: 240px; right: 240px; bottom: 27px; height: 1px; background: var(--aline); }
+.ab-hud__hair b { position: absolute; inset: 0; background: var(--abAccent, var(--ch0));
+  transform: scaleX(0); transform-origin: 0 50%; box-shadow: 0 0 8px rgba(184,255,60,.35); }
+.ab-hud__hair s { position: absolute; top: -2px; width: 1px; height: 5px; background: var(--aline2); }
+
+/* corner brackets flash the incoming chapter's tint on hand-off */
+.ab-hud.is-flash .ab-hud__c { animation: abHudFlash .9s var(--aease); }
+@keyframes abHudFlash {
+  0% { border-color: var(--abAccent, var(--aline2)); width: 21px; height: 21px; opacity: 1; }
+  100% { border-color: var(--aline2); width: 15px; height: 15px; opacity: .9; }
+}
+
+/* chapter rail → calibrated depth gauge: spine + fill + micro labels */
+.ab-rail__spine { position: absolute; left: 50%; top: -16px; bottom: -16px; width: 1px;
+  transform: translateX(-50%); background: var(--aline); pointer-events: none; }
+.ab-rail__spine b { position: absolute; inset: 0; background: var(--abAccent, var(--ch0));
+  transform: scaleY(0); transform-origin: 50% 0; box-shadow: 0 0 10px rgba(184,255,60,.3); }
+.ab-rail__dot { position: relative; z-index: 1; }
+.ab-rail__dot.is-active { background: var(--abAccent, var(--ch0));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--abAccent, var(--ch0)) 55%, transparent); }
+.ab-rail__lbl { position: absolute; right: 16px; top: 50%; transform: translate(6px, -50%);
+  font-family: var(--mono); font-size: .53rem; letter-spacing: .22em; color: var(--afaint);
+  white-space: nowrap; opacity: 0; transition: opacity .3s var(--aease), transform .3s var(--aease); pointer-events: none; }
+.ab-rail__dot:hover .ab-rail__lbl, .ab-rail__dot.is-active .ab-rail__lbl { opacity: 1; transform: translate(0, -50%); }
+.ab-rail__dot.is-active .ab-rail__lbl { color: var(--adim); }
+@media (hover: none) { .ab-rail__lbl { display: none; } }
+
+/* SND pill: when the analyser is live the bars are a REAL meter */
+.ab-hud__sound.is-live .ab-hud__eq i { animation: none; height: 10px;
+  transform: scaleY(.2); transform-origin: bottom; transition: transform .09s linear; }
+
+/* cursor reticle takes the hovered channel's color */
+.ab-cursor.is-hover::before { border-color: color-mix(in srgb, var(--curc, var(--ch0)) 65%, transparent);
+  background: color-mix(in srgb, var(--curc, var(--ch0)) 6%, transparent); }
+.ab-cursor__label { color: var(--curc, var(--ch0)); }
+
+/* copy links: underline exits right, returns left (still underlined at rest) */
+.ab-copy a { text-decoration: none; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; padding-bottom: 2px; }
+@media (hover: hover) { .ab-copy a:hover { animation: abLink .7s var(--aease); } }
+@keyframes abLink {
+  0% { background-size: 100% 1px; background-position: 100% 100%; }
+  48% { background-size: 0 1px; background-position: 100% 100%; }
+  52% { background-size: 0 1px; background-position: 0 100%; }
+  100% { background-size: 100% 1px; background-position: 0 100%; }
+}
+
+/* engraved marginalia riding each sticky kicker */
+.ab-kicker__note { position: sticky; top: calc(38vh + 4.6rem); margin: 0; font-family: var(--mono);
+  font-size: .56rem; letter-spacing: .3em; color: var(--afaint); opacity: .7; }
+
+/* work-row ship ledger */
+.ab-row__meta { grid-column: 2 / -1; font-family: var(--mono); font-size: .58rem; letter-spacing: .26em;
+  color: var(--afaint); opacity: .55; transition: opacity .45s var(--aease), color .45s var(--aease); }
+@media (hover: hover) { .ab-row:hover .ab-row__meta { opacity: 1; color: var(--rowc, var(--ch0)); } }
+
+/* principle proof receipts — every belief links to its published proof */
+.ab-principle__ref { display: block; width: fit-content; margin-top: .8rem; font-family: var(--mono);
+  font-size: .58rem; letter-spacing: .26em; color: var(--afaint); text-decoration: none;
+  transition: color .35s var(--aease); }
+.ab-principle__ref:hover, .ab-principle:hover .ab-principle__ref { color: var(--ch0); }
+
+/* colophon — the page closes by measuring itself */
+.ab-colophon { max-width: 1340px; margin: 0 auto; padding: 2.8rem clamp(20px, 4.5vw, 56px) 3.6rem;
+  border-top: 1px solid var(--aline); text-align: center; position: relative; z-index: 3; }
+.ab-colophon__title { font-family: var(--mono); font-size: .6rem; letter-spacing: .34em; color: var(--ch0); margin: 0 0 1.3rem; }
+.ab-colophon__title::after { content: ""; display: block; width: 34px; height: 1px; background: var(--aline2); margin: 1rem auto 0; }
+.ab-colophon__line { font-family: var(--mono); font-size: .64rem; letter-spacing: .22em; color: var(--adim);
+  margin: .55rem 0; line-height: 2; }
+.ab-colophon__line span { color: var(--aink); }
+.ab-colophon__note { font-size: .82rem; color: var(--afaint); margin: 1.4rem 0 0; }
+
 /* ---------- responsive + motion ---------- */
 @media (max-width: 980px) {
   .ab-chapter { grid-template-columns: 1fr; gap: 1.2rem; }
   .ab-chapter__rail .ab-kicker { position: static; }
+  .ab-chapter__rail .ab-kicker__note { position: static; margin: .4rem 0 .6rem; }
   .ab-principle { grid-template-columns: 5rem 1fr; }
   .ab-principle p { grid-column: 2; }
 }
 @media (max-width: 860px) {
-  .ab-row { grid-template-columns: 1fr 2.6rem; grid-template-areas: "num arrow" "name arrow" "desc arrow"; row-gap: .55rem; }
+  .ab-row { grid-template-columns: 1fr 2.6rem; grid-template-areas: "num arrow" "name arrow" "desc arrow" "meta arrow"; row-gap: .55rem; }
   .ab-row__num { grid-area: num; } .ab-row__name { grid-area: name; }
   .ab-row__desc { grid-area: desc; } .ab-row__arrow { grid-area: arrow; }
+  .ab-row__meta { grid-area: meta; }
+  .ab-rail__lbl { display: none; }
   .ab-rail { right: .55rem; }
   .ab-hud { display: none; }
   .ab-hud__sound { bottom: 10px; }

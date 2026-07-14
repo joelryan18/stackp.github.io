@@ -31,6 +31,39 @@ const hoverFine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 /* channel palette — mirrors --ch0/1/2 tokens (lime / magenta / cyan) */
 const CH = [new THREE.Color(0xb8ff3c), new THREE.Color(0xff4fa3), new THREE.Color(0x4fc4ff)];
 
+/* per-chapter accent hexes for DOM chrome (rail dot, bracket flash) —
+   CSS-space mirror of the grade pass CH_TINT ramp */
+const CH_HEX = ["#A9C77F", "#B8FF3C", "#A79ED9", "#FF4FA3", "#4FC4FF", "#A8C79E"];
+
+/* boot log — real init milestones stamped with real elapsed ms.
+   start() dispatches ab:boot as work actually completes; the loader
+   prints them. Once the loader dismisses this becomes a no-op. */
+const bootT0 = performance.now();
+const bootLog = (msg) =>
+  dispatchEvent(new CustomEvent("ab:boot", { detail: `${String(Math.round(performance.now() - bootT0)).padStart(4, "0")}MS · ${msg}` }));
+
+/* one shared text scramble — the page's single decode signature.
+   Settles left-to-right over ~600ms; instant under reduced motion. */
+const scrambleHandles = new WeakMap();
+const scramble = (el, text) => {
+  if (!el) return;
+  if (reduced || document.hidden) { el.textContent = text; return; }
+  cancelAnimationFrame(scrambleHandles.get(el) || 0);
+  const GLYPHS = "—/·<>#01";
+  const t0 = performance.now();
+  const tick = () => {
+    const k = Math.min(1, (performance.now() - t0) / 600);
+    const settled = Math.floor(text.length * k);
+    let out = text.slice(0, settled);
+    for (let i = settled; i < text.length; i++)
+      out += text[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = out;
+    if (k < 1) scrambleHandles.set(el, requestAnimationFrame(tick));
+    else el.textContent = text; // hard-set the final frame
+  };
+  tick();
+};
+
 if (!reduced) document.body.classList.add("ab-anim");
 
 /* ------------------------------------------------------------
@@ -58,6 +91,18 @@ const releaseIntro = () => {
   setTimeout(() => intro.remove(), 1100);
 };
 if (intro) {
+  /* real boot log — each line is an actual init milestone with a true
+     timestamp (dispatched from start() as the work completes). Keeps
+     the last 3 lines; silently stops once the loader is gone. */
+  const logEl = document.getElementById("abIntroLog");
+  if (logEl) {
+    const lines = [];
+    addEventListener("ab:boot", (e) => {
+      if (intro.classList.contains("is-done")) return;
+      lines.push(e.detail);
+      logEl.innerHTML = lines.slice(-3).map((l) => `<span>${l}</span>`).join("");
+    });
+  }
   if (reduced) {
     releaseIntro();
   } else {
@@ -137,12 +182,25 @@ const rail = document.getElementById("abRail");
 const readout = document.getElementById("abReadout");
 const hudPct = document.getElementById("abPct");
 const dots = [];
+let spineFill = null;
 if (rail && chapters.length) {
+  /* depth-gauge spine: a hairline behind the dots whose fill tracks
+     real scroll progress — the rail becomes a calibrated scale */
+  const spine = document.createElement("i");
+  spine.className = "ab-rail__spine";
+  spine.innerHTML = "<b></b>";
+  rail.appendChild(spine);
+  spineFill = spine.firstElementChild;
   chapters.forEach((ch, i) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "ab-rail__dot";
     b.setAttribute("aria-label", ch.dataset.abchapter || `Chapter ${i + 1}`);
+    const lbl = document.createElement("span");
+    lbl.className = "ab-rail__lbl";
+    lbl.setAttribute("aria-hidden", "true");
+    lbl.textContent = `${String(i + 1).padStart(2, "0")} ${(ch.dataset.abchapter || "").toUpperCase()}`;
+    b.appendChild(lbl);
     b.addEventListener("click", () => {
       const y = ch.getBoundingClientRect().top + scrollY - 60;
       lenis ? lenis.scrollTo(y) : scrollTo({ top: y, behavior: "smooth" });
@@ -151,7 +209,23 @@ if (rail && chapters.length) {
     dots.push(b);
   });
 }
+/* museum plaque — names the CURRENT particle formation in instrument
+   language. Every label describes what the shader genuinely renders
+   (the builders fECG…fMARK below), so it doubles as documentation.
+   Populated only under fx-on: no3d must never claim a formation it
+   isn't rendering. */
+const plaque = document.getElementById("abPlaque");
+const PLAQUES = [
+  "F0 · ECG WAVEFORM — THE STUDIO'S PULSE",
+  "F1 · CORE + ORBIT — ONE BUILDER, WHOLE STACK",
+  "F2 · THREE STRANDS — AXON · STACKIME · LOG",
+  "F3 · GLYPHS “3:14” — THE MINUTE IT STARTED",
+  "F4 · CUBIC LATTICE — STRUCTURE & GUARDRAILS",
+  "F5 · PULSE MARK — THE SIGNATURE",
+];
+const hud = document.querySelector(".ab-hud");
 let activeCh = -1;
+let pctTarget = 0;
 const markChapter = () => {
   const mid = scrollY + innerHeight * 0.45;
   let active = 0;
@@ -160,21 +234,73 @@ const markChapter = () => {
     const first = activeCh === -1;
     activeCh = active;
     dots.forEach((d, i) => d.classList.toggle("is-active", i === active));
-    if (readout) readout.textContent =
-      `${String(active + 1).padStart(2, "0")} / ${(chapters[active].dataset.abchapter || "").toUpperCase()}`;
+    if (readout) {
+      const label = `${String(active + 1).padStart(2, "0")} / ${(chapters[active].dataset.abchapter || "").toUpperCase()}`;
+      /* first paint must be instant + exact (smoke asserts the format) */
+      first ? (readout.textContent = label) : scramble(readout, label);
+    }
+    if (plaque && document.body.classList.contains("fx-on")) {
+      first ? (plaque.textContent = PLAQUES[active]) : scramble(plaque, PLAQUES[active]);
+    }
+    /* chapter accent: rail dot glow + HUD bracket flash agree with the
+       grade pass's corner tint */
+    document.documentElement.style.setProperty("--abAccent", CH_HEX[active] || CH_HEX[0]);
+    if (hud && !first) {
+      hud.classList.remove("is-flash");
+      void hud.offsetWidth; // restart the flash animation
+      hud.classList.add("is-flash");
+    }
     if (!first) dispatchEvent(new CustomEvent("ab:chapter", { detail: active }));
   }
-  if (hudPct) {
-    const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-    hudPct.textContent = String(Math.min(100, Math.round((scrollY / max) * 100))).padStart(3, "0");
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  pctTarget = Math.min(100, (scrollY / max) * 100);
+  if (reduced) {
+    /* no spool under reduced motion — instant, exact */
+    if (hudPct) hudPct.textContent = String(Math.round(pctTarget)).padStart(3, "0");
+    if (hairFill) hairFill.style.transform = `scaleX(${pctTarget / 100})`;
+    if (spineFill) spineFill.style.transform = `scaleY(${pctTarget / 100})`;
   }
 };
+
+/* HUD hairline — the loader's progress bar living on as permanent
+   chrome, with tick marks etched at the REAL chapter start offsets
+   (honest information design: they are not evenly spaced). */
+const hair = document.getElementById("abHair");
+const hairFill = hair ? hair.querySelector("b") : null;
+const placeHairTicks = () => {
+  if (!hair) return;
+  hair.querySelectorAll("s").forEach((s) => s.remove());
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  chapters.forEach((ch) => {
+    const s = document.createElement("s");
+    s.style.left = `${Math.min(100, (ch.offsetTop / max) * 100)}%`;
+    hair.appendChild(s);
+  });
+};
+/* the % counter physically spools toward the true value instead of
+   teleporting — mechanical-counter feel; also drives the hairline
+   and rail-spine fills from the same eased state */
+if (!reduced) {
+  let pctShown = 0;
+  gsap.ticker.add(() => {
+    pctShown += (pctTarget - pctShown) * 0.14;
+    if (Math.abs(pctTarget - pctShown) < 0.06) pctShown = pctTarget;
+    if (hudPct) {
+      const s = String(Math.round(pctShown)).padStart(3, "0");
+      if (hudPct.textContent !== s) hudPct.textContent = s;
+    }
+    const k = (pctShown / 100).toFixed(4);
+    if (hairFill) hairFill.style.transform = `scaleX(${k})`;
+    if (spineFill) spineFill.style.transform = `scaleY(${k})`;
+  });
+}
+
 addEventListener("scroll", markChapter, { passive: true });
 markChapter();
 
 /* piecewise chapter progress 0..(chapters-1) — drives world + camera */
 let chTops = [];
-const measureChapters = () => { chTops = chapters.map((c) => c.offsetTop); };
+const measureChapters = () => { chTops = chapters.map((c) => c.offsetTop); placeHairTicks(); };
 measureChapters();
 addEventListener("resize", measureChapters);
 addEventListener("load", measureChapters);
@@ -199,16 +325,20 @@ document.querySelectorAll(".ab-row[data-ch]").forEach((row) => {
   row.addEventListener("pointerleave", () => { hoverCh = -1; });
 });
 
-/* velocity marquee — JS-driven on fine pointers, CSS anim otherwise */
+/* velocity marquee — JS-driven on fine pointers, CSS anim otherwise.
+   Scroll energy also floods the outlined verbs with ink (a VU meter
+   of the reader's own momentum) — same ticker write, no extra layer. */
 const marquee = document.getElementById("abMarquee");
 if (marquee && hoverFine && !reduced) {
   marquee.parentElement.classList.add("is-js");
-  let x = 0;
+  let x = 0, ink = 0;
   const half = () => marquee.scrollWidth / 2 || 1;
   gsap.ticker.add(() => {
     x -= 0.9 + Math.min(7, Math.abs(scrollVel)) * 0.5;
     if (-x >= half()) x += half();
+    ink += (Math.min(1, Math.abs(scrollVel) * 0.055) - ink) * 0.08;
     marquee.style.transform = `translate3d(${x}px,0,0)`;
+    marquee.style.setProperty("--mink", ink.toFixed(3));
   });
 }
 
@@ -243,6 +373,11 @@ if (cursor && hoverFine && !reduced) {
     const t = e.target.closest("[data-cursor]");
     cursor.classList.toggle("is-hover", !!t);
     if (t && label) label.textContent = t.dataset.cursor;
+    /* the reticle tints to the hovered channel — cursor, field and
+       row glow agree on the same color */
+    const chEl = e.target.closest("[data-ch]");
+    if (chEl) cursor.style.setProperty("--curc", ["#B8FF3C", "#FF4FA3", "#4FC4FF"][chEl.dataset.ch] || "#B8FF3C");
+    else cursor.style.removeProperty("--curc");
   });
 }
 
@@ -270,14 +405,21 @@ if (hoverFine && !reduced) {
    ------------------------------------------------------------ */
 const soundBtn = document.getElementById("abSound");
 if (soundBtn) {
-  let AC = null, master = null, bedFilter = null, soundOn = false;
+  let AC = null, master = null, bedFilter = null, soundOn = false, analyser = null;
+  const bedOscs = []; // { o, f } — kept for per-chapter key modulation
   const ensureAudio = () => {
     if (AC) return true;
     try {
       AC = new (window.AudioContext || window.webkitAudioContext)();
       master = AC.createGain();
       master.gain.value = 0;
-      master.connect(AC.destination);
+      /* real analyser between master and output — the SND pill's EQ
+         bars show the ACTUAL signal, not a canned keyframe */
+      analyser = AC.createAnalyser();
+      analyser.fftSize = 64;
+      analyser.smoothingTimeConstant = 0.75;
+      master.connect(analyser);
+      analyser.connect(AC.destination);
       /* drone bed: three detuned partials through a breathing lowpass */
       bedFilter = AC.createBiquadFilter();
       bedFilter.type = "lowpass"; bedFilter.frequency.value = 240; bedFilter.Q.value = 0.6;
@@ -286,6 +428,7 @@ if (soundBtn) {
         const o = AC.createOscillator(), og = AC.createGain();
         o.type = ty; o.frequency.value = f; og.gain.value = g;
         o.connect(og); og.connect(bedFilter); o.start();
+        bedOscs.push({ o, f });
       });
       const lfo = AC.createOscillator(), lg = AC.createGain();
       lfo.frequency.value = 0.06; lg.gain.value = 90;
@@ -304,13 +447,21 @@ if (soundBtn) {
       return true;
     } catch { AC = null; return false; }
   };
-  const blip = (freq, vol = 0.10, dur = 0.10) => {
+  const blip = (freq, vol = 0.10, dur = 0.10, pan = 0) => {
     if (!AC || !soundOn) return;
     const o = AC.createOscillator(), g = AC.createGain();
     o.type = "sine"; o.frequency.value = freq;
     g.gain.setValueAtTime(vol, AC.currentTime);
     g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
-    o.connect(g); g.connect(master);
+    o.connect(g);
+    /* stereo image: each channel blip sits where its row sits */
+    if (pan && AC.createStereoPanner) {
+      const sp = AC.createStereoPanner();
+      sp.pan.value = pan;
+      g.connect(sp); sp.connect(master);
+    } else {
+      g.connect(master);
+    }
     o.start(); o.stop(AC.currentTime + dur + 0.02);
   };
   const whoosh = () => {
@@ -328,12 +479,30 @@ if (soundBtn) {
     src.connect(lp); lp.connect(g); g.connect(master);
     src.start();
   };
+  /* live EQ — sample the analyser every 3rd frame and scale the four
+     pill bars to the real spectrum. Falls back to the CSS keyframe
+     when the analyser is unavailable (is-live gates the keyframe). */
+  const eqBars = [...soundBtn.querySelectorAll(".ab-hud__eq i")];
+  const eqBuf = new Uint8Array(32);
+  let eqRAF = 0, eqFrame = 0;
+  const eqLoop = () => {
+    eqRAF = soundOn ? requestAnimationFrame(eqLoop) : 0;
+    if (!soundOn || !analyser || (eqFrame++ % 3)) return;
+    analyser.getByteFrequencyData(eqBuf);
+    for (let i = 0; i < eqBars.length; i++) {
+      const v = eqBuf[1 + i * 4] / 255;
+      eqBars[i].style.transform = `scaleY(${(0.2 + v * 0.8).toFixed(2)})`;
+    }
+  };
   const setOn = (v, persist = true) => {
     if (v) ensureAudio();
     soundOn = v;
     if (v && AC?.state === "suspended") AC.resume().catch(() => {});
     soundBtn.setAttribute("aria-pressed", String(!!v));
     soundBtn.classList.toggle("is-on", v);
+    soundBtn.classList.toggle("is-live", v && !!analyser && !reduced);
+    if (v && analyser && !reduced && !eqRAF) eqLoop();
+    if (!v) eqBars.forEach((b) => (b.style.transform = ""));
     if (persist) { try { localStorage.setItem("ab-sound", v ? "1" : "0"); } catch {} }
     if (master) master.gain.linearRampToValueAtTime(v ? 0.9 : 0, (AC?.currentTime || 0) + 0.7);
   };
@@ -352,7 +521,8 @@ if (soundBtn) {
   /* hook points */
   const NOTES = [587.33, 739.99, 880]; // D5 / F#5 / A5 — one per channel
   document.querySelectorAll(".ab-row[data-ch]").forEach((row) => {
-    row.addEventListener("pointerenter", () => blip(NOTES[Number(row.dataset.ch)] || 660, 0.09));
+    const ch = Number(row.dataset.ch);
+    row.addEventListener("pointerenter", () => blip(NOTES[ch] || 660, 0.09, 0.10, (ch - 1) * 0.45));
   });
   document.querySelectorAll(".ab-rail__dot").forEach((d, i) => {
     d.addEventListener("click", () => blip(392 + i * 49, 0.08, 0.14));
@@ -360,7 +530,16 @@ if (soundBtn) {
   document.querySelectorAll(".ab-cta__btn").forEach((b) => {
     b.addEventListener("pointerenter", () => blip(987.77, 0.06, 0.08));
   });
-  addEventListener("ab:chapter", whoosh);
+  /* chapter hand-off: whoosh + the drone bed re-keys to the chapter
+     (small consonant shifts — the room changes key as the light does) */
+  const KEYR = [1, 1.0595, 0.8909, 1.1892, 0.9439, 1]; // +1 / −2 / +3 / −1 semitones
+  addEventListener("ab:chapter", (e) => {
+    whoosh();
+    if (AC && bedOscs.length) {
+      const r = KEYR[e.detail] || 1;
+      bedOscs.forEach(({ o, f }) => o.frequency.setTargetAtTime(f * r, AC.currentTime, 0.8));
+    }
+  });
 }
 
 /* ------------------------------------------------------------
@@ -371,6 +550,7 @@ if (!canvas || reduced || innerWidth < 680) {
   document.body.classList.add("about-no3d");
 } else {
   const boot = () => {
+    bootLog("TYPEFACES SETTLED · COMPILING WORLD");
     try { start(); }
     catch (err) { console.warn("[aboutfx] 3D disabled:", err); document.body.classList.add("about-no3d"); }
   };
@@ -391,6 +571,18 @@ function start() {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
+  /* boot log: real GL milestone with the machine's real renderer name */
+  try {
+    const gl = renderer.getContext();
+    const ext = gl.getExtension("WEBGL_debug_renderer_info");
+    const gpu = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "";
+    bootLog(`GL CONTEXT · ${(gpu || "RENDERER READY").slice(0, 44).toUpperCase()}`);
+  } catch { bootLog("GL CONTEXT READY"); }
+
+  /* colophon refines "up to 62,000" to this device's exact truth */
+  const colN = document.getElementById("abColN");
+  if (colN) colN.textContent = N.toLocaleString("en-US");
+
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x05060b, 20, 46);
   const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 90);
@@ -400,19 +592,30 @@ function start() {
   const backdrop = new THREE.Mesh(
     new THREE.PlaneGeometry(160, 90),
     new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
+      uniforms: {
+        uTime: { value: 0 },
+        uTint: { value: new THREE.Color(0.42, 0.62, 0.32) },
+        uShaftY: { value: 0.18 },
+        uBeat: { value: 0 },
+      },
       depthWrite: false,
       vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
       fragmentShader: /* glsl */ `
-        uniform float uTime; varying vec2 vUv;
+        uniform float uTime, uShaftY, uBeat;
+        uniform vec3 uTint;
+        varying vec2 vUv;
         void main() {
           vec3 deep = vec3(0.020, 0.024, 0.043);
           vec3 edge = vec3(0.008, 0.009, 0.016);
           float r = distance(vUv, vec2(0.5, 0.42));
           vec3 c = mix(deep, edge, smoothstep(0.12, 0.75, r));
-          /* diagonal volumetric shaft, slowly breathing */
-          float sh = smoothstep(0.30, 0.0, abs((vUv.y - 0.18) - (vUv.x - 0.30) * 0.55));
-          c += vec3(0.030, 0.036, 0.052) * sh * (0.55 + 0.45 * sin(uTime * 0.10));
+          /* diagonal volumetric shaft — re-aims per chapter (uShaftY),
+             takes the chapter tint, and swells on the heartbeat */
+          float sh = smoothstep(0.30, 0.0, abs((vUv.y - uShaftY) - (vUv.x - 0.30) * 0.55));
+          c += (vec3(0.030, 0.036, 0.052) + uTint * 0.024) * sh
+             * (0.55 + 0.45 * sin(uTime * 0.10) + uBeat * 0.12);
+          /* faint chapter-tinted floor bounce */
+          c += uTint * 0.010 * smoothstep(0.45, 1.0, 1.0 - vUv.y);
           gl_FragColor = vec4(c, 1.0);
         }`,
     })
@@ -548,6 +751,7 @@ function start() {
     for (let i = 0; i < N; i++) fn(arr, i);
     return arr;
   });
+  bootLog(`${N.toLocaleString("en-US")} PTS · 6 FORMATIONS PACKED`);
 
   /* ---- particle geometry: position = F0, five morph attributes ---- */
   const geo = new THREE.BufferGeometry();
@@ -577,6 +781,8 @@ function start() {
     uFocus: { value: 17 },   // DOF focal distance
     uPtr: { value: new THREE.Vector3(999, 999, 0) },
     uEx: { value: new THREE.Vector3(0, 0, 0) }, // per-channel excitation
+    uBeat: { value: 0 },     // global ECG heartbeat envelope
+    uWaveT: { value: 9 },    // seconds since last chapter hand-off (shockwave)
   };
 
   const morphChunk = /* glsl */ `
@@ -595,9 +801,9 @@ function start() {
   const points = new THREE.Points(geo, new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: morphChunk + /* glsl */ `
-      uniform float uTime, uPx, uBoot, uKick, uFocus;
+      uniform float uTime, uPx, uBoot, uKick, uFocus, uBeat, uWaveT;
       uniform vec3 uPtr, uEx;
-      varying float vA, vHue, vSeed;
+      varying float vA, vHue, vSeed, vLife;
 
       vec3 curl(vec3 p) {
         float t = uTime * 0.14;
@@ -606,6 +812,34 @@ function start() {
           sin(p.z * 0.39 - t * 0.8) + cos(p.x * 0.34 + t),
           sin(p.x * 0.41 + t * 1.1) + cos(p.y * 0.37 - t)
         );
+      }
+
+      /* SIGNAL LIFE — real packets travel every formation, so the field
+         reads as a running instrument, not a sculpture. Evaluated on the
+         clean target position (pre-turbulence) of formation k. */
+      float life(float k, vec4 T) {
+        vec3 q = T.xyz;
+        if (k < 0.5) {                       /* ECG: pulse sweeps the trace */
+          float px = mod(uTime * 9.2, 60.0) - 30.0;
+          return smoothstep(3.4, 0.0, abs(q.x - px));
+        } else if (k < 1.5) {                /* orbit packet + systole core */
+          float onOrbit = step(6.8, length(q.xz));
+          float a = atan(q.z, q.x);
+          float s = uTime * 0.9;
+          float d = abs(atan(sin(a - s), cos(a - s)));
+          return onOrbit * smoothstep(0.9, 0.0, d) + (1.0 - onOrbit) * uBeat * 0.35;
+        } else if (k < 2.5) {                /* strands: per-channel packet race */
+          float px = mod(uTime * 11.0 + T.w * 17.0, 56.0) - 28.0;
+          return smoothstep(2.6, 0.0, abs(q.x - px));
+        } else if (k < 3.5) {                /* 3:14 — the colon blinks, a live clock */
+          float colon = smoothstep(1.05, 0.35, abs(q.x + 0.97));
+          return colon * step(0.5, fract(uTime * 0.5)) * 0.9;
+        } else if (k < 4.5) {                /* lattice: calibration plane scan */
+          float sy = mod(uTime * 2.2, 16.0) - 8.0;
+          return smoothstep(1.1, 0.0, abs(q.y - sy));
+        }
+        float px = mod(uTime * 8.0, 46.0) - 23.0;   /* mark: signature pulse */
+        return smoothstep(3.0, 0.0, abs(q.x - px));
       }
 
       void main() {
@@ -621,9 +855,19 @@ function start() {
         vec3 p = mix(A.xyz, B.xyz, e);
         float hue = mix(A.w, B.w, e);
 
-        /* turbulence: gentle idle, strong mid-flight, scroll kick */
-        p += curl(p * 0.16 + aSeed * 6.2831) * (0.30 + flight * 2.3 + uKick * 1.1) * (0.6 + aSeed * 0.8);
+        /* signal life blended across the hand-off (both formations, no flicker) */
+        float lf = mix(life(uFa, A), life(uFb, B), e);
+
+        /* turbulence: gentle idle, strong mid-flight, scroll kick,
+           heartbeat swells the idle sway in sync with the whole room */
+        p += curl(p * 0.16 + aSeed * 6.2831) * (0.30 + flight * 2.3 + uKick * 1.1 + uBeat * 0.16) * (0.6 + aSeed * 0.8);
         p.y += sin(uTime * (0.25 + aSeed * 0.35) + aSeed * 40.0) * 0.22;
+
+        /* reformation shockwave — a radial energy front detonates from
+           the world center on each chapter hand-off, then dies out */
+        float wr = uWaveT * 9.0;
+        float wband = smoothstep(2.6, 0.0, abs(length(p) - wr)) * exp(-uWaveT * 1.4);
+        p += normalize(p + 1e-4) * wband * 0.85;
 
         /* pointer repulsion — swirl away from the cursor */
         vec3 dp = p - uPtr;
@@ -647,14 +891,16 @@ function start() {
         gl_PointSize = clamp(size * uPx * (17.0 / max(1.0, dep)) * 1.7, 1.0, 24.0);
 
         float tw = 0.5 + 0.5 * sin(uTime * (0.4 + aSeed) + aSeed * 30.0);
-        vA = (0.05 + 0.24 * tw) * uBoot / (1.0 + coc * coc * 9.0) * (1.0 + ex * 1.6 + push * 1.2 + flight * 0.4);
+        vA = (0.05 + 0.24 * tw) * uBoot / (1.0 + coc * coc * 9.0)
+           * (1.0 + ex * 1.6 + push * 1.2 + flight * 0.4 + lf * 1.9 + wband * 1.4);
         vHue = hue;
         vSeed = aSeed;
+        vLife = lf;
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */ `
       uniform vec3 uEx;
-      varying float vA, vHue, vSeed;
+      varying float vA, vHue, vSeed, vLife;
       vec3 ramp(float h) {
         vec3 lime = vec3(0.722, 1.0, 0.235);
         vec3 mag  = vec3(1.0, 0.310, 0.639);
@@ -667,6 +913,7 @@ function start() {
         vec3 col = ramp(clamp(vHue, 0.0, 2.0));
         col = mix(col, vec3(0.82, 0.86, 0.92), 0.10);           /* premium desaturation */
         col = mix(col, vec3(1.0), smoothstep(0.20, 0.0, d) * 0.28); /* hot core */
+        col = mix(col, vec3(1.0), vLife * 0.45);                /* packets run white-hot */
         gl_FragColor = vec4(col, smoothstep(0.5, 0.04, d) * vA);
       }`,
   }));
@@ -716,8 +963,10 @@ function start() {
   dust.frustumCulled = false;
   scene.add(dust);
 
-  /* ---- hero artifact — iridescent signal ring ---- */
-  const ringU = { uTime: { value: 0 }, uOp: { value: 0 } };
+  /* ---- hero artifact — iridescent signal ring, machined like a
+     calibrated bezel: engraved graduation ticks + a phosphor sweep,
+     and a rim-flash on every heartbeat ---- */
+  const ringU = { uTime: { value: 0 }, uOp: { value: 0 }, uBeat: { value: 0 } };
   const ring = new THREE.Mesh(
     new THREE.TorusGeometry(4.1, 0.10, 26, 220),
     new THREE.ShaderMaterial({
@@ -731,14 +980,24 @@ function start() {
           gl_Position = projectionMatrix * mv;
         }`,
       fragmentShader: /* glsl */ `
-        uniform float uTime, uOp;
+        uniform float uTime, uOp, uBeat;
         varying vec3 vN, vV, vP;
         vec3 pal(float t) { return 0.5 + 0.5 * cos(6.2831 * (t + vec3(0.00, 0.33, 0.67))); }
         void main() {
           float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 1.6);
           vec3 irid = pal(fr * 0.85 + vP.x * 0.05 + vP.y * 0.04 + uTime * 0.03);
           vec3 col = mix(vec3(0.06, 0.07, 0.10), irid, 0.30 + fr * 0.7);
-          gl_FragColor = vec4(col, (0.16 + fr * 0.9) * uOp);
+          /* engraved graduations — 72 fine, 12 major (smoothstep, no moiré) */
+          float ang = atan(vP.y, vP.x);
+          float tick = smoothstep(0.90, 0.995, cos(ang * 72.0));
+          float major = smoothstep(0.975, 0.999, cos(ang * 12.0));
+          col += irid * (tick * 0.22 + major * 0.30) * (0.25 + fr * 0.75);
+          /* phosphor sweep circling the dial */
+          float sw = smoothstep(0.55, 0.0, abs(atan(sin(ang - uTime * 0.45), cos(ang - uTime * 0.45))));
+          col += irid * sw * 0.16;
+          /* heartbeat rim-flash */
+          col += irid * uBeat * 0.22;
+          gl_FragColor = vec4(col, (0.16 + fr * 0.9 + uBeat * 0.06) * uOp);
         }`,
     })
   );
@@ -810,6 +1069,7 @@ function start() {
   try {
     preloadFont({ font: FONT_URL, characters: "0123456789" }, () => {
       try {
+        bootLog("SDF GLYPH ATLAS READY");
         TYPE_KEYS.forEach((k) => {
           const t = new Text();
           t.font = FONT_URL;
@@ -980,6 +1240,7 @@ function start() {
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
   composer.addPass(gradePass);
+  bootLog("GRADE PASS COMPILED");
 
   /* per-chapter corner-glow tints + bloom energy (AT tunes bloom per scene:
      home 3.82, work 0.5, contact 0.8 — we stay tasteful but do vary it). */
@@ -992,8 +1253,14 @@ function start() {
     new THREE.Color(0.66, 0.78, 0.62), // contact — full spectrum, calm
   ];
   const CH_BLOOM = [0.46, 0.34, 0.30, 0.40, 0.32, 0.44];
+  /* per-chapter shaft aim for the backdrop relighting (uShaftY) —
+     the room's key light re-hangs itself for every scene */
+  const SHAFT_Y = [0.18, 0.30, 0.10, 0.44, 0.24, 0.34];
   const tintTmp = new THREE.Color();
   let warpState = 0, contactState = 0, rollState = 0, prevChapter = 0, chapterPulse = 0;
+  let beatState = 0, prevFrameT = 0, firstFrameLogged = false;
+  const telemEl = document.getElementById("abTelem");
+  let lastTelem = -1;
 
   /* ---- camera rig: per-chapter keyframes, Catmull-Rom travel ---- */
   /* lookAt.x biased positive on copy chapters so the formation sits
@@ -1008,6 +1275,7 @@ function start() {
   ];
   const posCurve = new THREE.CatmullRomCurve3(KEYS.map((k) => new THREE.Vector3(...k.p)), false, "centripetal", 0.4);
   const lookCurve = new THREE.CatmullRomCurve3(KEYS.map((k) => new THREE.Vector3(...k.l)), false, "centripetal", 0.4);
+  bootLog("CAMERA RIG ARMED · 6 KEYFRAMES");
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
   const curPos = new THREE.Vector3(...KEYS[0].p), curLook = new THREE.Vector3(...KEYS[0].l);
 
@@ -1089,12 +1357,35 @@ function start() {
   renderer.setAnimationLoop(() => {
     if (hidden) return;
     const t = clock.getElapsedTime();
+    const dt = Math.min(0.1, Math.max(0, t - prevFrameT));
+    prevFrameT = t;
     uniforms.uTime.value = t;
     dustU.uTime.value = t;
     ringU.uTime.value = t;
     coreU.uTime.value = t;
     backdrop.material.uniforms.uTime.value = t;
     governQuality(t);
+    if (!firstFrameLogged) { firstFrameLogged = true; bootLog("FIRST FRAME RENDERED"); }
+
+    /* the global heartbeat — sampled from the SAME ecgY() waveform the
+       particles form. Sharp systole attack, slow decay; everything
+       downstream (ring, bloom, shaft, field sway) shares this bus. */
+    const beatRaw = Math.max(0, ecgY(t * 9.2)) / 3.3;
+    beatState = Math.max(beatRaw, beatState - dt * 2.4);
+    uniforms.uBeat.value = beatState;
+    ringU.uBeat.value = beatState;
+    backdrop.material.uniforms.uBeat.value = beatState;
+
+    /* shockwave clock — reset to 0 on every chapter hand-off below */
+    uniforms.uWaveT.value = Math.min(9, uniforms.uWaveT.value + dt);
+
+    /* live telemetry — real particle count, real frame rate, real
+       governor tier, refreshed at 2 Hz (never faster: the readout must
+       not cost the frames it reports) */
+    if (telemEl && t - lastTelem > 0.5) {
+      lastTelem = t;
+      telemEl.textContent = `${N.toLocaleString("en-US")} PTS · ${Math.min(120, Math.round(1000 / Math.max(8.3, emaMs)))} FPS · Q:${["HI", "MID", "LO"][qIdx]}`;
+    }
 
     /* chapter progress drives formation + camera */
     const cp = Math.min(F, Math.max(0, chapterProgress()));
@@ -1120,8 +1411,10 @@ function start() {
     const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac;
     if (Math.abs(camera.fov - fv) > 0.01) { camera.fov += (fv - camera.fov) * 0.06; camera.updateProjectionMatrix(); }
 
-    /* focus follows the world center */
-    const focus = curPos.length();
+    /* focus follows the world center — with a rack-focus overshoot on
+       chapter hand-offs that settles as the pulse decays (a camera
+       operator finding the mark, not a tween) */
+    const focus = curPos.length() + chapterPulse * 2.6;
     uniforms.uFocus.value += (focus - uniforms.uFocus.value) * 0.05;
     dustU.uFocus.value = uniforms.uFocus.value;
 
@@ -1207,7 +1500,10 @@ function start() {
 
     /* ---- master grade wiring ---- */
     const chNow = Math.round(cp);
-    if (chNow !== prevChapter) { chapterPulse = 1; prevChapter = chNow; } // dolly + warp kick on hand-off
+    if (chNow !== prevChapter) {
+      chapterPulse = 1; prevChapter = chNow;   // dolly + warp kick on hand-off
+      uniforms.uWaveT.value = 0;               // detonate the reformation shockwave
+    }
     chapterPulse *= 0.90;
 
     /* transition warp = scroll velocity + chapter pulse; breathing = same energy */
@@ -1219,10 +1515,15 @@ function start() {
     gradeUniforms.uContact.value = contactState;
     gradeUniforms.uAberration.value = velEnergy;
 
-    /* corner-glow tint + bloom energy interpolate between chapters */
+    /* corner-glow tint + bloom energy interpolate between chapters;
+       the backdrop's key light follows the same tint and re-aims per
+       chapter (room relighting), and bloom micro-swells on the beat */
     tintTmp.copy(CH_TINT[fa]).lerp(CH_TINT[Math.min(F, fa + 1)], frac);
     gradeUniforms.uTint.value.lerp(tintTmp, 0.06);
-    const targetBloom = (CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5;
+    backdrop.material.uniforms.uTint.value.lerp(tintTmp, 0.05);
+    const shaftY = SHAFT_Y[fa] + (SHAFT_Y[Math.min(F, fa + 1)] - SHAFT_Y[fa]) * frac;
+    backdrop.material.uniforms.uShaftY.value += (shaftY - backdrop.material.uniforms.uShaftY.value) * 0.04;
+    const targetBloom = (CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5 + beatState * 0.07;
     bloomPass.strength += (targetBloom - bloomPass.strength) * 0.08;
 
     /* chapter dolly kick — a small push-in on each hand-off */
@@ -1232,4 +1533,6 @@ function start() {
   });
 
   document.body.classList.add("fx-on");
+  /* the plaque can only speak once the world actually renders */
+  if (plaque) plaque.textContent = PLAQUES[Math.max(0, activeCh)];
 }

@@ -128,6 +128,15 @@ check("about: footer sitemap links", await evalJs(`["/privacy.html","/terms.html
 check("about: sound toggle mounted", await evalJs(`!!document.getElementById("abSound")`));
 check("about: sound toggle flips", await evalJs(`(() => { const b = document.getElementById("abSound"); b.click(); const on = b.getAttribute("aria-pressed") === "true"; b.click(); return on; })()`));
 check("about: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("ab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+/* v4 "Calibrated" detailing */
+check("about: 3 work-row ship-ledger lines", (await evalJs(`document.querySelectorAll(".ab-row__meta").length`)) === 3 && (await evalJs(`document.querySelector('.ab-row[data-ch="1"] .ab-row__meta')?.textContent.includes("2026-07-08")`)));
+check("about: 4 principle proof receipts", (await evalJs(`[...document.querySelectorAll(".ab-principle__ref")].map((a) => a.getAttribute("href")).join(",")`)) === "/blog/why-automation-needs-an-audit-trail.html,/blog/guardrails-are-a-feature.html,/blog/engineering-sub-40ms-orchestration.html,/axon.html#datasheet");
+check("about: 4 rail marginalia notes", (await evalJs(`document.querySelectorAll(".ab-kicker__note").length`)) === 4);
+check("about: colophon measures the page", (await evalJs(`document.querySelector(".ab-colophon")?.textContent.replace(/\\s+/g, " ")`))?.includes("PARTICLES"));
+check("about: formation plaque speaks", await evalJs(`(document.getElementById("abPlaque")?.textContent || "").startsWith("F0")`));
+check("about: live telemetry ticks", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => /PTS · \\d+ FPS · Q:(HI|MID|LO)/.test(document.getElementById("abTelem")?.textContent || "") ? res(true) : (Date.now() - t0 > 6000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("about: hairline etched with 6 chapter ticks", (await evalJs(`document.querySelectorAll(".ab-hud__hair s").length`)) === 6);
+check("about: rail depth-gauge spine", await evalJs(`!!document.querySelector(".ab-rail__spine b")`));
 
 /* ---- 2d · lab page (Deep Signal — baked-asset WebGL descent) ---- */
 await go(BASE + "/lab.html", 4000);
