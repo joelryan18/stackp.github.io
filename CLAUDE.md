@@ -7,6 +7,51 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-15)
 
+- **About page v5 "Signal Field — Machined" SHIPPED 2026-07-15** (user:
+  "use blender models 3d workflow, make it even better and cleaner"; when a
+  design-panel workflow was launched the user cut it off — "one is enough
+  choose and make the best design" — so ONE design was chosen and built
+  directly, no panel): commit `94dfbf3`, built ON TOP of v4. The hero
+  procedural TorusGeometry ring hands off to a **Blender-authored machined
+  gyroscope** — lathed bezel with REAL graduation-tick geometry + a cut
+  phosphor groove (r≈4.215, shader paints it lime w/ rotating sweep +
+  uBeat flash), two nested gimbal rings on radial pivot studs (A spins
+  three-X at t·0.31+beat·0.20, B nested inside A spins three-Y at t·0.47)
+  around the KEPT procedural breathing core; all lit by ONE Cycles-baked
+  brushed-steel matcap whose light rig encodes the palette (warm key, cyan
+  rim, lime kick, magenta fill). Second authored-asset bundle after lab:
+  `assets-src/about/gen_instrument.py` (deterministic, zero RNG; bmesh
+  spin-lathe helper + tick add_box loop + add_stud; matcap bake scene) →
+  `scripts/build-3d.mjs` now a **BUNDLES map** (lab + about; positional
+  args filter: `node scripts/build-3d.mjs about`, `--no-bake` kept) →
+  `about-instrument.glb` 34.6KB Draco (367KB raw) + `about-matcap.ktx2`
+  235.7KB UASTC, committed under `src/assets/3d/`. Runtime (about3d.js):
+  GLTFLoader+DRACOLoader+KTX2Loader async IIFE (decoders shared w/ lab at
+  /assets/3d/draco|basis/), matcap ShaderMaterial (mc·1.30 + irid fresnel
+  ·0.22), parts found BY NAME (Bezel/GimbalA/GimbalB — throws if missing),
+  B parented inside A, group copies ring pos/rot each frame; crossfade
+  `machined.blend` 0→1 via gsap on dock, loop composes
+  `ringU.uOp = bootState.ring·(1−heroBlend)·(1−blend)` and
+  `machU.uOp = …·blend` FRESH each frame (never self-multiplied — v2 bug
+  class). ANY failure → catch → procedural ring stays, silently. Orientation
+  gotcha: Blender Y-spin profile + y-up glTF export lands rings in three's
+  XY plane (axis Z) matching TorusGeometry; GimbalA studs on Blender X →
+  three X, GimbalB studs on Blender Z → three Y. Honesty: colophon line got
+  `#abColMach` span — static "0 STOCK ASSETS" stays true no-JS/no3d, JS
+  refines to "0 STOCK ASSETS · HERO MACHINED IN BLENDER" only inside the
+  dock success path (abColN pattern); body class `ab-machined` is the
+  QA/smoke marker, also only set on dock. Smoke 2c +4 checks (docked-class
+  12s poll, glb arrayBuffer>4000, ktx2 r.ok, colophon claim) = 30 about:
+  checks, suite **246 ALL PASS** with HUB WIP stashed. Live-verified in
+  real Chrome (fx-on/ab-type-on/ab-machined + colophon claim on
+  stackwith.me/about.html, console clean, assets 200, homepage untouched
+  hub3d.5XGXAZ7X). Mobile <680px is about-no3d by design → no machined, no
+  colophon claim (correct honesty behavior). QA driver /tmp/ab-qa4.mjs
+  gained ab-machined + colophon prints. HUB WIP stash-popped clean after
+  ship (NO assets.json conflict this time — ship committed the fresh
+  hashes). WIP still uncommitted, its CSS layer still MISSING (see v3
+  warning below).
+
 - **About page v4 "Signal Field — Calibrated" SHIPPED 2026-07-15** (user:
   "professional god level peak, add more detailing"): commit `fe690cd`, built
   ON TOP of v3 — additive detailing chosen by a 4-designer/2-judge workflow
