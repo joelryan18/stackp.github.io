@@ -21,6 +21,9 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 import { Text, preloadFont } from "troika-three-text";
 import Lenis from "@studio-freight/lenis";
 import gsap from "gsap";
@@ -1047,6 +1050,99 @@ function start() {
   core.position.copy(ring.position);
   scene.add(core);
 
+  /* ---- machined hero assembly — the first AUTHORED asset on this page.
+     Headless-Blender lathe work (assets-src/about/gen_instrument.py →
+     scripts/build-3d.mjs): a bezel whose 72/12 graduation ticks and
+     phosphor groove are REAL CUT GEOMETRY (v3 faked them with cos() in
+     the torus shader), plus two nested gimbal rings that spin on their
+     pivot studs around the breathing core — honest gyroscope kinematics.
+     Lit by a Cycles-baked matcap whose light rig IS the brand palette.
+     Loads async + optional: until it docks (or if fetch/parse/transcode
+     fails) the procedural ring above simply remains. ---- */
+  const machined = { group: null, gA: null, gB: null, blend: 0 };
+  const machU = {
+    uTime: { value: 0 },
+    uOp: { value: 0 },
+    uBeat: { value: 0 },
+    uMatcap: { value: null },
+  };
+  (async () => {
+    try {
+      const draco = new DRACOLoader().setDecoderPath("/assets/3d/draco/");
+      const gltfLoader = new GLTFLoader().setDRACOLoader(draco);
+      const ktx2 = new KTX2Loader().setTranscoderPath("/assets/3d/basis/").detectSupport(renderer);
+      const [gltf, matcap] = await Promise.all([
+        gltfLoader.loadAsync("/assets/3d/about-instrument.glb"),
+        ktx2.loadAsync("/assets/3d/about-matcap.ktx2"),
+      ]);
+      matcap.colorSpace = THREE.SRGBColorSpace;
+      machU.uMatcap.value = matcap;
+      const machMat = new THREE.ShaderMaterial({
+        uniforms: machU, transparent: true, depthWrite: false,
+        vertexShader: /* glsl */ `
+          varying vec3 vN, vV, vP;
+          void main() {
+            vN = normalize(normalMatrix * normal);
+            vP = position;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vV = -mv.xyz;
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: /* glsl */ `
+          uniform sampler2D uMatcap;
+          uniform float uTime, uOp, uBeat;
+          varying vec3 vN, vV, vP;
+          vec3 pal(float t) { return 0.5 + 0.5 * cos(6.2831 * (t + vec3(0.00, 0.33, 0.67))); }
+          void main() {
+            vec3 n = normalize(vN);
+            vec3 v = normalize(vV);
+            /* the whole studio light rig lives in this one baked texture */
+            vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
+            float fr = pow(1.0 - abs(dot(n, v)), 1.8);
+            vec3 irid = pal(fr * 0.8 + vP.x * 0.04 + uTime * 0.03);
+            vec3 col = mc * 1.30;
+            col += irid * fr * 0.22;   /* thin-film whisper on grazing edges */
+            /* phosphor riding the CUT groove of the bezel's outer face —
+               the light lives in machined geometry, not on it. r/z masks
+               select the groove; zero on the gimbals (r < 2.8). */
+            float r = length(vP.xy);
+            float groove = smoothstep(4.16, 4.20, r) * smoothstep(0.034, 0.012, abs(vP.z));
+            float ang = atan(vP.y, vP.x);
+            float sw = smoothstep(0.7, 0.0, abs(atan(sin(ang - uTime * 0.45), cos(ang - uTime * 0.45))));
+            col += vec3(0.72, 1.0, 0.42) * groove * (0.14 + sw * 0.9 + uBeat * 0.35);
+            col += irid * uBeat * 0.10; /* heartbeat rim-flash, same bus as v4 */
+            gl_FragColor = vec4(col, uOp);
+          }`,
+      });
+      const group = new THREE.Group();
+      const parts = {};
+      gltf.scene.traverse((o) => { if (o.isMesh) { o.material = machMat; parts[o.name] = o; } });
+      if (!parts.Bezel || !parts.GimbalA || !parts.GimbalB) throw new Error("instrument parts missing");
+      parts.GimbalA.position.set(0, 0, 0);
+      parts.GimbalB.position.set(0, 0, 0);
+      group.add(parts.Bezel);
+      group.add(parts.GimbalA);
+      parts.GimbalA.add(parts.GimbalB); // nested: B pivots inside A
+      group.position.copy(ring.position);
+      group.rotation.copy(ring.rotation);
+      group.visible = false;
+      scene.add(group);
+      machined.group = group;
+      machined.gA = parts.GimbalA;
+      machined.gB = parts.GimbalB;
+      bootLog("MACHINED ASSEMBLY DOCKED · DRACO + KTX2");
+      document.body.classList.add("ab-machined"); // QA/smoke marker
+      /* the colophon may now truthfully claim the metal (abColN pattern:
+         static copy stays true no-JS/no3d, JS refines once it's real) */
+      const colMach = document.getElementById("abColMach");
+      if (colMach) colMach.textContent = "0 STOCK ASSETS · HERO MACHINED IN BLENDER";
+      /* cross-fade so a mid-hero arrival never pops */
+      gsap.to(machined, { blend: 1, duration: 1.6, ease: "power2.inOut" });
+    } catch (e) {
+      console.warn("[aboutfx] machined hero unavailable, procedural ring stays:", e);
+    }
+  })();
+
   /* ---- in-world typography — giant SDF ghost numerals (troika)
      standing at each chapter's camera stop: content IN the world,
      not wallpaper behind it. Outlined, nearly transparent, fogged
@@ -1425,13 +1521,28 @@ function start() {
     ex.set(hoverCh === 0 ? 1 : 0, hoverCh === 1 ? 1 : 0, hoverCh === 2 ? 1 : 0);
     uniforms.uEx.value.lerp(ex, 0.08);
 
-    /* ring + core live in the hero, rise away after */
+    /* ring + core live in the hero, rise away after. When the machined
+       assembly has docked, it inherits the dial's exact motion and the
+       procedural ring cross-fades out — compose from state each frame
+       (never uniform *= k: that's the v2 exponential-decay bug). */
     const heroBlend = Math.min(1, cp);
     ring.rotation.z = -0.35 + t * 0.05;
     ring.rotation.x = 0.5 + Math.sin(t * 0.22) * 0.06;
     ring.position.y = 0.3 + heroBlend * 9;
-    ringU.uOp.value = bootState.ring * (1 - heroBlend);
+    const ringOp = bootState.ring * (1 - heroBlend);
+    ringU.uOp.value = ringOp * (1 - machined.blend);
     ring.visible = ringU.uOp.value > 0.005;
+    if (machined.group) {
+      machined.group.position.copy(ring.position);
+      machined.group.rotation.copy(ring.rotation);
+      /* gyroscope: A spins on its X pivot studs, B on its Y studs inside A */
+      machined.gA.rotation.x = t * 0.31 + beatState * 0.20;
+      machined.gB.rotation.y = t * 0.47;
+      machU.uTime.value = t;
+      machU.uBeat.value = beatState;
+      machU.uOp.value = ringOp * machined.blend;
+      machined.group.visible = machU.uOp.value > 0.005;
+    }
     core.position.set(ring.position.x, ring.position.y, ring.position.z);
     core.rotation.y = t * 0.14;
     core.rotation.x = Math.sin(t * 0.1) * 0.2;

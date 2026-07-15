@@ -137,6 +137,11 @@ check("about: formation plaque speaks", await evalJs(`(document.getElementById("
 check("about: live telemetry ticks", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => /PTS · \\d+ FPS · Q:(HI|MID|LO)/.test(document.getElementById("abTelem")?.textContent || "") ? res(true) : (Date.now() - t0 > 6000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("about: hairline etched with 6 chapter ticks", (await evalJs(`document.querySelectorAll(".ab-hud__hair s").length`)) === 6);
 check("about: rail depth-gauge spine", await evalJs(`!!document.querySelector(".ab-rail__spine b")`));
+/* v5 "Machined" — authored Blender hero assembly (async + optional, so poll) */
+check("about: machined assembly docked", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("ab-machined") ? res(true) : (Date.now() - t0 > 12000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("about: instrument glb served", await evalJs(`fetch("/assets/3d/about-instrument.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 4000)`));
+check("about: instrument matcap served", await evalJs(`fetch("/assets/3d/about-matcap.ktx2").then((r) => r.ok)`));
+check("about: colophon claims the machined hero", await evalJs(`(document.getElementById("abColMach")?.textContent || "").includes("MACHINED IN BLENDER")`));
 
 /* ---- 2d · lab page (Deep Signal — baked-asset WebGL descent) ---- */
 await go(BASE + "/lab.html", 4000);
