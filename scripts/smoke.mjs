@@ -166,6 +166,16 @@ await evalJs(`(() => { const y = document.documentElement.scrollHeight - innerHe
 await sleep(1800);
 check("lab: descent reaches RESURFACE", (await evalJs(`document.getElementById("labReadout")?.textContent`)) === "04 / RESURFACE", String(await evalJs(`document.getElementById("labReadout")?.textContent`)));
 check("lab: end card goes live", await evalJs(`document.getElementById("labEnd").classList.contains("is-live")`));
+/* v4 resonance — synthetic pointer sweep must register wall strikes */
+check("lab: resonance ripples fire", await evalJs(`(async () => { for (let i = 0; i <= 6; i++) { dispatchEvent(new PointerEvent("pointermove", { clientX: innerWidth * (0.2 + 0.1 * i), clientY: innerHeight * 0.2 })); await new Promise((r) => setTimeout(r, 120)); } const t0 = Date.now(); return await new Promise((res) => { const poll = () => document.body.classList.contains("lab-resonant") ? res(true) : (Date.now() - t0 > 4000 ? res(false) : setTimeout(poll, 200)); poll(); }); })()`));
+check("lab: reticle cursor mounted", await evalJs(`!!document.getElementById("labCursor") && document.body.classList.contains("lab-cursor-on")`));
+/* v4 core charge — park in THE CORE, hold, charge must climb */
+await evalJs(`(() => { const y = Math.round((document.documentElement.scrollHeight - innerHeight) * 0.78); scrollTo(0, y); window.__labLenis && window.__labLenis.scrollTo(y, { immediate: true }); })()`);
+await sleep(8000); // camera lerp settle (slow under software GL)
+await evalJs(`dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidth * 0.5, clientY: innerHeight * 0.5 }))`);
+await sleep(2400);
+check("lab: core charge responds", (await evalJs(`window.__labQ?.().charge`)) > 0.3, `charge=${await evalJs(`window.__labQ?.().charge`)}`);
+await evalJs(`dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.5, clientY: innerHeight * 0.5 }))`);
 await evalJs(`scrollTo(0, 0); window.__labLenis && window.__labLenis.scrollTo(0, { immediate: true })`);
 
 /* ---- 3 · consent gating ---- */

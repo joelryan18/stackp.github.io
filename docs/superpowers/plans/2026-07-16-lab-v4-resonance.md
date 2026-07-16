@@ -69,7 +69,7 @@ committable diff (cooldown-resilient like the v3 plan).
   (gsap quickTo). `#labReadout` flickers (class-toggle text-shadow pulse) on
   ripple. CSS additions inside the LAB section only. Commit.
 
-- [ ] **Task 5 — Ship.** Fallback copy gains one honest sentence about
+- [x] **Task 5 — Ship.** Fallback copy gains one honest sentence about
   resonance/charge interaction (stays ≥400 chars). Smoke 2d: `lab: resonance
   ripples fire` (synthetic pointermoves → poll `lab-resonant`), `lab: core
   charge responds` (scroll ~78%, pointerdown ≥1.2s → `__labQ().charge >
