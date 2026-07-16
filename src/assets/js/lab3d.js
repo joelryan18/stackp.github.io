@@ -154,7 +154,7 @@ markChapter();
    only arms until the first gesture (autoplay policy).
    ------------------------------------------------------------ */
 const soundBtn = document.getElementById("labSound");
-let bedFilterRef = null, acRef = null, chimeRef = null, chimeCount = 0;
+let bedFilterRef = null, acRef = null, chimeRef = null, chimeCount = 0, thumpRef = null;
 if (soundBtn) {
   let AC = null, master = null, soundOn = false;
   const ensureAudio = () => {
@@ -229,6 +229,34 @@ if (soundBtn) {
     });
     chimeVoices++; chimeCount++;
     setTimeout(() => { chimeVoices--; }, 1000);
+  };
+  /* v4 CHARGE release thump — sub-bass drop (46→30Hz) + a short
+     filtered noise crack, both scaled by how charged the core was. */
+  thumpRef = (k) => {
+    if (!AC || !soundOn) return;
+    const now = AC.currentTime;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0.001, now);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.002, 0.16 * k), now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0004, now + 0.7);
+    g.connect(master);
+    const o = AC.createOscillator();
+    o.type = "sine";
+    o.frequency.setValueAtTime(46, now);
+    o.frequency.exponentialRampToValueAtTime(30, now + 0.6);
+    o.connect(g);
+    o.onended = () => { try { g.disconnect(); } catch {} };
+    o.start(now); o.stop(now + 0.75);
+    const nb = AC.createBuffer(1, Math.floor(AC.sampleRate * 0.1), AC.sampleRate);
+    const nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
+    const ns = AC.createBufferSource(); ns.buffer = nb;
+    const nf = AC.createBiquadFilter();
+    nf.type = "bandpass"; nf.frequency.value = 900; nf.Q.value = 0.8;
+    const ng = AC.createGain(); ng.gain.value = 0.05 * k;
+    ns.connect(nf); nf.connect(ng); ng.connect(master);
+    ns.onended = () => { try { ng.disconnect(); } catch {} };
+    ns.start(now);
   };
   const whoosh = () => {
     if (!AC || !soundOn) return;
@@ -377,6 +405,9 @@ async function start() {
         new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
       ],
     },
+    /* v4 CHARGE release — one expanding spherical shell: xyz = origin
+       (the core heart), w = release time (−100 = never fired) */
+    uWave: { value: new THREE.Vector4(0, 0, 0, -100) },
   };
   const shardMat = new THREE.ShaderMaterial({
     uniforms: shardUniforms,
@@ -386,6 +417,7 @@ async function start() {
       attribute float aBirth, aSeed;
       uniform float uTime, uGrow;
       uniform vec4 uRip[4];
+      uniform vec4 uWave;
       varying vec3 vTint, vN, vV;
       varying float vSeed, vY, vRip;
       void main(){
@@ -405,6 +437,12 @@ async function start() {
                * exp(-age * 2.4) * smoothstep(0.0, 0.07, age);
         }
         vRip = min(rip, 1.25);
+        /* v4 CHARGE release — a shell expands from the heart at 9u/s;
+           crystals ring as the front passes them, through the SAME
+           varying (same swell, same tinted fragment glow). */
+        float wAge = uTime - uWave.w;
+        float wd = abs(distance(org, uWave.xyz) - wAge * 9.0);
+        vRip = min(vRip + step(0.0, wAge) * smoothstep(2.8, 0.0, wd) * exp(-wAge * 1.1), 1.25);
         vec3 p = position * (s * (1.0 + 0.055 * vRip));
         vec4 wp = instanceMatrix * vec4(p, 1.0);
         /* glacial idle sway */
@@ -963,6 +1001,29 @@ async function start() {
   if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
   addEventListener("pointerdown", (e) => strike(e.clientX, e.clientY, true), { passive: true });
 
+  /* v4 CORE CHARGE — inside THE CORE the pointer becomes an
+     instrument: hold to feed the heart, release to detonate one
+     resonance wave through the whole field. Armed off heartNear
+     in the loop; created here so no3d pages never carry the cue. */
+  let charge = 0, charging = false, chargeArmed = false, releaseKick = 0;
+  const chargeCue = document.createElement("div");
+  chargeCue.id = "labCharge";
+  chargeCue.textContent = "[ HOLD TO CHARGE ]";
+  document.body.appendChild(chargeCue);
+  const chargeRelease = () => {
+    chargeCue.classList.remove("is-hot");
+    if (!charging) return;
+    charging = false;
+    if (charge < 0.22) return; // a stray click never detonates
+    shardUniforms.uWave.value.set(0, -46.5, 0, shardUniforms.uTime.value); // the heart
+    releaseKick = Math.min(1, charge);
+    if (thumpRef) thumpRef(charge);
+  };
+  addEventListener("pointerdown", () => { if (chargeArmed) { charging = true; chargeCue.classList.add("is-hot"); } }, { passive: true });
+  addEventListener("pointerup", chargeRelease, { passive: true });
+  addEventListener("pointercancel", chargeRelease, { passive: true });
+  addEventListener("blur", chargeRelease);
+
   let hidden = false;
   document.addEventListener("visibilitychange", () => { hidden = document.hidden; });
 
@@ -999,7 +1060,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
@@ -1041,7 +1102,7 @@ async function start() {
     camera.lookAt(curLook);
     rollState += (gsap.utils.clamp(-0.05, 0.05, scrollVel * 0.006) - rollState) * 0.06;
     camera.rotateZ(rollState + Math.sin(t * 0.16) * 0.006);
-    const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac;
+    const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac - 4 * charge; // v4: charge pinches the lens
     if (Math.abs(camera.fov - fv) > 0.01) { camera.fov += (fv - camera.fov) * 0.06; camera.updateProjectionMatrix(); }
 
     /* shaft follows so the tube never ends */
@@ -1089,7 +1150,13 @@ async function start() {
     heartGem.rotation.y = -t * 0.3;
     heartGem.rotation.z = Math.sin(t * 0.21) * 0.12;
     const heartNear = Math.max(0, 1 - Math.abs(cp - (F - 0.6)) * 0.9);
-    heartU.uEnergy.value += ((heartNear + chapterPulse) - heartU.uEnergy.value) * 0.06;
+    /* v4 CHARGE — armed only near the heart; hold ramps ~1.1s to
+       full, releasing (or drifting away) drains fast. Drives the
+       heart's own energy, bloom, FOV pinch and the drone filter. */
+    chargeArmed = heartNear > 0.15;
+    charge += ((charging && chargeArmed ? 1 : 0) - charge) * (charging ? 0.035 : 0.1);
+    chargeCue.classList.toggle("is-on", chargeArmed);
+    heartU.uEnergy.value += ((heartNear + chapterPulse + charge * 1.7) - heartU.uEnergy.value) * 0.06;
     heartGem.scale.setScalar(2.1 + Math.sin(t * 1.8) * 0.05 * (1 + heartU.uEnergy.value));
 
     /* in-world chapter names — proximity fade (troika strokes need
@@ -1109,6 +1176,10 @@ async function start() {
     /* grade wiring */
     const chNow = Math.round(cp);
     if (chNow !== prevChapter) { chapterPulse = 1; prevChapter = chNow; }
+    /* v4 CHARGE release rides the SAME shockwave rails as a chapter
+       hand-off (warp/contact/bloom/uPulse/dolly punch) + a roll kick;
+       the expanding uWave shell is already in flight shader-side. */
+    if (releaseKick > 0) { chapterPulse = Math.max(chapterPulse, 0.9 * releaseKick); rollState += 0.028 * releaseKick; releaseKick = 0; }
     chapterPulse *= 0.9;
     shardUniforms.uPulse.value = chapterPulse;
     const velEnergy = Math.min(1, Math.abs(scrollVel) * 0.05);
@@ -1120,12 +1191,12 @@ async function start() {
     gradeUniforms.uAberration.value = velEnergy;
     tintTmp.copy(CH_TINT[fa]).lerp(CH_TINT[Math.min(F, fa + 1)], frac);
     gradeUniforms.uTint.value.lerp(tintTmp, 0.06);
-    const targetBloom = (CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5;
+    const targetBloom = (CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5 + charge * 0.45;
     bloomPass.strength += (targetBloom - bloomPass.strength) * 0.08;
     camera.position.z -= chapterPulse * 0.5;
 
-    /* the drone darkens with depth */
-    if (bedFilterRef && acRef) bedFilterRef.frequency.value = 230 - cp * 30;
+    /* the drone darkens with depth — and opens while the core charges */
+    if (bedFilterRef && acRef) bedFilterRef.frequency.value = 230 - cp * 30 + charge * 320;
 
     scrollVel *= 0.94;
     composer.render();

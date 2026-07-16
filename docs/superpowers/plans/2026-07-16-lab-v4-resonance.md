@@ -45,7 +45,7 @@ committable diff (cooldown-resilient like the v3 plan).
   degrees over the 48Hz drone root, octave drops with depth, ~0.9s exp decay,
   gain ≤0.05, throttle ≥110ms, only when `soundOn`. Ripples call it. Commit.
 
-- [ ] **Task 3 — Core charge event.** Armed when `heartNear > 0.15` (reuses
+- [x] **Task 3 — Core charge event.** Armed when `heartNear > 0.15` (reuses
   the existing loop math): pointerdown ramps `uCharge` 0→1 (~1.1s) — heart
   uEnergy and bloom swell, drone filter opens, FOV pinches −4·charge
   (dolly-zoom read). Release (or full charge) fires `uWave` (origin = heart,
@@ -54,6 +54,13 @@ committable diff (cooldown-resilient like the v3 plan).
   existing chapterPulse path, camera roll kick. DOM cue `[ HOLD TO CHARGE ]`
   bottom-center while armed & unused, fades after first fire. Touch works
   (pointerdown/up). `__labQ()` gains `charge`. Commit.
+  *As built: `uCharge` stayed a JS state (`charge`) feeding the existing
+  heartU.uEnergy/bloom/FOV/drone paths — only `uWave` went shader-side,
+  riding the SAME `vRip` varying as Task 1 (same swell, same tinted glow,
+  same 1.25 cap). Thump is 46→30Hz (46 sits over the 48Hz drone root).
+  Cue shows whenever armed (`.is-on`), pulses while held (`.is-hot`) —
+  clearer than fade-after-first-fire. Release gate ≥0.22 charge so stray
+  clicks never detonate.*
 
 - [ ] **Task 4 — Reticle cursor + HUD polish.** `#labCursor` instrument
   reticle (dot + thin bracket ring; rotates/expands on press; label slot fed

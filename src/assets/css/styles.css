@@ -1447,6 +1447,16 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .lab-cue.is-gone { opacity: 0; }
 .lab-no3d .lab-cue { display: none; }
 
+/* v4 charge cue — JS-created, appears only inside THE CORE */
+#labCharge { position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 12; pointer-events: none;
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .3em; color: var(--ch0);
+  opacity: 0; transition: opacity .5s var(--lease); }
+#labCharge.is-on { opacity: .75; }
+#labCharge.is-hot { animation: labChargePulse .55s ease-in-out infinite;
+  text-shadow: 0 0 14px rgba(184, 255, 60, .75); }
+@keyframes labChargePulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+.lab-no3d #labCharge { display: none; }
+
 /* end card — fades in over the final chapter */
 .lab-end { position: fixed; inset: 0; z-index: 11; display: grid; place-content: center; justify-items: center;
   gap: 1.1rem; text-align: center; opacity: 0; visibility: hidden; pointer-events: none;
