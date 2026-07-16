@@ -9,9 +9,16 @@
        bevelled hero gem, authored headless in Blender
        (assets-src/lab/gen_crystals.py), Draco-compressed via
        gltf-transform (29 KB → 7 KB)
-     · src/assets/3d/lab-matcap.ktx2 — a Cycles-baked studio
-       matcap (UASTC KTX2 via toktx); the entire crystal lighting
-       model is this one texture
+     · src/assets/3d/lab-matcap.ktx2 — Cycles-baked EXTERIOR studio
+       matcap; lab-matcap-int.ktx2 — INTERIOR refraction matcap,
+       sampled along refract(v,n) so facets carry real internal
+       light. These two textures ARE the crystal lighting model.
+   v2 "Crystalline" (2026-07-15): quartz-habit authored geometry
+   (irregular hex prisms, asymmetric pyramidal tips, twinned
+   clusters), dual-matcap refraction + facet sparkle, volumetric
+   godlight/core-aura cones, depth-band instance culling (~⅓ the
+   per-frame shard load), crisper grade (less grain, higher bloom
+   threshold).
    ~1.6k shards are instanced along the shaft wall and GROW in
    (per-instance birth threshold vs. scroll depth — the igloo
    signature). In-world SDF type (troika) names each chapter.
@@ -250,12 +257,14 @@ async function start() {
   const draco = new DRACOLoader(manager).setDecoderPath("/assets/3d/draco/");
   const gltfLoader = new GLTFLoader(manager).setDRACOLoader(draco);
   const ktx2 = new KTX2Loader(manager).setTranscoderPath("/assets/3d/basis/").detectSupport(renderer);
-  const [gltf, matcap] = await Promise.all([
+  const [gltf, matcap, matcapInt] = await Promise.all([
     gltfLoader.loadAsync("/assets/3d/lab-crystals.glb"),
     ktx2.loadAsync("/assets/3d/lab-matcap.ktx2"),
+    ktx2.loadAsync("/assets/3d/lab-matcap-int.ktx2"),
   ]);
   loadTarget = 1;
   matcap.colorSpace = THREE.SRGBColorSpace;
+  matcapInt.colorSpace = THREE.SRGBColorSpace;
 
   const shardGeos = [];
   let gemGeo = null;
@@ -306,6 +315,7 @@ async function start() {
     uTime: { value: 0 },
     uGrow: { value: 0 },
     uMatcap: { value: matcap },
+    uMatcapInt: { value: matcapInt }, // sampled along refract(v,n) — internal light
     uPulse: { value: 0 }, // chapter hand-off shockwave
   };
   const shardMat = new THREE.ShaderMaterial({
@@ -336,22 +346,52 @@ async function start() {
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */ `
-      uniform sampler2D uMatcap;
+      uniform sampler2D uMatcap, uMatcapInt;
       uniform float uTime, uPulse;
       varying vec3 vTint, vN, vV;
       varying float vSeed, vY;
       void main(){
         vec3 n = normalize(vN);
         vec3 v = normalize(vV);
+        float ndv = abs(dot(n, v));
+        /* exterior surface — studio-ice matcap by view-space normal */
         vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
-        float fr = pow(1.0 - abs(dot(n, v)), 2.4);
+        /* INTERIOR light — sample the refraction matcap along the bent
+           ray (ior ~1.55). This is what makes facets read as GLASS with
+           depth instead of tinted stone; per-shard seed offsets the
+           lookup so neighbours never carry identical interiors. */
+        vec3 rf = refract(-v, n, 0.645);
+        vec2 riUv = rf.xy * 0.49 + 0.5 + vec2(vSeed * 0.07 - 0.035);
+        vec3 ri = texture2D(uMatcapInt, riUv).rgb;
+        float fr = pow(1.0 - ndv, 2.4);
         /* signal current — a luminous band travelling DOWN the shaft */
         float band = smoothstep(2.6, 0.0, abs(mod(-vY + uTime * 1.6, 22.0) - 11.0));
-        vec3 col = mc * mix(vec3(1.0), vTint, 0.72);
-        col += vTint * fr * (0.5 + band * 0.9 + uPulse * 1.4);
+        /* facet body: interior refraction tinted, exterior reflection
+           on top — sums tuned so the BODY stays deep navy and only
+           rims/glints approach white (bloom threshold 0.74) */
+        vec3 tintDeep = vTint * vTint;                    /* saturate — kills the washed-pastel read */
+        vec3 col = ri * tintDeep * (0.55 + 0.45 * ndv);
+        col += mc * mc * mix(vec3(1.0), vTint, 0.5) * (0.22 + fr * 0.75);
+        col += vTint * fr * (0.34 + band * 0.9 + uPulse * 1.4);
         col += vTint * band * 0.06;
-        /* shards crossing the lens go dark silhouette, not bloom-blown */
-        col *= mix(0.12, 1.0, smoothstep(0.9, 3.4, length(vV)));
+        /* facet sparkle — a facet glints hard when its normal sweeps
+           the half-vector of an implied top light; gated per facet by
+           seed so glints twinkle across the wall, not strobe in sync */
+        float spark = pow(max(0.0, dot(n, normalize(vec3(0.3, 0.75, 0.6)))), 60.0);
+        spark *= 0.55 + 0.45 * sin(uTime * (1.3 + vSeed * 2.2) + vSeed * 40.0);
+        col += vec3(0.85, 0.95, 1.0) * spark * (0.7 + uPulse);
+        /* aerial perspective — distant shards melt into the shaft
+           haze (also what makes the 36u band cull provably invisible) */
+        float dist = length(vV);
+        col = mix(vec3(0.008, 0.011, 0.024), col, smoothstep(36.0, 22.0, dist));
+        /* near-lens crossing: dissolve via stable R2 screen-door
+           dither instead of blocking the frame as a dark slab */
+        float nearK = smoothstep(1.1, 3.0, dist);
+        if (nearK < 0.999) {
+          float dith = fract(dot(floor(gl_FragCoord.xy), vec2(0.75487766, 0.56984029)));
+          if (dith > nearK * nearK) discard;
+        }
+        col *= mix(0.3, 1.0, smoothstep(1.4, 5.5, dist)); /* close-passers dim progressively, never bloom-blow */
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
@@ -396,22 +436,40 @@ async function start() {
     qTwist.setFromAxisAngle(dir, rand() * Math.PI * 2);
     plan.push({ pos, quat: q.clone().multiply(qTwist), scale: 0.35 + rand() * 0.9, birth: rand() * 0.42, tint: ICE.clone().lerp(CH[0], rand() * 0.3) });
   }
-  /* core bloom — a violent radial burst around the heart */
+  /* core bloom — a radial burst around the heart. Kept SMALL and
+     deep-tinted: these sit closest to the final camera, and at v2's
+     brighter facet response full-size shards read as screen-filling
+     slabs (v1 could afford it — its bodies were near-silhouettes). */
   const CORE = MID ? 100 : 160;
   for (let i = 0; i < CORE; i++) {
     dir.set(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize();
-    const r = 3.4 + rand() * 2.6;
+    const r = 4.0 + rand() * 2.8;
     const pos = new THREE.Vector3(0, -46.5, 0).addScaledVector(dir, r);
     q.setFromUnitVectors(UP, dir); // tips point outward from the heart
     qTwist.setFromAxisAngle(dir, rand() * Math.PI * 2);
-    const tint = CH[Math.floor(rand() * 3)].clone().lerp(ICE, 0.2);
-    plan.push({ pos, quat: q.clone().multiply(qTwist), scale: 0.5 + rand() * 1.1, birth: 2.95 + rand() * 0.5, tint });
+    const tint = CH[Math.floor(rand() * 3)].clone().lerp(ICE, 0.2).multiplyScalar(0.6);
+    plan.push({ pos, quat: q.clone().multiply(qTwist), scale: 0.32 + rand() * 0.6, birth: 2.95 + rand() * 0.5, tint });
   }
 
-  /* distribute the plan across the 6 authored variants */
-  const buckets = shardGeos.map(() => []);
-  plan.forEach((e, i) => buckets[i % shardGeos.length].push(e));
-  const meshes = buckets.map((list, gi) => {
+  /* distribute the plan across the 6 authored variants × 4 depth
+     bands. Banding exists purely for CULLING, two provably pop-free
+     gates per band: (a) growth — a band whose EARLIEST birth is
+     still ahead of the growth front has every instance at scale 0,
+     so skipping it changes nothing; (b) distance — bands whose
+     nearest content is beyond the shader's aerial fade-out (37u)
+     can't be seen. Early in the descent this skips most of the
+     ~1.6k shards v1 vertex-processed every frame. */
+  const BAND_H = 10, NBANDS = 6;
+  const bandOf = (y) => Math.max(0, Math.min(NBANDS - 1, Math.floor((3 - y) / BAND_H)));
+  const buckets = [];
+  const bucketMeta = [];
+  for (let gi = 0; gi < shardGeos.length; gi++) {
+    for (let b = 0; b < NBANDS; b++) { buckets.push([]); bucketMeta.push({ gi, band: b }); }
+  }
+  plan.forEach((e, i) => buckets[(i % shardGeos.length) * NBANDS + bandOf(e.pos.y)].push(e));
+  const meshes = buckets.map((list, bi) => {
+    if (!list.length) return null;
+    const gi = bucketMeta[bi].gi;
     const im = new THREE.InstancedMesh(shardGeos[gi], shardMat, list.length);
     const tints = new Float32Array(list.length * 3);
     const births = new Float32Array(list.length);
@@ -431,15 +489,18 @@ async function start() {
     im.geometry.setAttribute("aBirth", new THREE.InstancedBufferAttribute(births, 1));
     im.geometry.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
     im.instanceMatrix.needsUpdate = true;
-    im.frustumCulled = false;
+    im.frustumCulled = false; // culled by BAND in the loop instead
+    im.userData.bandY = 3 - (bucketMeta[bi].band + 0.5) * BAND_H; // band center
+    im.userData.minBirth = list.reduce((m, e) => Math.min(m, e.birth), Infinity);
     scene.add(im);
     return im;
-  });
+  }).filter(Boolean);
 
   /* ---- the two gems — hero (surface) + heart (core) ---- */
   const gemUniforms = () => ({
     uTime: { value: 0 },
     uMatcap: { value: matcap },
+    uMatcapInt: { value: matcapInt },
     uOp: { value: 1 },
     uEnergy: { value: 0 },
   });
@@ -455,18 +516,26 @@ async function start() {
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */ `
-      uniform sampler2D uMatcap;
+      uniform sampler2D uMatcap, uMatcapInt;
       uniform float uTime, uOp, uEnergy;
       varying vec3 vN, vV;
       vec3 pal(float t){ return 0.5 + 0.5 * cos(6.2831 * (t + vec3(0.0, 0.33, 0.67))); }
       void main(){
         vec3 n = normalize(vN);
         vec3 v = normalize(vV);
+        float ndv = abs(dot(n, v));
         vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
-        float fr = pow(1.0 - abs(dot(n, v)), 1.8);
+        /* refracted interior — the gem carries a lit heart, and energy
+           swirls the lookup so the core visibly CHURNS when excited */
+        vec3 rf = refract(-v, n, 0.645);
+        vec2 riUv = rf.xy * 0.49 + 0.5;
+        riUv += vec2(sin(uTime * 0.4), cos(uTime * 0.31)) * 0.02 * (1.0 + uEnergy * 2.0);
+        vec3 ri = texture2D(uMatcapInt, riUv).rgb;
+        float fr = pow(1.0 - ndv, 1.8);
         /* thin-film flicker across the facets */
         vec3 film = pal(fr * 0.8 + n.x * 0.14 + uTime * 0.03);
-        vec3 col = mc * 1.15 + film * fr * (0.5 + uEnergy * 1.3);
+        vec3 col = ri * (0.75 + uEnergy * 0.8) + mc * (0.55 + fr * 0.8);
+        col += film * fr * (0.4 + uEnergy * 1.2);
         col += vec3(0.72, 1.0, 0.24) * uEnergy * 0.12;
         gl_FragColor = vec4(col * uOp, 1.0);
       }`,
@@ -480,6 +549,57 @@ async function start() {
   heartGem.position.set(0, -46.5, 0);
   heartGem.scale.setScalar(2.1);
   scene.add(heartGem);
+
+  /* ---- volumetric light shafts — fake godlight cones. One pours
+     down from the surface opening (sells "you are underground, the
+     light is up THERE"), one rises off the core heart. Additive,
+     depth-read-only, edge-faded by view fresnel so the cone never
+     shows a hard silhouette. ---- */
+  const shaftLightMat = (tint, down) => {
+    const u = { uTime: { value: 0 }, uOp: { value: 0 }, uTint: { value: tint }, uDown: { value: down } };
+    return {
+      u,
+      mat: new THREE.ShaderMaterial({
+        uniforms: u, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending, fog: false,
+        vertexShader: /* glsl */ `
+          varying vec3 vN, vV; varying vec2 vUv; varying float vY;
+          void main(){
+            vUv = uv;
+            vec4 mv = modelViewMatrix * vec4(position, 1.0);
+            vN = normalize(normalMatrix * normal);
+            vV = -mv.xyz;
+            vY = position.y;
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: /* glsl */ `
+          uniform float uTime, uOp, uDown; uniform vec3 uTint;
+          varying vec3 vN, vV; varying vec2 vUv; varying float vY;
+          void main(){
+            float edge = abs(dot(normalize(vN), normalize(vV)));         /* rim → 0 */
+            float body = smoothstep(0.0, 0.55, edge);                    /* no hard cone edge */
+            /* bright at the light's mouth, dying along the throw —
+               and softened again AT the mouth so the open cylinder
+               rim never draws a hard ellipse */
+            float fall = mix(smoothstep(0.0, 0.9, vUv.y) * smoothstep(1.0, 0.86, vUv.y),
+                             smoothstep(1.0, 0.1, vUv.y) * smoothstep(0.0, 0.14, vUv.y), uDown);
+            float flick = 0.82 + 0.18 * sin(vUv.x * 19.0 + uTime * 0.7)  /* slow ray shimmer */
+                                * sin(vUv.x * 7.0 - uTime * 0.4);
+            gl_FragColor = vec4(uTint, body * fall * flick * 0.055 * uOp);
+          }`,
+      }),
+    };
+  };
+  /* surface godlight: wide cone, mouth up at the opening */
+  const sun = shaftLightMat(new THREE.Color(0.62, 0.78, 1.0), 0); // mouth at the surface opening
+  const sunCone = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 8.6, 26, 28, 6, true), sun.mat);
+  sunCone.position.set(0, -4, 0);
+  scene.add(sunCone);
+  /* core aura: tight column rising off the heart */
+  const aura = shaftLightMat(new THREE.Color(0.72, 1.0, 0.30), 1); // mouth at the heart
+  const auraCone = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 3.4, 14, 24, 4, true), aura.mat);
+  auraCone.position.set(0, -41.5, 0);
+  scene.add(auraCone);
 
   /* ---- drift dust — depth cue along the whole shaft ---- */
   const DN = MID ? 300 : 520;
@@ -566,14 +686,14 @@ async function start() {
   /* ---- post: bloom → tone → master grade (about3d's proven look,
      tuned colder: CA, cnoise corner glow per chapter, split-tone,
      vignette, grain, velocity warp, breathing) ---- */
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), 0.34, 0.6, 0.68);
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), 0.34, 0.6, 0.74); // v2: higher threshold — only true glints bloom
   const gradeUniforms = {
     tDiffuse: { value: null },
     uTime: { value: 0 },
     uResolution: { value: new THREE.Vector2(W * DPR, H * DPR) },
     uAberration: { value: 0 },
     uWarp: { value: 0 },
-    uGrain: { value: 0.08 },
+    uGrain: { value: 0.055 }, // v2: lighter grain — facet edges stay crisp
     uContact: { value: 0 },
     uTint: { value: new THREE.Color(0.35, 0.5, 0.62) },
   };
@@ -745,6 +865,24 @@ async function start() {
     /* shaft follows so the tube never ends */
     shaft.position.y = curPos.y - 14;
 
+    /* depth-band culling — a band draws only if (a) its earliest
+       birth is inside the growth front (else all scale-0) and (b) it
+       sits inside the shader's 36u aerial fade (vertical distance is
+       a lower bound of true view distance, so this can't pop) */
+    const growNow = shardUniforms.uGrow.value;
+    for (const m of meshes) {
+      m.visible = m.userData.minBirth < growNow + 0.02 &&
+                  Math.abs(m.userData.bandY - curPos.y) - 5 < 36;
+    }
+
+    /* godlight lives at the surface, aura at the core */
+    sun.u.uTime.value = t;
+    aura.u.uTime.value = t;
+    sun.u.uOp.value = grow.base / 0.6 * Math.max(0, 1 - cp * 0.75);
+    aura.u.uOp.value = Math.max(0, 1 - Math.abs(cp - (F - 0.85)) * 0.75);
+    sunCone.visible = sun.u.uOp.value > 0.01;
+    auraCone.visible = aura.u.uOp.value > 0.01;
+
     /* gems */
     heroGem.rotation.y = t * 0.22;
     heroGem.rotation.x = Math.sin(t * 0.17) * 0.14;
@@ -797,5 +935,6 @@ async function start() {
   });
 
   document.body.classList.add("fx-on");
+  document.body.classList.add("lab-crystalline"); // v2 QA/smoke marker — only on real boot
   releaseIntro();
 }

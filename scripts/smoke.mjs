@@ -150,10 +150,12 @@ check("lab: fx canvas present", await evalJs(`!!document.querySelector("canvas.l
 check("lab: world booted from baked assets", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("fx-on") ? res(true) : (document.body.classList.contains("lab-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab: boot loader auto-dismisses", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => { const i = document.getElementById("labIntro"); (!i || i.classList.contains("is-done")) ? res(true) : (Date.now() - t0 > 12000 ? res(false) : setTimeout(poll, 250)); }; poll(); })`));
 check("lab: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("lab: crystalline v2 world booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-crystalline") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab: HUD readout mounted", await evalJs(`/^0[0-4] \\//.test(document.getElementById("labReadout")?.textContent || "")`));
 check("lab: scroll track is a descent", await evalJs(`document.documentElement.scrollHeight >= innerHeight * 4.5`));
 check("lab: draco glb served", await evalJs(`fetch("/assets/3d/lab-crystals.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 4000)`));
 check("lab: ktx2 matcap served", await evalJs(`fetch("/assets/3d/lab-matcap.ktx2").then((r) => r.ok)`));
+check("lab: ktx2 interior matcap served", await evalJs(`fetch("/assets/3d/lab-matcap-int.ktx2").then((r) => r.ok)`));
 check("lab: draco decoder served", await evalJs(`fetch("/assets/3d/draco/draco_decoder.wasm").then((r) => r.ok)`));
 check("lab: basis transcoder served", await evalJs(`fetch("/assets/3d/basis/basis_transcoder.wasm").then((r) => r.ok)`));
 check("lab: sound toggle mounted", await evalJs(`!!document.getElementById("labSound")`));

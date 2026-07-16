@@ -20,7 +20,7 @@ const OUT = "src/assets/3d";
 
 // one entry per page bundle: Blender authoring script + its outputs
 const BUNDLES = {
-  lab: { script: "assets-src/lab/gen_crystals.py", tmp: "/tmp/lab-assets", glb: "lab-crystals", matcap: "lab-matcap" },
+  lab: { script: "assets-src/lab/gen_crystals.py", tmp: "/tmp/lab-assets", glb: "lab-crystals", matcap: "lab-matcap", extraMatcaps: ["lab-matcap-int"] },
   about: { script: "assets-src/about/gen_instrument.py", tmp: "/tmp/about-assets", glb: "about-instrument", matcap: "about-matcap" },
 };
 
@@ -51,8 +51,11 @@ for (const [name, b] of picked) {
   // 2 · Draco-compress the geometry
   run("npx", ["gltf-transform", "draco", `${b.tmp}/${b.glb}-raw.glb`, `${OUT}/${b.glb}.glb`]);
 
-  // 3 · KTX2 the matcap (UASTC — all soft gradients, ETC1S bands)
-  run(TOKTX, ["--t2", "--encode", "uastc", "--uastc_quality", "3", "--zcmp", "19", "--genmipmap", "--assign_oetf", "srgb", `${OUT}/${b.matcap}.ktx2`, `${b.tmp}/${b.matcap}.png`]);
+  // 3 · KTX2 the matcap(s) (UASTC — all soft gradients, ETC1S bands)
+  for (const m of [b.matcap, ...(b.extraMatcaps || [])]) {
+    if (!existsSync(`${b.tmp}/${m}.png`)) { console.error(`[3d] missing ${b.tmp}/${m}.png — run without --no-bake`); process.exit(1); }
+    run(TOKTX, ["--t2", "--encode", "uastc", "--uastc_quality", "3", "--zcmp", "19", "--genmipmap", "--assign_oetf", "srgb", `${OUT}/${m}.ktx2`, `${b.tmp}/${m}.png`]);
+  }
 
   console.log(`[3d] ${name} ok — glb ${kb(`${OUT}/${b.glb}.glb`)}, matcap ${kb(`${OUT}/${b.matcap}.ktx2`)}`);
 }
