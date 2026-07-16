@@ -153,7 +153,7 @@ check("lab: in-world type booted", await evalJs(`new Promise((res) => { const t0
 check("lab: crystalline v2 world booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-crystalline") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab: HUD readout mounted", await evalJs(`/^0[0-4] \\//.test(document.getElementById("labReadout")?.textContent || "")`));
 check("lab: scroll track is a descent", await evalJs(`document.documentElement.scrollHeight >= innerHeight * 4.5`));
-check("lab: draco glb served", await evalJs(`fetch("/assets/3d/lab-crystals.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 4000)`));
+check("lab: draco glb served (v3 high-poly)", await evalJs(`fetch("/assets/3d/lab-crystals.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 20000)`));
 check("lab: ktx2 matcap served", await evalJs(`fetch("/assets/3d/lab-matcap.ktx2").then((r) => r.ok)`));
 check("lab: ktx2 interior matcap served", await evalJs(`fetch("/assets/3d/lab-matcap-int.ktx2").then((r) => r.ok)`));
 check("lab: draco decoder served", await evalJs(`fetch("/assets/3d/draco/draco_decoder.wasm").then((r) => r.ok)`));
