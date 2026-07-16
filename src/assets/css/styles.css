@@ -1457,6 +1457,33 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 @keyframes labChargePulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .lab-no3d #labCharge { display: none; }
 
+/* v4 reticle cursor — JS-created, hover-fine && !reduced only */
+.lab-cursor-on.lab-body, .lab-cursor-on .lab, .lab-cursor-on a, .lab-cursor-on button { cursor: none; }
+#labCursor { position: fixed; inset: 0; z-index: 14; pointer-events: none; }
+.lab-cursor__dot { position: absolute; top: -2px; left: -2px; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--ch2); box-shadow: 0 0 8px rgba(79,196,255,.8); }
+.lab-cursor__ring { position: absolute; top: -14px; left: -14px; width: 28px; height: 28px;
+  border: 1px solid var(--lline2); border-radius: 2px; display: grid; place-content: center;
+  transition: width .25s var(--lease), height .25s var(--lease), top .25s var(--lease), left .25s var(--lease),
+    border-color .25s, transform .1s; box-sizing: border-box; rotate: 45deg;
+  clip-path: polygon(0 0, 30% 0, 30% 8%, 8% 8%, 8% 30%, 0 30%, 0 0,
+    100% 0, 100% 30%, 92% 30%, 92% 8%, 70% 8%, 70% 0, 100% 0,
+    100% 100%, 70% 100%, 70% 92%, 92% 92%, 92% 70%, 100% 70%, 100% 100%,
+    0 100%, 0 70%, 8% 70%, 8% 92%, 30% 92%, 30% 100%, 0 100%); }
+#labCursor .lab-cursor__label { rotate: -45deg; font-family: var(--mono); font-style: normal; font-size: .5rem;
+  letter-spacing: .22em; color: var(--ch2); opacity: 0; transition: opacity .25s; white-space: nowrap; }
+#labCursor.is-hover .lab-cursor__ring { top: -24px; left: -24px; width: 48px; height: 48px;
+  border-color: rgba(79,196,255,.55); }
+#labCursor.is-hover .lab-cursor__label { opacity: 1; }
+#labCursor.is-down .lab-cursor__ring { transform: scale(.82); border-color: var(--ch0); }
+.lab-no3d #labCursor { display: none; }
+.lab-no3d.lab-cursor-on.lab-body, .lab-no3d.lab-cursor-on a { cursor: auto; }
+
+/* HUD readout registers each strike */
+.lab-hud__readout.is-ping { animation: labPing .45s var(--lease); }
+@keyframes labPing { 0% { color: var(--ch2); text-shadow: 0 0 12px rgba(79,196,255,.9); }
+  100% { color: var(--ldim); text-shadow: none; } }
+
 /* end card — fades in over the final chapter */
 .lab-end { position: fixed; inset: 0; z-index: 11; display: grid; place-content: center; justify-items: center;
   gap: 1.1rem; text-align: center; opacity: 0; visibility: hidden; pointer-events: none;

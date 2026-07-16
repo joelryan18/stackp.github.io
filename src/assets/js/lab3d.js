@@ -996,6 +996,7 @@ async function start() {
     ripSlot = (ripSlot + 1) % 4;
     ripX = hx; ripY = hy; ripZ = hz; ripLastT = now;
     if (chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
+    if (readout) { readout.classList.remove("is-ping"); void readout.offsetWidth; readout.classList.add("is-ping"); } // HUD registers the strike
     if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
   };
   if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
@@ -1023,6 +1024,47 @@ async function start() {
   addEventListener("pointerup", chargeRelease, { passive: true });
   addEventListener("pointercancel", chargeRelease, { passive: true });
   addEventListener("blur", chargeRelease);
+
+  /* v4 RETICLE — instrument cursor (dot + lagging bracket ring,
+     about3d pattern). Fine pointers only; the native cursor stays
+     for reduced-motion. Created here so no3d pages never carry it. */
+  if (hoverFine && !reduced) {
+    const cur = document.createElement("div");
+    cur.id = "labCursor";
+    cur.setAttribute("aria-hidden", "true");
+    cur.innerHTML = '<i class="lab-cursor__dot"></i><span class="lab-cursor__ring"><em class="lab-cursor__label"></em></span>';
+    document.body.appendChild(cur);
+    document.body.classList.add("lab-cursor-on");
+    const ring = cur.querySelector(".lab-cursor__ring");
+    const dot = cur.querySelector(".lab-cursor__dot");
+    const curLabel = cur.querySelector(".lab-cursor__label");
+    let cpx = W / 2, cpy = H / 2, crx = cpx, cry = cpy, curSeen = false;
+    addEventListener("pointermove", (e) => { cpx = e.clientX; cpy = e.clientY; curSeen = true; }, { passive: true });
+    addEventListener("pointerdown", () => cur.classList.add("is-down"), { passive: true });
+    addEventListener("pointerup", () => cur.classList.remove("is-down"), { passive: true });
+    gsap.ticker.add(() => {
+      if (!curSeen) return;
+      crx += (cpx - crx) * 0.18; cry += (cpy - cry) * 0.18;
+      ring.style.transform = `translate3d(${crx}px,${cry}px,0)`;
+      dot.style.transform = `translate3d(${cpx}px,${cpy}px,0)`;
+    });
+    document.addEventListener("pointerover", (e) => {
+      const t = e.target.closest("[data-cursor]");
+      cur.classList.toggle("is-hover", !!t);
+      if (t) curLabel.textContent = t.dataset.cursor;
+    });
+    /* magnetic end-card links */
+    document.querySelectorAll(".lab-end__actions a").forEach((btn) => {
+      const xTo = gsap.quickTo(btn, "x", { duration: 0.4, ease: "power3.out" });
+      const yTo = gsap.quickTo(btn, "y", { duration: 0.4, ease: "power3.out" });
+      btn.addEventListener("pointermove", (e) => {
+        const r = btn.getBoundingClientRect();
+        xTo((e.clientX - r.left - r.width / 2) * 0.3);
+        yTo((e.clientY - r.top - r.height / 2) * 0.45);
+      });
+      btn.addEventListener("pointerleave", () => { xTo(0); yTo(0); });
+    });
+  }
 
   let hidden = false;
   document.addEventListener("visibilitychange", () => { hidden = document.hidden; });

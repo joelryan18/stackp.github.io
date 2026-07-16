@@ -62,7 +62,7 @@ committable diff (cooldown-resilient like the v3 plan).
   clearer than fade-after-first-fire. Release gate ≥0.22 charge so stray
   clicks never detonate.*
 
-- [ ] **Task 4 — Reticle cursor + HUD polish.** `#labCursor` instrument
+- [x] **Task 4 — Reticle cursor + HUD polish.** `#labCursor` instrument
   reticle (dot + thin bracket ring; rotates/expands on press; label slot fed
   by `[data-cursor]` on the end-card links) — hover-fine && !reduced only,
   about3d cursor pattern; body `lab-cursor-on`. Magnetic end-card links
