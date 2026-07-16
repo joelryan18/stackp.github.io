@@ -106,8 +106,8 @@ so extra `_LOD1` nodes are ignored by v2 runtime — safe to commit early).
 Only Task 5 pushes to main. If a session dies mid-task, the plan checkbox
 state + commit history is the resume point.
 
-- [ ] Task 1 geometry
-- [ ] Task 2 matcaps
-- [ ] Task 3 optics/LOD
-- [ ] Task 4 perf/polish
-- [ ] Task 5 ship
+- [x] Task 1 geometry
+- [x] Task 2 matcaps
+- [x] Task 3 optics/LOD
+- [x] Task 4 perf/polish
+- [x] Task 5 ship
