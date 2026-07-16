@@ -7,6 +7,44 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-16)
 
+- **/lab.html v3 "Deep Signal — Prismatic" SHIPPED 2026-07-16** (user: make
+  it "exceptional … low poly to high poly", 5-task plan for cooldown
+  resilience — plan `docs/superpowers/plans/2026-07-16-lab-v3-prismatic-
+  highpoly.md`, all boxes checked): commits `b2a3d32`→`581f9a2`, built ON
+  TOP of v2 — same 5-chapter contract, classes, node names, asset paths.
+  (a) GEOMETRY — `gen_crystals.py` v3: hi-poly quartz (7 striation ring
+  loops w/ sinusoidal wobble, stepped terminations [shoulder ring 0.38–0.52
+  → apex], parasite micro-spikes on Shard3/4/5, Bevel modifier seg 2 / 28°,
+  430–1716 tris/shard; Gem n_pts 90 bevelled = 1646 tris) PLUS
+  `Shard*_LOD1` twins at exact v2 topology (`hi=False` path) in the SAME
+  glb — 36.4KB Draco. v2 spike params/seeds verbatim so placements match.
+  (b) LIGHT — matcaps re-baked 1024²/256smp; exterior gained 8-point halo
+  ring (energy 7 / size 0.22 — **first bake at 26 washed the whole wall
+  pastel: mc is SQUARED in the shader, faint strips suffice**); interior
+  noise 10/12 finer fracture. toktx gained opt-in `rdo: true` bundle flag
+  (`--uastc_rdo_l 1.5 --uastc_rdo_d 8192`) → 1024² at 443/439KB.
+  (c) SHADER — 3-tap chromatic dispersion (IOR .635/.645/.655 → R/G/B)
+  gated by `uDisp`; bevel glint lobe pow-160 × 0.4 (0.9 too hot). (d) LOD —
+  loader splits `hiByName/loByName` on `_LOD1` suffix (missing LOD1 →
+  degrade to hi, never crash); every bucket = hi+LOD1 InstancedMesh pair
+  sharing matrices/attrs; loop picks by band distance vs `LOD_DIST 18`
+  (inside fog, swap invisible); MID tier builds LOD1 only + uDisp 0.
+  Governor drops dispersion BEFORE any DPR step; `window.__labQ()` QA hook
+  returns {qIdx,dpr,disp,emaMs}. (e) ATMOSPHERE — godlight cones got
+  drifting density banks; THE VEIN got 3 channel-tinted caustic sheets
+  (alpha 0.035, shared uniform objects by reference, `caustU.uOp` peaks at
+  cp 2.0). PERF measured: real GPU 16.7ms med at CORE/RESURFACE w/
+  dispersion on; swiftshader steps to tier 2 + disp off (116ms — that's
+  the software-GL brand, v2 was 83ms). Fallback copy rewritten for v3
+  (high-poly/LOD/dispersion claims, ≥400 chars); smoke glb threshold
+  4k→20k, suite **248 ALL PASS** with HUB WIP path-scope-stashed (popped
+  clean, no assets.json conflict). Live-verified real Chrome on
+  stackwith.me/lab.html: fx-on/lab-crystalline/lab-type-on, 00→04, console
+  clean, 3 assets 200 (glb 36,420B), homepage untouched hub3d.5XGXAZ7X.
+  QA drivers: /tmp/lab-qa.mjs (PORT 8147, `--mobile`/`--live`),
+  /tmp/lab-perf.mjs (+240-frame rAF percentiles + __labQ dump). Perf-probe
+  gotcha: quote GitHub API URLs in zsh — a bare `?per_page=` glob-fails.
+
 - **/lab.html v2 "Deep Signal — Crystalline" SHIPPED 2026-07-16** (user:
   "evolve the lab into peak performance clearity and more realistc award
   wiining … but do evolve it"): commit `ffa56e7`, built ON TOP of v1 —
