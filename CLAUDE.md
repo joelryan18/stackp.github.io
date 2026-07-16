@@ -7,6 +7,50 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-16)
 
+- **/lab.html v4 "Deep Signal — Resonance" SHIPPED 2026-07-16** (user chose
+  "Evolve lab to v4" via question; plan `docs/superpowers/plans/2026-07-16-
+  lab-v4-resonance.md`, all boxes checked): commits `1e3c703`→`1f0c7d5`,
+  runtime-only (lab3d.js + LAB CSS + lab.njk + lab.html + smoke — NO
+  Blender/asset rebuilds), built ON TOP of v3. The world RESPONDS:
+  (a) RIPPLES — analytic ray→cylinder hit (RIP_R 9.4, no Raycaster; camera
+  rail sits inside the wall so the LARGER quadratic root is the wall being
+  looked at; qa<1e-5 → straight-down → strike mid-haze t=14) writes a
+  4-slot `uRip[4]` vec4 ring buffer (xyz hit, w birth, −100 empty). Vertex
+  sums branchless kernels at the instance ORIGIN (`vec3(instanceMatrix[3])`)
+  → rigid-body swell 5.5% via varying vRip (cap 1.25); fragment adds
+  `vTint · vRip · (0.4 + fr·0.45)` — tinted, never white, navy holds.
+  Sweep gates: ≥90ms AND ≥1.2u wall travel; taps (pointerdown) bypass.
+  First strike sets body `lab-resonant` (honesty marker). (b) CHIMES —
+  `chimeRef(hx,hy,hz)` module ref set in the sound closure: sine + 2.997×
+  partial → lowpass 2600 → StereoPanner (pan hx/9), pentatonic minor
+  degree by azimuth over the 48Hz drone root, octave drops with depth
+  (hy thresholds −12/−30), 0.95s exp decay gain 0.055, ≤6 voices ≥110ms,
+  soundOn-gated, subgraph disconnects onended. (c) CORE CHARGE — armed at
+  `heartNear > 0.15`; hold ramps JS `charge` ~1.1s (heart uEnergy +1.7×,
+  bloom +0.45, FOV −4 dolly-pinch, drone filter +320Hz); release ≥0.22
+  fires `uWave` (single vec4: shell from (0,−46.5,0) at 9u/s, exp −1.1,
+  riding the SAME vRip varying) + 46→30Hz sub thump + noise crack +
+  chapterPulse shockwave rails + roll kick. Cue `#labCharge` "[ HOLD TO
+  CHARGE ]" is-on when armed / is-hot pulsing while held; blur/
+  pointercancel release safely. (d) RETICLE — JS-created `#labCursor`
+  (hover-fine && !reduced; body `lab-cursor-on`, cursor:none restored
+  under lab-no3d): cyan dot raw + 45° clip-path corner-bracket ring
+  lagging 0.18, expands + shows label on `[data-cursor]` (end links
+  ENTER/ASCEND), scales lime on press; end links magnetic (gsap quickTo);
+  `#labReadout` pings cyan per strike (remove class + offsetWidth reflow
+  re-trigger). `__labQ()` now {qIdx,dpr,disp,rip,chime,charge,emaMs}.
+  Smoke 2d +3 (resonance ripples fire / reticle cursor mounted / core
+  charge responds — park 78%, settle 8s, hold 2.4s → charge>0.3), suite
+  **251 ALL PASS** with HUB WIP path-scope-stashed (popped clean). Live-
+  verified real Chrome on stackwith.me/lab.html: lab-cursor-on/fx-on/
+  lab-crystalline/lab-type-on, rip 8 marker true, chime 6, charge
+  0.434→release, reticle hover label ENTER, console NONE, homepage
+  untouched hub3d.5XGXAZ7X. QA driver /tmp/lab-qa.mjs gained RESONANCE/
+  CHIME/CHARGE/RETICLE probes (+ `--autoplay-policy=no-user-gesture-
+  required`); charge/settle probes need 8–9s sleeps after big scroll
+  jumps (0.055 camera lerp at swiftshader ~8fps). GOTCHA: chime probe
+  needs the sound pill CLICKED (aria-pressed true) before strikes count.
+
 - **/lab.html v3 "Deep Signal — Prismatic" SHIPPED 2026-07-16** (user: make
   it "exceptional … low poly to high poly", 5-task plan for cooldown
   resilience — plan `docs/superpowers/plans/2026-07-16-lab-v3-prismatic-
