@@ -305,10 +305,12 @@ add_area("Kick", (2.3, 1.3, 0.6), 130, (0.72, 0.90, 1.0), 1.0)      # icy edge k
 add_area("Lime", (-1.8, -1.8, 1.0), 40, (0.72, 1.0, 0.24), 1.4)     # faint brand kick, low-left
 # v3 halo ring: 8 slim strips around the equator — thin bright arcs the
 # bevel strips sweep through as instances rotate past the camera
+# low energy: mc is squared in the runtime shader, so even faint strips
+# read — anything stronger tips the whole body toward washed pastel
 for hi in range(8):
     a = hi * math.tau / 8.0
     add_area(f"Halo{hi}", (2.6 * math.cos(a), 2.6 * math.sin(a), 0.9),
-             26, (0.88, 0.96, 1.0), 0.35)
+             7, (0.88, 0.96, 1.0), 0.22)
 
 scene.render.filepath = f"{out_dir}/lab-matcap.png"
 bpy.ops.render.render(write_still=True)

@@ -266,15 +266,26 @@ async function start() {
   matcap.colorSpace = THREE.SRGBColorSpace;
   matcapInt.colorSpace = THREE.SRGBColorSpace;
 
-  const shardGeos = [];
+  /* v3: the glb carries a high-poly Shard0..5 set (beveled quartz)
+     plus Shard0_LOD1..5_LOD1 (v2-density) for far depth bands. Same
+     local +Y growth axis on both, so one instance plan feeds both. */
+  const hiByName = {}, loByName = {};
   let gemGeo = null;
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
     const g = o.geometry;
     g.computeVertexNormals(); // Draco quantization can bruise normals; facets must stay crisp
-    if (o.name.startsWith("Shard")) { g.center(); shardGeos.push(g); }
+    if (o.name.startsWith("Shard")) {
+      g.center();
+      if (o.name.endsWith("_LOD1")) loByName[o.name.slice(0, -5)] = g;
+      else hiByName[o.name] = g;
+    }
     if (o.name === "Gem") { g.center(); gemGeo = g; }
   });
+  const shardNames = Object.keys(hiByName).sort();
+  const shardGeos = shardNames.map((n) => hiByName[n]);
+  // missing LOD1 nodes degrade to hi-poly everywhere, never a crash
+  const shardGeosLo = shardNames.map((n) => loByName[n] || hiByName[n]);
   if (!shardGeos.length || !gemGeo) throw new Error("crystal glb missing nodes");
 
   const scene = new THREE.Scene();
@@ -317,6 +328,7 @@ async function start() {
     uMatcap: { value: matcap },
     uMatcapInt: { value: matcapInt }, // sampled along refract(v,n) — internal light
     uPulse: { value: 0 }, // chapter hand-off shockwave
+    uDisp: { value: 1 }, // chromatic dispersion on/off — governor drops it before DPR
   };
   const shardMat = new THREE.ShaderMaterial({
     uniforms: shardUniforms,
@@ -347,7 +359,7 @@ async function start() {
       }`,
     fragmentShader: /* glsl */ `
       uniform sampler2D uMatcap, uMatcapInt;
-      uniform float uTime, uPulse;
+      uniform float uTime, uPulse, uDisp;
       varying vec3 vTint, vN, vV;
       varying float vSeed, vY;
       void main(){
@@ -357,12 +369,21 @@ async function start() {
         /* exterior surface — studio-ice matcap by view-space normal */
         vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
         /* INTERIOR light — sample the refraction matcap along the bent
-           ray (ior ~1.55). This is what makes facets read as GLASS with
-           depth instead of tinted stone; per-shard seed offsets the
-           lookup so neighbours never carry identical interiors. */
-        vec3 rf = refract(-v, n, 0.645);
-        vec2 riUv = rf.xy * 0.49 + 0.5 + vec2(vSeed * 0.07 - 0.035);
-        vec3 ri = texture2D(uMatcapInt, riUv).rgb;
+           ray (ior ~1.55). Per-shard seed offsets the lookup so
+           neighbours never carry identical interiors. v3: CHROMATIC
+           DISPERSION — R/G/B each refract at a slightly different IOR,
+           so facet edges fringe into spectra exactly where the bent
+           rays diverge (the expensive-glass read); the governor sets
+           uDisp 0 on the lowest tier, collapsing to the single tap. */
+        vec2 seedOff = vec2(vSeed * 0.07 - 0.035);
+        vec3 rfG = refract(-v, n, 0.645);
+        vec2 riUvG = rfG.xy * 0.49 + 0.5 + seedOff;
+        vec3 ri = texture2D(uMatcapInt, riUvG).rgb;
+        if (uDisp > 0.5) {
+          vec2 riUvR = refract(-v, n, 0.635).xy * 0.49 + 0.5 + seedOff;
+          vec2 riUvB = refract(-v, n, 0.655).xy * 0.49 + 0.5 + seedOff;
+          ri = vec3(texture2D(uMatcapInt, riUvR).r, ri.g, texture2D(uMatcapInt, riUvB).b);
+        }
         float fr = pow(1.0 - ndv, 2.4);
         /* signal current — a luminous band travelling DOWN the shaft */
         float band = smoothstep(2.6, 0.0, abs(mod(-vY + uTime * 1.6, 22.0) - 11.0));
@@ -380,6 +401,12 @@ async function start() {
         float spark = pow(max(0.0, dot(n, normalize(vec3(0.3, 0.75, 0.6)))), 60.0);
         spark *= 0.55 + 0.45 * sin(uTime * (1.3 + vSeed * 2.2) + vSeed * 40.0);
         col += vec3(0.85, 0.95, 1.0) * spark * (0.7 + uPulse);
+        /* bevel glint — a second, much tighter lobe aimed where the
+           1024 matcap's halo ring lives; only the thin bevel strips
+           (normals between adjacent facets) sweep through it, so they
+           flash as the camera moves — the machined-edge read */
+        float bevG = pow(max(0.0, dot(n, normalize(vec3(-0.55, 0.35, 0.75)))), 160.0);
+        col += vec3(0.9, 0.97, 1.0) * bevG * 0.4;
         /* aerial perspective — distant shards melt into the shaft
            haze (also what makes the 36u band cull provably invisible) */
         float dist = length(vV);
@@ -467,34 +494,46 @@ async function start() {
     for (let b = 0; b < NBANDS; b++) { buckets.push([]); bucketMeta.push({ gi, band: b }); }
   }
   plan.forEach((e, i) => buckets[(i % shardGeos.length) * NBANDS + bandOf(e.pos.y)].push(e));
-  const meshes = buckets.map((list, bi) => {
-    if (!list.length) return null;
+  /* v3 LOD: every bucket materialises TWICE — a high-poly beveled
+     mesh and a v2-density LOD1 mesh sharing the identical instance
+     matrices + attrs. The loop shows exactly ONE of the pair: LOD1
+     when the band is > LOD_DIST from the camera (well past fog onset
+     at 11u, so the swap is invisible). MID skips the hi copies
+     entirely — the coarse tier renders LOD1 everywhere. */
+  const LOD_DIST = 18;
+  const meshes = buckets.flatMap((list, bi) => {
+    if (!list.length) return [];
     const gi = bucketMeta[bi].gi;
-    const im = new THREE.InstancedMesh(shardGeos[gi], shardMat, list.length);
     const tints = new Float32Array(list.length * 3);
     const births = new Float32Array(list.length);
     const seeds = new Float32Array(list.length);
-    list.forEach((e, i) => {
+    const mats = list.map((e, i) => {
       dummy.position.copy(e.pos);
       dummy.quaternion.copy(e.quat);
       dummy.scale.setScalar(e.scale);
       dummy.updateMatrix();
-      im.setMatrixAt(i, dummy.matrix);
       e.tint.toArray(tints, i * 3);
       births[i] = e.birth;
       seeds[i] = rand();
+      return dummy.matrix.clone();
     });
-    im.geometry = shardGeos[gi].clone(); // per-mesh attribute sets
-    im.geometry.setAttribute("aTint", new THREE.InstancedBufferAttribute(tints, 3));
-    im.geometry.setAttribute("aBirth", new THREE.InstancedBufferAttribute(births, 1));
-    im.geometry.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
-    im.instanceMatrix.needsUpdate = true;
-    im.frustumCulled = false; // culled by BAND in the loop instead
-    im.userData.bandY = 3 - (bucketMeta[bi].band + 0.5) * BAND_H; // band center
-    im.userData.minBirth = list.reduce((m, e) => Math.min(m, e.birth), Infinity);
-    scene.add(im);
-    return im;
-  }).filter(Boolean);
+    const build = (geo, lod) => {
+      const im = new THREE.InstancedMesh(geo.clone(), shardMat, list.length);
+      mats.forEach((m, i) => im.setMatrixAt(i, m));
+      im.geometry.setAttribute("aTint", new THREE.InstancedBufferAttribute(tints, 3));
+      im.geometry.setAttribute("aBirth", new THREE.InstancedBufferAttribute(births, 1));
+      im.geometry.setAttribute("aSeed", new THREE.InstancedBufferAttribute(seeds, 1));
+      im.instanceMatrix.needsUpdate = true;
+      im.frustumCulled = false; // culled by BAND in the loop instead
+      im.userData.bandY = 3 - (bucketMeta[bi].band + 0.5) * BAND_H; // band center
+      im.userData.minBirth = list.reduce((m, e) => Math.min(m, e.birth), Infinity);
+      im.userData.lod = lod;
+      scene.add(im);
+      return im;
+    };
+    return MID ? [build(shardGeosLo[gi], 1)]
+               : [build(shardGeos[gi], 0), build(shardGeosLo[gi], 1)];
+  });
 
   /* ---- the two gems — hero (surface) + heart (core) ---- */
   const gemUniforms = () => ({
@@ -585,7 +624,11 @@ async function start() {
                              smoothstep(1.0, 0.1, vUv.y) * smoothstep(0.0, 0.14, vUv.y), uDown);
             float flick = 0.82 + 0.18 * sin(vUv.x * 19.0 + uTime * 0.7)  /* slow ray shimmer */
                                 * sin(vUv.x * 7.0 - uTime * 0.4);
-            gl_FragColor = vec4(uTint, body * fall * flick * 0.055 * uOp);
+            /* v3: drifting density along the throw — dust banks slide
+               through the beam instead of a static gradient */
+            float drift = 0.86 + 0.14 * sin(vUv.y * 11.0 - uTime * 0.23 + sin(vUv.x * 5.0) * 1.7)
+                                 * sin(vUv.y * 4.0 + uTime * 0.11);
+            gl_FragColor = vec4(uTint, body * fall * flick * drift * 0.055 * uOp);
           }`,
       }),
     };
@@ -600,6 +643,40 @@ async function start() {
   const auraCone = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 3.4, 14, 24, 4, true), aura.mat);
   auraCone.position.set(0, -41.5, 0);
   scene.add(auraCone);
+
+  /* ---- v3 vein caustics — three faint horizontal light sheets
+     drifting through THE VEIN band (y −13..−27), one per channel
+     color. Additive, ultra-low alpha (v2 lesson: 0.16 reads as
+     milk), noise-broken so they read as suspended particulate
+     catching the channel light, not as flat discs. ---- */
+  const caustU = { uTime: { value: 0 }, uOp: { value: 0 } };
+  const caustMat = (tint) => new THREE.ShaderMaterial({
+    uniforms: { ...caustU, uTint: { value: tint } },
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending, fog: false,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: /* glsl */ `
+      uniform float uTime, uOp; uniform vec3 uTint;
+      varying vec2 vUv;
+      float n2(vec2 p){
+        return 0.5 + 0.25 * sin(p.x * 5.1 + uTime * 0.14) * sin(p.y * 4.3 - uTime * 0.10)
+                   + 0.25 * sin(p.x * 11.0 - uTime * 0.07 + sin(p.y * 6.0) * 2.0);
+      }
+      void main(){
+        float r = length(vUv - 0.5) * 2.0;
+        float disc = smoothstep(1.0, 0.25, r);          /* soft round falloff */
+        float mottle = smoothstep(0.42, 0.85, n2(vUv * 3.0));
+        gl_FragColor = vec4(uTint, disc * mottle * 0.035 * uOp);
+      }`,
+  });
+  const caustics = [0, 1, 2].map((i) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), caustMat(CH[i].clone()));
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(Math.cos(i * 2.1) * 2.0, -15.5 - i * 4.3, Math.sin(i * 2.1) * 2.0);
+    m.userData.baseY = m.position.y;
+    scene.add(m);
+    return m;
+  });
 
   /* ---- drift dust — depth cue along the whole shaft ---- */
   const DN = MID ? 300 : 520;
@@ -809,7 +886,11 @@ async function start() {
   /* ---- adaptive quality governor (about3d pattern) ---- */
   const QCAPS = MID ? [1.25, 1.0, 0.8] : [1.5, 1.15, 0.9];
   let qIdx = 0, emaMs = 16.7, qCooldown = 120, lastT = 0, dprNow = DPR;
+  if (MID) shardUniforms.uDisp.value = 0; // coarse tier: single refraction tap
   const applyQ = () => {
+    // dispersion is the first thing to go — cheaper than a DPR drop
+    // and invisible next to one (tier 0 = full spectra, else off)
+    shardUniforms.uDisp.value = !MID && qIdx === 0 ? 1 : 0;
     dprNow = Math.min(devicePixelRatio || 1, QCAPS[qIdx]);
     renderer.setPixelRatio(dprNow);
     composer.setPixelRatio(dprNow);
@@ -871,8 +952,12 @@ async function start() {
        a lower bound of true view distance, so this can't pop) */
     const growNow = shardUniforms.uGrow.value;
     for (const m of meshes) {
-      m.visible = m.userData.minBirth < growNow + 0.02 &&
-                  Math.abs(m.userData.bandY - curPos.y) - 5 < 36;
+      const bandD = Math.abs(m.userData.bandY - curPos.y);
+      const live = m.userData.minBirth < growNow + 0.02 && bandD - 5 < 36;
+      /* LOD pick: near bands (or MID, which only built LOD1 meshes)
+         draw their single copy; far bands swap hi→LOD1 past LOD_DIST,
+         deep inside the fog so the swap can't read */
+      m.visible = live && (MID || (m.userData.lod === (bandD - 5 < LOD_DIST ? 0 : 1)));
     }
 
     /* godlight lives at the surface, aura at the core */
@@ -882,6 +967,17 @@ async function start() {
     aura.u.uOp.value = Math.max(0, 1 - Math.abs(cp - (F - 0.85)) * 0.75);
     sunCone.visible = sun.u.uOp.value > 0.01;
     auraCone.visible = aura.u.uOp.value > 0.01;
+
+    /* vein caustic sheets live around chapter 2 only */
+    caustU.uTime.value = t;
+    caustU.uOp.value = Math.max(0, 1 - Math.abs(cp - 2.0) * 1.4);
+    for (let ci = 0; ci < caustics.length; ci++) {
+      const cm = caustics[ci];
+      cm.visible = caustU.uOp.value > 0.01;
+      if (!cm.visible) continue;
+      cm.position.y = cm.userData.baseY + Math.sin(t * 0.11 + ci * 2.4) * 0.9;
+      cm.rotation.z = t * 0.02 * (ci % 2 ? -1 : 1);
+    }
 
     /* gems */
     heroGem.rotation.y = t * 0.22;
