@@ -329,6 +329,14 @@ async function start() {
     uMatcapInt: { value: matcapInt }, // sampled along refract(v,n) — internal light
     uPulse: { value: 0 }, // chapter hand-off shockwave
     uDisp: { value: 1 }, // chromatic dispersion on/off — governor drops it before DPR
+    /* v4 RESONANCE — 4-slot pointer-strike ring buffer: xyz = world
+       hit on the shaft wall, w = birth time (−100 = empty slot) */
+    uRip: {
+      value: [
+        new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
+        new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
+      ],
+    },
   };
   const shardMat = new THREE.ShaderMaterial({
     uniforms: shardUniforms,
@@ -337,14 +345,27 @@ async function start() {
       attribute vec3 aTint;
       attribute float aBirth, aSeed;
       uniform float uTime, uGrow;
+      uniform vec4 uRip[4];
       varying vec3 vTint, vN, vV;
-      varying float vSeed, vY;
+      varying float vSeed, vY, vRip;
       void main(){
         /* growth: smoothstep past birth with a small elastic overshoot */
         float g = clamp((uGrow - aBirth) / 0.5, 0.0, 1.0);
         g = g * g * (3.0 - 2.0 * g);
         float s = g * (1.0 + 0.16 * sin(g * 3.14159));
-        vec3 p = position * s;
+        /* v4 RESONANCE — sum the strike kernels at the instance ORIGIN
+           so a struck crystal rings as a rigid body (uniform swell),
+           not as jelly. Branchless: dead slots contribute 0. */
+        vec3 org = vec3(instanceMatrix[3]);
+        float rip = 0.0;
+        for (int i = 0; i < 4; i++) {
+          float age = uTime - uRip[i].w;
+          float live = step(0.0, age) * step(age, 1.6);
+          rip += live * smoothstep(3.6, 0.5, distance(org, uRip[i].xyz))
+               * exp(-age * 2.4) * smoothstep(0.0, 0.07, age);
+        }
+        vRip = min(rip, 1.25);
+        vec3 p = position * (s * (1.0 + 0.055 * vRip));
         vec4 wp = instanceMatrix * vec4(p, 1.0);
         /* glacial idle sway */
         wp.x += sin(uTime * 0.22 + aSeed * 17.0) * 0.05;
@@ -361,7 +382,7 @@ async function start() {
       uniform sampler2D uMatcap, uMatcapInt;
       uniform float uTime, uPulse, uDisp;
       varying vec3 vTint, vN, vV;
-      varying float vSeed, vY;
+      varying float vSeed, vY, vRip;
       void main(){
         vec3 n = normalize(vN);
         vec3 v = normalize(vV);
@@ -395,6 +416,11 @@ async function start() {
         col += mc * mc * mix(vec3(1.0), vTint, 0.5) * (0.22 + fr * 0.75);
         col += vTint * fr * (0.34 + band * 0.9 + uPulse * 1.4);
         col += vTint * band * 0.06;
+        /* v4 RESONANCE glow — struck crystals ring in their OWN
+           channel tint (never white), fresnel-weighted so the light
+           gathers at the rim; capped upstream at 1.25 so a pile-up
+           of strikes can't break the body-navy discipline */
+        col += vTint * vRip * (0.4 + fr * 0.45);
         /* facet sparkle — a facet glints hard when its normal sweeps
            the half-vector of an implied top light; gated per facet by
            seed so glints twinkle across the wall, not strobe in sync */
@@ -863,6 +889,39 @@ async function start() {
     }, { passive: true });
   }
 
+  /* ---- v4 RESONANCE: pointer strikes ring the shaft wall ----
+     Analytic ray→cylinder hit (the crystals live on the wall at
+     r≈8.6–12.2 and the camera rail stays inside it) — no Raycaster,
+     no per-instance attribute writes: 4 uniform slots drive every
+     shard. Hover-fine pointers excite continuously as they sweep;
+     coarse pointers strike on tap. */
+  const RIP_R = 9.4;
+  const ripDir = new THREE.Vector3();
+  let ripSlot = 0, ripLastT = -10, ripCount = 0;
+  let ripX = 1e9, ripY = 1e9, ripZ = 1e9;
+  const strike = (cx, cy, force) => {
+    const now = shardUniforms.uTime.value;
+    const o = camera.position;
+    ripDir.set((cx / W) * 2 - 1, -(cy / H) * 2 + 1, 0.5).unproject(camera).sub(o).normalize();
+    const qa = ripDir.x * ripDir.x + ripDir.z * ripDir.z;
+    const qb = 2 * (o.x * ripDir.x + o.z * ripDir.z);
+    const qc = o.x * o.x + o.z * o.z - RIP_R * RIP_R;
+    const disc = qb * qb - 4 * qa * qc;
+    let tH = 14; // looking straight down the axis — strike mid-haze
+    if (qa > 1e-5 && disc > 0) tH = Math.min(34, (-qb + Math.sqrt(disc)) / (2 * qa));
+    const hx = o.x + ripDir.x * tH, hy = o.y + ripDir.y * tH, hz = o.z + ripDir.z * tH;
+    const dx = hx - ripX, dy = hy - ripY, dz = hz - ripZ;
+    /* gate sweeps: ≥90ms between strikes AND ≥1.2u travel on the
+       wall, so idle jitter never restrikes; taps bypass both */
+    if (!force && (now - ripLastT < 0.09 || dx * dx + dy * dy + dz * dz < 1.44)) return;
+    shardUniforms.uRip.value[ripSlot].set(hx, hy, hz, now);
+    ripSlot = (ripSlot + 1) % 4;
+    ripX = hx; ripY = hy; ripZ = hz; ripLastT = now;
+    if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
+  };
+  if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
+  addEventListener("pointerdown", (e) => strike(e.clientX, e.clientY, true), { passive: true });
+
   let hidden = false;
   document.addEventListener("visibilitychange", () => { hidden = document.hidden; });
 
@@ -899,7 +958,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
