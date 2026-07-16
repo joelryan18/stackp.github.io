@@ -1,21 +1,26 @@
 # gen_crystals.py — authored 3D assets for /lab.html ("Deep Signal")
-# v2 "Crystalline": real quartz-habit crystals + a dual-matcap bake.
+# v3 "Prismatic": HIGH-POLY quartz — beveled facet edges, growth
+# striations along the prism faces, stepped multi-face terminations,
+# parasite micro-crystals on the cluster shards — plus a low-detail
+# LOD1 copy of every shard for far depth bands, and 1024² matcaps.
 # Run headless:
 #   /opt/homebrew/bin/blender --background --factory-startup \
 #     --python assets-src/lab/gen_crystals.py -- <out_dir>
 #
 # Writes to <out_dir>:
-#   lab-crystals-raw.glb  — 6 crystal variants (4 single quartz spikes +
-#                           2 twinned clusters) + 1 bevelled hero gem
-#                           (scripts/build-3d.mjs draco-compresses this into
-#                            src/assets/3d/lab-crystals.glb)
-#   lab-matcap.png        — 512² EXTERIOR studio-ice matcap (Cycles)
-#   lab-matcap-int.png    — 512² INTERIOR refraction matcap: the runtime
-#                           samples this along refract(v,n) so facets carry
-#                           real internal light instead of a flat tint
-#                           (toktx turns both into .ktx2)
+#   lab-crystals-raw.glb  — Shard0..Shard5 (high-poly) + Shard0_LOD1..
+#                           Shard5_LOD1 (v2-density far geometry, same
+#                           +Y growth axis & silhouette) + hero Gem
+#                           (scripts/build-3d.mjs draco-compresses this
+#                            into src/assets/3d/lab-crystals.glb)
+#   lab-matcap.png        — 1024² EXTERIOR studio-ice matcap (Cycles)
+#   lab-matcap-int.png    — 1024² INTERIOR refraction matcap (sampled
+#                           along refract(v,n) at runtime; also fed to
+#                           the R/G/B dispersion taps)
 #
 # Deterministic: seeded RNG, fixed sample counts, zero unseeded calls.
+# Local +Y is the growth axis on EVERY shard and LOD — the runtime
+# placement quaternions depend on it.
 
 import bpy
 import bmesh
@@ -31,35 +36,78 @@ scene = bpy.context.scene
 
 
 # ------------------------------------------------------------------
-# quartz-habit crystal: an IRREGULAR hexagonal prism (real quartz
-# prisms are never regular hexagons) with a slight taper and an
-# ASYMMETRIC six-face pyramidal termination (the apex sits off-axis,
-# as in natural points). Root is a blunt cap that buries in the wall.
-# Local axis: +Y is the growth direction (matches the old shards, so
-# the runtime placement quaternions keep working unchanged).
+# HIGH-POLY quartz spike. Real quartz habit: irregular hexagonal
+# prism (never a regular hexagon), horizontal growth striations on
+# the prism faces, slight taper, and a STEPPED asymmetric six-face
+# termination (an intermediate shoulder ring before the off-axis
+# apex — natural points nearly always break the taper twice).
+# The bevel modifier added per-object turns every hard edge into a
+# thin catch-light strip; that is where the high-poly read comes from.
 # ------------------------------------------------------------------
-def crystal_bmesh(bm, rnd, elong, base_r, tip_len, apex_off, xform):
+N_STRIA = 7  # intermediate striation rings along the prism body
+
+
+def crystal_bmesh(bm, rnd, elong, base_r, tip_len, apex_off, xform, hi=True):
     jit = [rnd.uniform(0.72, 1.12) for _ in range(6)]          # irregular hexagon
     ang0 = rnd.uniform(0.0, math.tau)
     y_root = -elong * 0.5
     y_neck = elong * 0.5
     taper = rnd.uniform(0.82, 0.94)                            # prism narrows upward
-    ring0, ring1 = [], []
-    for i in range(6):
-        a = ang0 + i * math.tau / 6.0
-        cx, cz = math.cos(a), math.sin(a)
-        r0 = base_r * jit[i]
-        ring0.append(bm.verts.new(xform @ Vector((cx * r0, y_root, cz * r0))))
-        ring1.append(bm.verts.new(xform @ Vector((cx * r0 * taper, y_neck, cz * r0 * taper))))
-    apex = bm.verts.new(xform @ Vector((apex_off[0], y_neck + tip_len, apex_off[1])))
-    bm.faces.new(list(reversed(ring0)))                        # root cap
-    for i in range(6):
-        j = (i + 1) % 6
-        bm.faces.new((ring0[i], ring0[j], ring1[j], ring1[i]))  # prism facet
-        bm.faces.new((ring1[i], ring1[j], apex))                # termination facet
+    stria_ph = rnd.uniform(0.0, math.tau)
+    stria_amp = rnd.uniform(0.015, 0.035)
+    n_rings = (2 + N_STRIA) if hi else 2                       # LOD1 = v2 topology
+
+    rings = []
+    for k in range(n_rings):
+        t = k / (n_rings - 1)
+        y = y_root + (y_neck - y_root) * t
+        scale = 1.0 + (taper - 1.0) * t
+        if hi and 0 < k < n_rings - 1:
+            # growth striation: gentle radial banding + tiny ring wobble
+            scale *= 1.0 + stria_amp * math.sin(t * 9.5 + stria_ph)
+            y += rnd.uniform(-0.02, 0.02) * elong
+        ring = []
+        for i in range(6):
+            a = ang0 + i * math.tau / 6.0
+            r = base_r * jit[i] * scale
+            ring.append(bm.verts.new(xform @ Vector((math.cos(a) * r, y, math.sin(a) * r))))
+        rings.append(ring)
+
+    bm.faces.new(list(reversed(rings[0])))                     # root cap
+    for k in range(n_rings - 1):
+        r0, r1 = rings[k], rings[k + 1]
+        for i in range(6):
+            j = (i + 1) % 6
+            bm.faces.new((r0[i], r0[j], r1[j], r1[i]))         # prism facet band
+
+    neck = rings[-1]
+    if hi:
+        # stepped termination: shoulder ring at reduced radius, then apex
+        sh_t = rnd.uniform(0.38, 0.52)
+        sh_scale = rnd.uniform(0.48, 0.62)
+        shoulder = []
+        for i in range(6):
+            a = ang0 + i * math.tau / 6.0
+            r = base_r * jit[i] * taper * sh_scale
+            y = y_neck + tip_len * sh_t + rnd.uniform(-0.03, 0.03) * tip_len
+            shoulder.append(bm.verts.new(xform @ Vector((
+                math.cos(a) * r + apex_off[0] * sh_t,
+                y,
+                math.sin(a) * r + apex_off[1] * sh_t,
+            ))))
+        apex = bm.verts.new(xform @ Vector((apex_off[0], y_neck + tip_len, apex_off[1])))
+        for i in range(6):
+            j = (i + 1) % 6
+            bm.faces.new((neck[i], neck[j], shoulder[j], shoulder[i]))
+            bm.faces.new((shoulder[i], shoulder[j], apex))
+    else:
+        apex = bm.verts.new(xform @ Vector((apex_off[0], y_neck + tip_len, apex_off[1])))
+        for i in range(6):
+            j = (i + 1) % 6
+            bm.faces.new((neck[i], neck[j], apex))
 
 
-def make_crystal(name, seed, spikes):
+def make_crystal(name, seed, spikes, hi=True, bevel_w=0.022):
     """spikes: list of (elong, base_r, tip_len, lean_deg, azim_deg, y_shift)"""
     rnd = random.Random(seed)
     bm = bmesh.new()
@@ -67,7 +115,7 @@ def make_crystal(name, seed, spikes):
         apex_off = (rnd.uniform(-0.14, 0.14) * base_r, rnd.uniform(-0.14, 0.14) * base_r)
         rot = Matrix.Rotation(math.radians(azim), 4, "Y") @ Matrix.Rotation(math.radians(lean), 4, "X")
         xform = Matrix.Translation(Vector((0.0, y_shift, 0.0))) @ rot
-        crystal_bmesh(bm, rnd, elong, base_r, tip_len, apex_off, xform)
+        crystal_bmesh(bm, rnd, elong, base_r, tip_len, apex_off, xform, hi=hi)
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
@@ -75,32 +123,50 @@ def make_crystal(name, seed, spikes):
         poly.use_smooth = False                                # crisp flat facets
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
+    if hi:
+        bev = obj.modifiers.new("Bevel", "BEVEL")              # edge catch-light strips
+        bev.width = bevel_w
+        bev.segments = 2
+        bev.limit_method = "ANGLE"
+        bev.angle_limit = math.radians(28)
     return obj
 
 
-# 4 single points of varying habit + 2 twinned clusters (druse reads)
-shards = [
-    make_crystal("Shard0", 101, [(2.9, 0.40, 1.10, 0, 0, 0)]),                       # long needle
-    make_crystal("Shard1", 202, [(2.1, 0.60, 0.80, 0, 0, 0)]),                       # stout prism
-    make_crystal("Shard2", 303, [(3.4, 0.34, 1.30, 0, 0, 0)]),                       # hair-fine spike
-    make_crystal("Shard3", 404, [(2.5, 0.50, 0.95, 0, 0, 0)]),                       # classic point
-    make_crystal("Shard4", 505, [(2.7, 0.46, 1.00, 0, 0, 0),                         # twin: main +
-                                 (1.6, 0.30, 0.62, 34, 140, -0.55)]),                #   leaning child
-    make_crystal("Shard5", 606, [(2.3, 0.42, 0.85, 0, 0, 0),                         # triplet cluster
-                                 (1.4, 0.26, 0.55, 28, 40, -0.45),
-                                 (1.1, 0.22, 0.48, 42, 250, -0.62)]),
-]
+# spike recipes — IDENTICAL params to v2 so silhouettes, placement and
+# birth choreography read the same; parasite micro-crystals appended
+# on the cluster habits (Shard3 gets one, Shard4/5 get two).
+SPIKES = {
+    "Shard0": [(2.9, 0.40, 1.10, 0, 0, 0)],                    # long needle
+    "Shard1": [(2.1, 0.60, 0.80, 0, 0, 0)],                    # stout prism
+    "Shard2": [(3.4, 0.34, 1.30, 0, 0, 0)],                    # hair-fine spike
+    "Shard3": [(2.5, 0.50, 0.95, 0, 0, 0),                     # classic point +
+               (0.7, 0.14, 0.30, 52, 205, -0.85)],             #   parasite
+    "Shard4": [(2.7, 0.46, 1.00, 0, 0, 0),                     # twin: main +
+               (1.6, 0.30, 0.62, 34, 140, -0.55),              #   leaning child
+               (0.6, 0.12, 0.26, 60, 320, -0.95)],             #   parasite
+    "Shard5": [(2.3, 0.42, 0.85, 0, 0, 0),                     # triplet cluster
+               (1.4, 0.26, 0.55, 28, 40, -0.45),
+               (1.1, 0.22, 0.48, 42, 250, -0.62),
+               (0.55, 0.11, 0.24, 66, 155, -0.80)],            #   parasite
+}
+SEEDS = {"Shard0": 101, "Shard1": 202, "Shard2": 303,
+         "Shard3": 404, "Shard4": 505, "Shard5": 606}
 
-# spread them out so the exported scene is inspectable in a viewer
-for i, s in enumerate(shards):
-    s.location.x = (i - 2.5) * 1.8
+shards = []
+for i, name in enumerate(sorted(SPIKES)):
+    hi = make_crystal(name, SEEDS[name], SPIKES[name], hi=True)
+    lo = make_crystal(name + "_LOD1", SEEDS[name], SPIKES[name], hi=False)
+    hi.location.x = (i - 2.5) * 1.8
+    lo.location.x = (i - 2.5) * 1.8
+    lo.location.z = 3.0
+    shards += [hi, lo]
 
 
 # ------------------------------------------------------------------
-# hero gem — a dense golden-angle hull with a bevel pass so every
-# edge carries a thin extra facet (edge glints under the matcap).
+# hero gem — a DENSE golden-angle hull (v3: 90 pts, was 30) with a
+# multi-segment bevel so every edge carries a soft glint strip.
 # ------------------------------------------------------------------
-def make_gem(name, seed=777, n_pts=30):
+def make_gem(name, seed=777, n_pts=90):
     rnd = random.Random(seed)
     pts = []
     ga = math.pi * (3.0 - math.sqrt(5.0))  # golden angle
@@ -130,8 +196,8 @@ def make_gem(name, seed=777, n_pts=30):
     bpy.context.collection.objects.link(obj)
 
     bev = obj.modifiers.new("Bevel", "BEVEL")
-    bev.width = 0.05
-    bev.segments = 1
+    bev.width = 0.035
+    bev.segments = 3
     bev.limit_method = "ANGLE"
     bev.angle_limit = math.radians(12)
     return obj
@@ -140,10 +206,19 @@ def make_gem(name, seed=777, n_pts=30):
 gem = make_gem("Gem")
 gem.location.y = 3.2
 
+# report post-modifier triangle counts (build sanity: hi-poly targets)
+dg = bpy.context.evaluated_depsgraph_get()
+for o in shards + [gem]:
+    ev = o.evaluated_get(dg)
+    m = ev.to_mesh()
+    m.calc_loop_triangles()
+    print(f"[gen_crystals] {o.name}: {len(m.loop_triangles)} tris")
+    ev.to_mesh_clear()
+
 bpy.ops.export_scene.gltf(
     filepath=f"{out_dir}/lab-crystals-raw.glb",
     export_format="GLB",
-    export_apply=True,   # bake the gem's bevel modifier
+    export_apply=True,   # bake all bevel modifiers
     export_yup=True,
 )
 print(f"[gen_crystals] wrote {out_dir}/lab-crystals-raw.glb")
@@ -153,7 +228,8 @@ print(f"[gen_crystals] wrote {out_dir}/lab-crystals-raw.glb")
 # matcap bakes — orthographic camera on a unit sphere, Cycles. The
 # runtime samples the EXTERIOR map by view-space normal and the
 # INTERIOR map by the refracted view vector, so these two renders
-# ARE the entire crystal lighting model.
+# ARE the entire crystal lighting model. v3: 1024² / 256 samples —
+# at 512 the fine bevel strips alias.
 # ------------------------------------------------------------------
 def matcap_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -175,10 +251,10 @@ def matcap_scene():
     bpy.context.collection.objects.link(cam)
     sc.camera = cam
     sc.render.engine = "CYCLES"
-    sc.cycles.samples = 128
+    sc.cycles.samples = 256
     sc.cycles.use_denoising = True
-    sc.render.resolution_x = 512
-    sc.render.resolution_y = 512
+    sc.render.resolution_x = 1024
+    sc.render.resolution_y = 1024
     sc.render.image_settings.file_format = "PNG"
     return sc, sphere
 
@@ -197,7 +273,8 @@ def add_area(name, loc, energy, color, size=2.2):
 
 
 # ---- EXTERIOR: glassy studio ice — broad window reflection band,
-#      cold rim, faint brand-lime kick low-left ----
+#      cold rim, faint brand-lime kick low-left, and (v3) a thin
+#      bright halo ring that the new bevel strips catch as glints ----
 scene, sphere = matcap_scene()
 mat = bpy.data.materials.new("MatcapIceExt")
 mat.use_nodes = True
@@ -226,6 +303,12 @@ add_area("Key", (-2.0, 1.2, 2.6), 140, (1.0, 0.985, 0.94), 1.6)     # warm key a
 add_area("Fill", (1.5, -1.2, 1.8), 60, (0.55, 0.75, 1.0))           # cold fill, bottom-right
 add_area("Kick", (2.3, 1.3, 0.6), 130, (0.72, 0.90, 1.0), 1.0)      # icy edge kick, right
 add_area("Lime", (-1.8, -1.8, 1.0), 40, (0.72, 1.0, 0.24), 1.4)     # faint brand kick, low-left
+# v3 halo ring: 8 slim strips around the equator — thin bright arcs the
+# bevel strips sweep through as instances rotate past the camera
+for hi in range(8):
+    a = hi * math.tau / 8.0
+    add_area(f"Halo{hi}", (2.6 * math.cos(a), 2.6 * math.sin(a), 0.9),
+             26, (0.88, 0.96, 1.0), 0.35)
 
 scene.render.filepath = f"{out_dir}/lab-matcap.png"
 bpy.ops.render.render(write_still=True)
@@ -234,7 +317,10 @@ print(f"[gen_crystals] wrote {out_dir}/lab-matcap.png")
 
 # ---- INTERIOR: refraction light — a bright caustic heart that dims
 #      to deep glacial blue at grazing angles; noise mottling reads
-#      as internal fracture planes catching light ----
+#      as internal fracture planes catching light. v3: finer fracture
+#      (scale 10 / detail 12) — heart brightness is UNCHANGED from v2
+#      (emission 0.9 / ADD 0.45 / ramp 0.60→0.74: three v2 bake
+#      iterations found the ACES+bloom blow-out ceiling; do not raise).
 scene, sphere = matcap_scene()
 mat = bpy.data.materials.new("MatcapIceInt")
 mat.use_nodes = True
@@ -255,8 +341,8 @@ mid = ramp.color_ramp.elements.new(0.26)
 mid.color = (0.028, 0.085, 0.22, 1.0)
 
 noise = nt.nodes.new("ShaderNodeTexNoise")
-noise.inputs["Scale"].default_value = 7.0
-noise.inputs["Detail"].default_value = 8.0
+noise.inputs["Scale"].default_value = 10.0
+noise.inputs["Detail"].default_value = 12.0
 noise.inputs["Distortion"].default_value = 1.6                # streaked, fracture-plane feel
 nramp = nt.nodes.new("ShaderNodeValToRGB")    # caustic mottle mask
 nramp.color_ramp.elements[0].position = 0.60
@@ -269,8 +355,8 @@ mixc.blend_type = "ADD"
 mixc.inputs["Factor"].default_value = 0.45
 nt.links.new(lw.outputs["Facing"], ramp.inputs["Fac"])
 nt.links.new(noise.outputs["Fac"], nramp.inputs["Fac"])
-nt.links.new(ramp.outputs["Color"], mixc.inputs["A"])
 nt.links.new(nramp.outputs["Color"], mixc.inputs["B"])
+nt.links.new(ramp.outputs["Color"], mixc.inputs["A"])
 nt.links.new(mixc.outputs["Result"], bsdf.inputs["Emission Color"])
 bsdf.inputs["Emission Strength"].default_value = 0.9
 sphere.data.materials.append(mat)
