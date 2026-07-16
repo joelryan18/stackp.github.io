@@ -5,7 +5,55 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-15)
+## Current state (2026-07-16)
+
+- **/lab.html v2 "Deep Signal — Crystalline" SHIPPED 2026-07-16** (user:
+  "evolve the lab into peak performance clearity and more realistc award
+  wiining … but do evolve it"): commit `ffa56e7`, built ON TOP of v1 —
+  same 5-chapter descent/DOM/fallbacks, the world got real. (a) GEOMETRY —
+  `gen_crystals.py` rewritten: quartz-habit shards (irregular hex prisms,
+  6 jittered radii 0.72–1.12, taper, asymmetric 6-face pyramid tips w/
+  off-axis apex); Shard0–3 single points, Shard4 twin (+34° lean child),
+  Shard5 triplet cluster; local +Y growth axis PRESERVED so the runtime
+  placement quats still work; glb 7.4KB Draco. (b) LIGHT — SECOND Cycles
+  bake `lab-matcap-int.ktx2` (226.7KB): interior refraction matcap (Layer
+  Weight facing ramp navy heart (.085,.20,.42)→grazing dark + Noise
+  7.0/8.0/1.6 fracture streaks through 0.60→0.74 ramp, ADD 0.45, emission
+  0.9 — took 3 bake iterations, brighter hearts blow out under ACES+bloom);
+  `build-3d.mjs` bundles gained `extraMatcaps: []` looped in step 3.
+  Fragment shader: `ri = texture2D(uMatcapInt, refract(-v,n,0.645).xy*
+  0.49+0.5 + seedOffset)`, col = ri·tint² + mc²·mix(1,tint,.5)·fresnel +
+  tint·(fresnel+band+pulse) + facet spark glints; **tint²/mc² squaring is
+  what kills the washed-pastel read** (bodies stay deep navy, only rims/
+  glints near white; bloom threshold raised 0.74, grain 0.055). Near-lens:
+  R2 screen-door dither dissolve (`fract(dot(floor(gl_FragCoord.xy),
+  vec2(0.75487766,0.56984029)))`, discard > nearK²) replaced v1's dark-
+  silhouette slab; aerial fade to shaft-haze at 36u. (c) ATMOSPHERE — two
+  additive godlight cones (`shaftLightMat(tint, down)`: fresnel-edge +
+  mouth-softened falloff, uDown flips bright end; alpha 0.055 — 0.16 read
+  as solid milk washing the hero): surface sun shaft (y −4, fades by
+  cp·0.75) + lime core aura (y −41.5, peaks near F−0.85). (d) PERF —
+  depth-band culling: buckets = 6 variants × 6 bands (BAND_H 10,
+  `bandOf(y)=floor((3−y)/10)` clamped), loop sets `m.visible = minBirth <
+  uGrow+0.02 && |bandY − camY| − 5 < 36`; provably pop-free (ungrown band
+  = all scale-0; 36u = the shader's own aerial-fade horizon, vertical
+  distance lower-bounds view distance). (e) Core bloom TAMED (scale
+  .32+.6·r, radius 4.0–6.8, tint·0.6) — at v2 facet brightness the v1
+  sizes read as screen-filling slabs over the end card; now the RESURFACE
+  frame is the lit gem heart ringed by deep quartz spikes. Boot adds body
+  class `lab-crystalline` ONLY on real asset boot (QA/smoke honesty
+  marker); fallback copy in lab.html updated to describe the v2 pipeline.
+  Smoke 2d +2 (crystalline poll, int-matcap served) = 18 lab checks, suite
+  **248 ALL PASS** with HUB WIP stashed. Mobile <680 = lab-no3d, no
+  crystalline claim (correct). Live-verified real Chrome (fx-on/
+  lab-crystalline/lab-type-on on stackwith.me/lab.html, 00→04 chapters,
+  console clean, 3 assets 200, homepage untouched hub3d.5XGXAZ7X). QA
+  driver /tmp/lab-qa.mjs recreated (PORT 8147, `--mobile`/`--live`).
+  **Stash lesson: `git stash push -- src/index.html src/assets/js/hub3d.js
+  src/_includes/layouts/hub.njk` (WIP paths ONLY) — a bare stash grabs the
+  ship's own tracked edits, and the path-scoped stash also popped clean
+  with NO assets.json conflict.** HUB WIP restored, still uncommitted, its
+  CSS layer still MISSING (see v3 warning below).
 
 - **About page v5 "Signal Field — Machined" SHIPPED 2026-07-15** (user:
   "use blender models 3d workflow, make it even better and cleaner"; when a
