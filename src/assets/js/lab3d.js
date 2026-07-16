@@ -154,7 +154,7 @@ markChapter();
    only arms until the first gesture (autoplay policy).
    ------------------------------------------------------------ */
 const soundBtn = document.getElementById("labSound");
-let bedFilterRef = null, acRef = null;
+let bedFilterRef = null, acRef = null, chimeRef = null, chimeCount = 0;
 if (soundBtn) {
   let AC = null, master = null, soundOn = false;
   const ensureAudio = () => {
@@ -189,6 +189,46 @@ if (soundBtn) {
       noise.connect(bp); bp.connect(ng); ng.connect(master); noise.start();
       return true;
     } catch { AC = null; return false; }
+  };
+  /* v4 RESONANCE chime — struck crystals ring pitched. Pentatonic
+     minor over the 48Hz drone root so any strike cluster stays
+     consonant with the bed; azimuth picks the degree, depth drops
+     the octave (the shaft gets graver as you descend), strike x
+     pans the voice. Gated by soundOn; ≤6 live voices, ≥110ms apart. */
+  let lastChime = 0, chimeVoices = 0;
+  chimeRef = (hx, hy, hz) => {
+    if (!AC || !soundOn || chimeVoices >= 6) return;
+    const now = AC.currentTime;
+    if (now - lastChime < 0.11) return;
+    lastChime = now;
+    const PENTA = [0, 3, 5, 7, 10];
+    const deg = PENTA[Math.abs(Math.floor(((Math.atan2(hz, hx) + Math.PI) / (Math.PI * 2)) * 5)) % 5];
+    const oct = hy > -12 ? 3 : hy > -30 ? 2 : 1;
+    const f0 = 48 * Math.pow(2, oct + deg / 12);
+    const g = AC.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.055, now + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0004, now + 0.95);
+    const lp = AC.createBiquadFilter();
+    lp.type = "lowpass"; lp.frequency.value = 2600; lp.Q.value = 0.9;
+    g.connect(lp);
+    let tail = lp;
+    if (AC.createStereoPanner) {
+      const pan = AC.createStereoPanner();
+      pan.pan.value = Math.max(-0.8, Math.min(0.8, hx / 9));
+      lp.connect(pan); tail = pan;
+    }
+    tail.connect(master);
+    /* fundamental + a barely-detuned 3rd partial = glassy ring */
+    [[f0, 1], [f0 * 2.997, 0.22]].forEach(([f, k], vi) => {
+      const o = AC.createOscillator(), og = AC.createGain();
+      o.type = "sine"; o.frequency.value = f; og.gain.value = k;
+      o.connect(og); og.connect(g);
+      if (vi === 0) o.onended = () => { try { tail.disconnect(); } catch {} }; // free the dead subgraph
+      o.start(now); o.stop(now + 1.0);
+    });
+    chimeVoices++; chimeCount++;
+    setTimeout(() => { chimeVoices--; }, 1000);
   };
   const whoosh = () => {
     if (!AC || !soundOn) return;
@@ -917,6 +957,7 @@ async function start() {
     shardUniforms.uRip.value[ripSlot].set(hx, hy, hz, now);
     ripSlot = (ripSlot + 1) % 4;
     ripX = hx; ripY = hy; ripZ = hz; ripLastT = now;
+    if (chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
     if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
   };
   if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
@@ -958,7 +999,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;

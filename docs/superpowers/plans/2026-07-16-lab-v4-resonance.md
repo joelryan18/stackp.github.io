@@ -28,7 +28,7 @@ committable diff (cooldown-resilient like the v3 plan).
 
 ## Tasks
 
-- [ ] **Task 1 — Pointer resonance (visual).** Analytic ray→shaft-wall hit
+- [x] **Task 1 — Pointer resonance (visual).** Analytic ray→shaft-wall hit
   each pointermove (unproject NDC ray, intersect cylinder x²+z²≈9.2² around
   the shaft axis — no THREE.Raycaster, O(1)); write into a 4-slot round-robin
   ripple buffer `uRip[4]` (xyz = world hit, w = birth time; new slot only if
@@ -39,7 +39,7 @@ committable diff (cooldown-resilient like the v3 plan).
   `lab-resonant`; `__labQ()` gains `rip`. QA screenshots must hold the navy
   read. Commit.
 
-- [ ] **Task 2 — Resonance sound.** Module-level `chimeRef(hit)` exposed from
+- [x] **Task 2 — Resonance sound.** Module-level `chimeRef(hit)` exposed from
   the sound block (same pattern as `bedFilterRef`): ≤6-voice pool, sine +
   faint 5th partial → lowpass → StereoPanner (pan = hit.x/9), pentatonic
   degrees over the 48Hz drone root, octave drops with depth, ~0.9s exp decay,
