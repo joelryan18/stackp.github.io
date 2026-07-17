@@ -1354,6 +1354,9 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .lab-body {
   --lbg: #030509; --link: #EFF4FA; --ldim: #A9B6C6; --lfaint: #64707F;
   --ch0: #B8FF3C; --ch1: #FF4FA3; --ch2: #4FC4FF;
+  /* v5 climate accent — JS retints these per chapter (ice → cyan →
+     magenta → lime → pearl); everything accent-colored reads them */
+  --labAcc: #9FD8FF; --labAccGlow: rgba(159,216,255,.55);
   --lline: rgba(210,228,248,.10); --lline2: rgba(210,228,248,.2);
   --lease: cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--lbg); color: var(--link);
@@ -1362,9 +1365,9 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 /* film grain */
 .lab-body::after { content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: .05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); }
-.lab-body ::selection { background: var(--ch2); color: #041018; }
+.lab-body ::selection { background: var(--labAcc); color: #041018; }
 .lab-body .nav { background: transparent; border-bottom-color: transparent; }
-.lab-body .nav__mark { color: var(--ch2); }
+.lab-body .nav__mark { color: var(--labAcc); transition: color .8s; }
 /* .page main sets max-width:860px — the lab must escape it */
 .lab-body main.lab { max-width: none; padding: 0; margin: 0; }
 .lab-body .nav { position: fixed; z-index: 12; }
@@ -1399,8 +1402,8 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .lab-intro__pct { font-family: var(--display); font-weight: 600; font-size: clamp(2.6rem, 7vw, 5rem);
   letter-spacing: -0.02em; color: var(--link); font-variant-numeric: tabular-nums; line-height: 1; }
 .lab-intro__bar { flex: 1; height: 1px; background: var(--lline); position: relative; }
-.lab-intro__bar b { position: absolute; inset: 0; background: var(--ch2); transform: scaleX(0); transform-origin: 0 50%;
-  box-shadow: 0 0 12px rgba(79,196,255,.6); }
+.lab-intro__bar b { position: absolute; inset: 0; background: var(--labAcc); transform: scaleX(0); transform-origin: 0 50%;
+  box-shadow: 0 0 12px var(--labAccGlow); }
 .lab-intro__skip { font-family: var(--mono); font-style: normal; font-size: .58rem; letter-spacing: .26em; color: var(--lfaint); }
 
 /* HUD chrome */
@@ -1424,7 +1427,7 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
   font-family: var(--mono); font-size: .56rem; letter-spacing: .24em; color: var(--lfaint);
   cursor: pointer; backdrop-filter: blur(6px); transition: color .3s, border-color .3s; }
 .lab-hud__sound:hover { border-color: var(--lline2); color: var(--ldim); }
-.lab-hud__sound.is-on { color: var(--ch2); border-color: rgba(79,196,255,.4); }
+.lab-hud__sound.is-on { color: var(--labAcc); border-color: var(--labAccGlow); }
 .lab-hud__sound.is-armed { color: var(--ldim); }
 .lab-hud__eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 10px; }
 .lab-hud__eq i { width: 2px; height: 3px; background: currentColor; }
@@ -1440,7 +1443,7 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
   display: flex; flex-direction: column; align-items: center; gap: .55rem;
   font-family: var(--mono); font-size: .58rem; letter-spacing: .3em; color: var(--ldim);
   transition: opacity .6s var(--lease); }
-.lab-cue span { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, var(--ch2));
+.lab-cue span { width: 1px; height: 34px; background: linear-gradient(180deg, transparent, var(--labAcc));
   animation: labCue 1.8s ease-in-out infinite; }
 @keyframes labCue { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; }
   55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
@@ -1449,11 +1452,11 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 
 /* v4 charge cue — JS-created, appears only inside THE CORE */
 #labCharge { position: fixed; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 12; pointer-events: none;
-  font-family: var(--mono); font-size: .58rem; letter-spacing: .3em; color: var(--ch0);
-  opacity: 0; transition: opacity .5s var(--lease); }
+  font-family: var(--mono); font-size: .58rem; letter-spacing: .3em; color: var(--labAcc);
+  opacity: 0; transition: opacity .5s var(--lease), color .8s; }
 #labCharge.is-on { opacity: .75; }
 #labCharge.is-hot { animation: labChargePulse .55s ease-in-out infinite;
-  text-shadow: 0 0 14px rgba(184, 255, 60, .75); }
+  text-shadow: 0 0 14px var(--labAccGlow); }
 @keyframes labChargePulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .lab-no3d #labCharge { display: none; }
 
@@ -1461,7 +1464,7 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .lab-cursor-on.lab-body, .lab-cursor-on .lab, .lab-cursor-on a, .lab-cursor-on button { cursor: none; }
 #labCursor { position: fixed; inset: 0; z-index: 14; pointer-events: none; }
 .lab-cursor__dot { position: absolute; top: -2px; left: -2px; width: 4px; height: 4px; border-radius: 50%;
-  background: var(--ch2); box-shadow: 0 0 8px rgba(79,196,255,.8); }
+  background: var(--labAcc); box-shadow: 0 0 8px var(--labAccGlow); transition: background .8s, box-shadow .8s; }
 .lab-cursor__ring { position: absolute; top: -14px; left: -14px; width: 28px; height: 28px;
   border: 1px solid var(--lline2); border-radius: 2px; display: grid; place-content: center;
   transition: width .25s var(--lease), height .25s var(--lease), top .25s var(--lease), left .25s var(--lease),
@@ -1471,17 +1474,17 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
     100% 100%, 70% 100%, 70% 92%, 92% 92%, 92% 70%, 100% 70%, 100% 100%,
     0 100%, 0 70%, 8% 70%, 8% 92%, 30% 92%, 30% 100%, 0 100%); }
 #labCursor .lab-cursor__label { rotate: -45deg; font-family: var(--mono); font-style: normal; font-size: .5rem;
-  letter-spacing: .22em; color: var(--ch2); opacity: 0; transition: opacity .25s; white-space: nowrap; }
+  letter-spacing: .22em; color: var(--labAcc); opacity: 0; transition: opacity .25s, color .8s; white-space: nowrap; }
 #labCursor.is-hover .lab-cursor__ring { top: -24px; left: -24px; width: 48px; height: 48px;
-  border-color: rgba(79,196,255,.55); }
+  border-color: var(--labAccGlow); }
 #labCursor.is-hover .lab-cursor__label { opacity: 1; }
-#labCursor.is-down .lab-cursor__ring { transform: scale(.82); border-color: var(--ch0); }
+#labCursor.is-down .lab-cursor__ring { transform: scale(.82); border-color: var(--link); }
 .lab-no3d #labCursor { display: none; }
 .lab-no3d.lab-cursor-on.lab-body, .lab-no3d.lab-cursor-on a { cursor: auto; }
 
-/* HUD readout registers each strike */
+/* HUD readout registers each strike — ping flashes the climate accent */
 .lab-hud__readout.is-ping { animation: labPing .45s var(--lease); }
-@keyframes labPing { 0% { color: var(--ch2); text-shadow: 0 0 12px rgba(79,196,255,.9); }
+@keyframes labPing { 0% { color: var(--labAcc); text-shadow: 0 0 12px var(--labAccGlow); }
   100% { color: var(--ldim); text-shadow: none; } }
 
 /* end card — fades in over the final chapter */
@@ -1489,7 +1492,7 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
   gap: 1.1rem; text-align: center; opacity: 0; visibility: hidden; pointer-events: none;
   transition: opacity .9s var(--lease), visibility 0s .9s; }
 .lab-end.is-live { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .9s var(--lease); }
-.lab-end__kicker { font-family: var(--mono); font-size: .6rem; letter-spacing: .3em; color: var(--ch0); }
+.lab-end__kicker { font-family: var(--mono); font-size: .6rem; letter-spacing: .3em; color: var(--labAcc); transition: color .8s; }
 .lab-end h2 { font-family: var(--display); font-weight: 600; font-size: clamp(1.8rem, 4.6vw, 3.4rem);
   line-height: 1.08; letter-spacing: -0.02em; text-shadow: 0 2px 30px rgba(3,5,9,.9); }
 .lab-end__actions { display: flex; gap: .9rem; flex-wrap: wrap; justify-content: center; margin-top: .4rem; }

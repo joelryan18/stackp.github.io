@@ -128,6 +128,17 @@ const readout = document.getElementById("labReadout");
 const hudPct = document.getElementById("labPct");
 const cue = document.getElementById("labCue");
 const endCard = document.getElementById("labEnd");
+/* v5 CLIMATE ACCENT — one custom prop carries the active chapter's
+   color through every piece of DOM chrome (cursor, cue, readout ping,
+   sound pill, nav mark). Set on <body> inline so it beats the
+   .lab-body fallback values; CSS transitions do the travelling. */
+const ACC = ["#9FD8FF", "#4FC4FF", "#FF4FA3", "#B8FF3C", "#E9F2FF"];
+const setAccent = (ch) => {
+  const a = ACC[ch];
+  const r = parseInt(a.slice(1, 3), 16), g = parseInt(a.slice(3, 5), 16), b = parseInt(a.slice(5, 7), 16);
+  document.body.style.setProperty("--labAcc", a);
+  document.body.style.setProperty("--labAccGlow", `rgba(${r},${g},${b},.55)`);
+};
 let activeCh = -1;
 const markChapter = () => {
   const cp = progress();
@@ -136,6 +147,7 @@ const markChapter = () => {
     const first = activeCh === -1;
     activeCh = ch;
     if (readout) readout.textContent = `${String(ch).padStart(2, "0")} / ${CHAPTERS[ch]}`;
+    setAccent(ch);
     if (!first) dispatchEvent(new CustomEvent("lab:chapter", { detail: ch }));
   }
   if (hudPct) {
@@ -366,8 +378,14 @@ async function start() {
   const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 90);
   camera.position.set(0, 4.6, 13.5);
 
-  /* ---- shaft backdrop — an inward-facing gradient tube ---- */
-  const shaftUniforms = { uTime: { value: 0 }, uCamY: { value: 0 } };
+  /* ---- shaft backdrop — an inward-facing gradient tube. The wall
+     colors are uniforms so the five-climate system can grade them:
+     uTop is the master air color, uDeep its floor-shadow. ---- */
+  const shaftUniforms = {
+    uTime: { value: 0 }, uCamY: { value: 0 },
+    uTop: { value: new THREE.Color(0.028, 0.040, 0.066) },
+    uDeep: { value: new THREE.Color(0.006, 0.008, 0.020) },
+  };
   const shaft = new THREE.Mesh(
     new THREE.CylinderGeometry(17, 15, 84, 40, 1, true),
     new THREE.ShaderMaterial({
@@ -389,15 +407,14 @@ async function start() {
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }`,
       fragmentShader: /* glsl */ `
-        uniform float uTime; varying vec3 vW;
+        uniform float uTime; uniform vec3 uTop, uDeep; varying vec3 vW;
         void main(){
           float d = clamp((6.0 - vW.y) / 56.0, 0.0, 1.0); /* 0 surface → 1 core */
-          vec3 top = vec3(0.028, 0.040, 0.066);
-          vec3 deep = vec3(0.006, 0.008, 0.020);
-          vec3 c = mix(top, deep, d);
-          /* faint vertical seams, slowly drifting — cave walls, not flat paint */
+          vec3 c = mix(uTop, uDeep, d);
+          /* faint vertical seams, slowly drifting — cave walls, not flat
+             paint; seam light is the air color, so climates carry it */
           float a = atan(vW.z, vW.x);
-          c += vec3(0.012, 0.018, 0.030) * (0.5 + 0.5 * sin(a * 9.0 + vW.y * 0.22 + uTime * 0.06));
+          c += uTop * 0.45 * (0.5 + 0.5 * sin(a * 9.0 + vW.y * 0.22 + uTime * 0.06));
           gl_FragColor = vec4(c, 1.0);
         }`,
     })
@@ -419,6 +436,7 @@ async function start() {
     uDisp: { value: 1 }, // chromatic dispersion on/off — governor drops it before DPR
     uMorph: { value: 0 }, // v5 TRANSCENDENT — morph state 0=dormant 1=transcendent
     uCamPos: { value: new THREE.Vector3() }, // v5: camera position for proximity morphing
+    uHaze: { value: new THREE.Color(0.008, 0.011, 0.024) }, // v5 climates — aerial fade color, derived from the chapter air
     /* v4 RESONANCE — 4-slot pointer-strike ring buffer: xyz = world
        hit on the shaft wall, w = birth time (−100 = empty slot) */
     uRip: {
@@ -475,15 +493,17 @@ async function start() {
         float morphAmt = uMorph * proximity * g; // only morph grown crystals
 
         vec3 p = position * (s * (1.0 + 0.055 * vRip));
-        /* morph: elongate along Y + slight twist */
-        p.y *= 1.0 + morphAmt * 0.35;
-        float twist = morphAmt * 0.4 * (p.y / length(position));
+        /* morph: a lean stretch + faint twist — enough to feel the
+           crystal answer your approach, never enough to bend the
+           quartz habit into something organic (the asset's identity) */
+        p.y *= 1.0 + morphAmt * 0.16;
+        float twist = morphAmt * 0.18 * (p.y / length(position));
         float co = cos(twist);
         float si = sin(twist);
         p.xz = mat2(co, -si, si, co) * p.xz;
         /* pulsing displacement along normal — kept faint so the facet
            read (the matcaps' whole job) survives the morph */
-        p += normal * morphAmt * 0.05 * sin(uTime * 2.0 + aSeed * 31.0);
+        p += normal * morphAmt * 0.035 * sin(uTime * 2.0 + aSeed * 31.0);
 
         vec4 wp = instanceMatrix * vec4(p, 1.0);
         /* glacial idle sway */
@@ -500,6 +520,7 @@ async function start() {
     fragmentShader: /* glsl */ `
       uniform sampler2D uMatcap, uMatcapInt;
       uniform float uTime, uPulse, uDisp;
+      uniform vec3 uHaze;
       varying vec3 vTint, vN, vV;
       varying float vSeed, vY, vRip;
       void main(){
@@ -552,10 +573,10 @@ async function start() {
            flash as the camera moves — the machined-edge read */
         float bevG = pow(max(0.0, dot(n, normalize(vec3(-0.55, 0.35, 0.75)))), 160.0);
         col += vec3(0.9, 0.97, 1.0) * bevG * 0.4;
-        /* aerial perspective — distant shards melt into the shaft
-           haze (also what makes the 36u band cull provably invisible) */
+        /* aerial perspective — distant shards melt into the chapter's
+           own air (also what makes the 36u band cull provably invisible) */
         float dist = length(vV);
-        col = mix(vec3(0.008, 0.011, 0.024), col, smoothstep(36.0, 22.0, dist));
+        col = mix(uHaze, col, smoothstep(36.0, 22.0, dist));
         /* near-lens crossing: dissolve via stable R2 screen-door
            dither instead of blocking the frame as a dark slab */
         float nearK = smoothstep(1.1, 3.0, dist);
@@ -981,10 +1002,27 @@ async function start() {
     new THREE.Color(0.30, 0.46, 0.80), // descent — cold blue
     new THREE.Color(0.80, 0.34, 0.60), // vein — magenta current
     new THREE.Color(0.31, 0.77, 1.00), // core approach — cyan
-    new THREE.Color(0.72, 1.00, 0.24), // resurface — lime burst
+    new THREE.Color(0.62, 0.78, 1.00), // resurface — pearl lift (v5: the finale breathes light, not acid)
   ];
   const CH_BLOOM = [0.34, 0.40, 0.52, 0.86, 0.44];
   const tintTmp = new THREE.Color();
+
+  /* v5 FIVE CLIMATES — each chapter is its own atmosphere. Every lab
+     material opts out of scene.fog, so the "air" here is really three
+     hand-tuned shader colors: the shaft wall gradient (uTop/uDeep)
+     and the shards' aerial haze (uHaze). One master air color per
+     chapter drives all three each frame, so the whole world agrees
+     about what the air is made of. Values sit in shader space (the
+     numeric Color ctor doesn't convert) and tint the dark — the
+     deep-navy body discipline stands, nothing washes. */
+  const CH_AIR = [
+    new THREE.Color(0.028, 0.040, 0.066), // 00 surface — the baseline navy dawn
+    new THREE.Color(0.020, 0.034, 0.072), // 01 descent — colder, bluer, thinner
+    new THREE.Color(0.052, 0.026, 0.070), // 02 the vein — violet blood-light
+    new THREE.Color(0.026, 0.048, 0.034), // 03 the core — ember lime-black
+    new THREE.Color(0.034, 0.044, 0.064), // 04 resurface — a breath lighter than the dawn, never milk
+  ];
+  const airTarget = new THREE.Color(), airNow = CH_AIR[0].clone();
 
   /* ---- camera rig — keyframed descent, Catmull-Rom ---- */
   const KEYS = [
@@ -1207,9 +1245,10 @@ async function start() {
     /* growth sweeps with depth */
     shardUniforms.uGrow.value = grow.base + cp * 0.9;
 
-    /* v5 MORPHING — crystals near camera become transcendent.
-       Morph strength ramps up as you descend (more fluid deeper down). */
-    const morphTarget = Math.min(1, cp * 0.35 + charge * 0.4);
+    /* v5 MORPHING — crystals near the camera lean toward fluid.
+       Ramps with depth + charge, capped well short of saturation so
+       the deep-core composition stays authored, not stretched. */
+    const morphTarget = Math.min(1, cp * 0.25 + charge * 0.4);
     shardUniforms.uMorph.value += (morphTarget - shardUniforms.uMorph.value) * 0.04;
 
     /* camera travel + parallax + banking — sprung, not lerped */
@@ -1302,6 +1341,13 @@ async function start() {
     /* grade wiring */
     const chNow = Math.round(cp);
     if (chNow !== prevChapter) { chapterPulse = 1; prevChapter = chNow; }
+    /* five climates — the master air color eases between chapters and
+       the wall gradient / floor shadow / aerial haze all derive */
+    airTarget.copy(CH_AIR[fa]).lerp(CH_AIR[Math.min(F, fa + 1)], frac);
+    airNow.lerp(airTarget, 0.04);
+    shaftUniforms.uTop.value.copy(airNow);
+    shaftUniforms.uDeep.value.copy(airNow).multiplyScalar(0.34);
+    shardUniforms.uHaze.value.copy(airNow).multiplyScalar(0.31);
     /* v4 CHARGE release rides the SAME shockwave rails as a chapter
        hand-off (warp/contact/bloom/uPulse/dolly punch) + a roll kick;
        the expanding uWave shell is already in flight shader-side. */
