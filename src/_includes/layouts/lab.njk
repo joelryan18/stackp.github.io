@@ -11,6 +11,7 @@ bodyClass: page lab-body
     <b class="lab-intro__word">DEEP&nbsp;SIGNAL</b>
     <span class="lab-intro__tag">[ LAB · A DESCENT IN FIVE CHAPTERS ]</span>
   </div>
+  <div class="lab-intro__log"></div>
   <div class="lab-intro__meta">
     <span class="lab-intro__pct">000</span>
     <i class="lab-intro__bar"><b></b></i>
@@ -19,7 +20,7 @@ bodyClass: page lab-body
 </div>
 
 <noscript><style>
-  .lab-intro, .lab-hud, .lab-hud__sound, .lab-cue, .labfx, .lab-end { display: none !important; }
+  .lab-intro, .lab-hud, .lab-hud__sound, .lab-hud__tx, .lab-cue, .labfx, .lab-end { display: none !important; }
   .lab-fallback { display: block !important; }
   .lab-track { display: none !important; }
 </style></noscript>
@@ -42,8 +43,9 @@ bodyClass: page lab-body
   <i class="lab-hud__c lab-hud__c--tl"></i><i class="lab-hud__c lab-hud__c--tr"></i>
   <i class="lab-hud__c lab-hud__c--bl"></i><i class="lab-hud__c lab-hud__c--br"></i>
   <span class="lab-hud__readout" id="labReadout">00 / SURFACE</span>
-  <span class="lab-hud__pct">DEPTH <b id="labPct">000</b> %</span>
+  <span class="lab-hud__pct">DEPTH <b id="labPct">&minus;0</b> M</span>
 </div>
+<p class="lab-hud__tx" id="labTx" aria-hidden="true"></p>
 <button class="lab-hud__sound" id="labSound" type="button" aria-pressed="false" aria-label="Toggle sound">
   <span class="lab-hud__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   <span>SND</span>
@@ -56,7 +58,7 @@ bodyClass: page lab-body
 </main>
 
 <div class="lab-end" id="labEnd">
-  <p class="lab-end__kicker">[ END OF DESCENT ]</p>
+  <p class="lab-end__kicker">[ SIGNAL RECOVERED ]</p>
   <h2>Built in the open,<br />like everything here.</h2>
   <div class="lab-end__actions">
     <a class="btn btn--signal" href="/about.html" data-cursor="ENTER">Meet the studio</a>

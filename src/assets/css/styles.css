@@ -1405,6 +1405,13 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
 .lab-intro__bar b { position: absolute; inset: 0; background: var(--labAcc); transform: scaleX(0); transform-origin: 0 50%;
   box-shadow: 0 0 12px var(--labAccGlow); }
 .lab-intro__skip { font-family: var(--mono); font-style: normal; font-size: .58rem; letter-spacing: .26em; color: var(--lfaint); }
+/* v5 boot transcript — real milestones, stamped with real seconds */
+.lab-intro__log { position: absolute; left: clamp(1.2rem, 4vw, 3rem); top: clamp(1.2rem, 4vh, 2.6rem);
+  display: grid; gap: .3rem; font-family: var(--mono); font-size: .55rem; letter-spacing: .14em;
+  color: var(--lfaint); transition: opacity .45s var(--lease); }
+.lab-intro.is-done .lab-intro__log { opacity: 0; }
+.lab-intro__log span { animation: labLogIn .35s var(--lease) both; }
+@keyframes labLogIn { from { opacity: 0; transform: translateY(5px); } to { opacity: .85; transform: none; } }
 
 /* HUD chrome */
 .lab-hud { position: fixed; inset: 0; z-index: 12; pointer-events: none; }
@@ -1417,8 +1424,15 @@ body:not(.fx-dom) [data-abreveal] { opacity: 1; transform: none; }
   letter-spacing: .22em; color: var(--ldim); }
 .lab-hud__pct { position: absolute; right: 44px; bottom: 22px; font-family: var(--mono); font-size: .6rem;
   letter-spacing: .22em; color: var(--lfaint); }
-.lab-hud__pct b { color: var(--ldim); font-weight: 500; font-variant-numeric: tabular-nums; }
+.lab-hud__pct b { color: var(--ldim); font-weight: 500; font-variant-numeric: tabular-nums;
+  display: inline-block; min-width: 6ch; text-align: right; }
+/* v5 transmission line — the decoded field report under the nav */
+.lab-hud__tx { position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 12;
+  margin: 0; pointer-events: none; font-family: var(--mono); font-size: .58rem; letter-spacing: .24em;
+  color: var(--ldim); white-space: nowrap; opacity: 0; transition: opacity .7s var(--lease); }
+.lab-transmission .lab-hud__tx { opacity: .72; }
 .lab-no3d .lab-hud { display: none; }
+.lab-no3d .lab-hud__tx { display: none; }
 
 /* sound pill — OUTSIDE the aria-hidden HUD (it's interactive) */
 .lab-hud__sound { position: fixed; left: 50%; bottom: 15px; transform: translateX(-50%); z-index: 13;

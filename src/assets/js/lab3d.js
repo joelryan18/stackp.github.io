@@ -96,6 +96,20 @@ const tickPct = () => { // ease displayed toward target, never backwards
 if (intro && !reduced) requestAnimationFrame(tickPct);
 
 const bootAt = performance.now();
+/* v5 TRANSMISSION — the loader doubles as a live boot transcript.
+   Every line is a REAL milestone stamped with real elapsed seconds;
+   the fiction is in the phrasing, never in the facts. */
+const logEl = intro?.querySelector(".lab-intro__log");
+let bootLines = 0;
+const bootLine = (msg) => {
+  if (!logEl || intro.classList.contains("is-done")) return;
+  const el = document.createElement("span");
+  el.textContent = `T+${((performance.now() - bootAt) / 1000).toFixed(3)} · ${msg}`;
+  logEl.appendChild(el);
+  bootLines += 1;
+  while (logEl.children.length > 4) logEl.removeChild(logEl.firstChild);
+};
+bootLine("RUNTIME ONLINE");
 const releaseIntro = () => {
   if (!intro) { document.body.classList.add("lab-in"); dispatchEvent(new CustomEvent("lab:hero")); return; }
   if (intro.classList.contains("is-done")) return;
@@ -152,13 +166,43 @@ const markChapter = () => {
   }
   if (hudPct) {
     const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-    hudPct.textContent = String(Math.min(100, Math.round((scrollY / max) * 100))).padStart(3, "0");
+    /* depth in meters — the descent's fiction scale: 100% = −4,600 M */
+    hudPct.textContent = `−${Math.min(4600, Math.round((scrollY / max) * 4600)).toLocaleString("en-US")}`;
   }
   if (cue) cue.classList.toggle("is-gone", cp > 0.06);
   if (endCard) endCard.classList.toggle("is-live", cp > F - 0.55);
 };
 addEventListener("scroll", markChapter, { passive: true });
 markChapter();
+
+/* ------------------------------------------------------------
+   v5 TRANSMISSION LINE — one decoded field report per chapter,
+   scramble-typed under the nav. Armed only from the boot success
+   path (body.lab-transmission), so the page never narrates a
+   world it isn't rendering.
+   ------------------------------------------------------------ */
+const txEl = document.getElementById("labTx");
+const TX = [
+  "CONTACT · SIGNAL FAINT · 4,600 M BELOW",
+  "DESCENT BEGUN · THE WALLS GROW AS YOU PASS",
+  "THREE CHANNELS BRAIDED · CURRENT RISING",
+  "SOURCE PROXIMITY · HOLD TO CHARGE",
+  "SIGNAL RECOVERED · ASCEND WHEN READY",
+];
+const TXCHARS = "ABCDEFGHIKLMNOPRSTUVXZ0123456789/—";
+let txTimer = 0;
+const txType = (line) => {
+  if (!txEl) return;
+  clearInterval(txTimer);
+  let k = 0;
+  txTimer = setInterval(() => {
+    k += 2;
+    if (k >= line.length) { txEl.textContent = line; clearInterval(txTimer); return; }
+    txEl.textContent = line.slice(0, k) +
+      [...line.slice(k, Math.min(line.length, k + 5))]
+        .map((c) => (c === " " || c === "·" ? c : TXCHARS[(Math.random() * TXCHARS.length) | 0])).join("");
+  }, 26);
+};
 
 /* ------------------------------------------------------------
    sound — synthesized WebAudio (same design as about3d): a
@@ -335,6 +379,7 @@ async function start() {
   renderer.setClearColor(0x030509, 1);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  bootLine("GL CONTEXT ACQUIRED");
 
   /* ---- baked assets — the authored pipeline ---- */
   const manager = new THREE.LoadingManager();
@@ -348,6 +393,7 @@ async function start() {
     ktx2.loadAsync("/assets/3d/lab-matcap-int.ktx2"),
   ]);
   loadTarget = 1;
+  bootLine("CRYSTAL ARCHIVE DECODED · 3 ASSETS");
   matcap.colorSpace = THREE.SRGBColorSpace;
   matcapInt.colorSpace = THREE.SRGBColorSpace;
 
@@ -654,6 +700,7 @@ async function start() {
      ~1.6k shards v1 vertex-processed every frame. */
   const BAND_H = 10, NBANDS = 6;
   const bandOf = (y) => Math.max(0, Math.min(NBANDS - 1, Math.floor((3 - y) / BAND_H)));
+  bootLine(`${plan.length.toLocaleString("en-US")} INSTANCES SEEDED`); // real count — the fiction never lies
   const buckets = [];
   const bucketMeta = [];
   for (let gi = 0; gi < shardGeos.length; gi++) {
@@ -1181,7 +1228,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, tx: txEl ? txEl.textContent : "", bootLines, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
@@ -1377,5 +1424,11 @@ async function start() {
   document.body.classList.add("fx-on");
   document.body.classList.add("lab-crystalline"); // v2 QA/smoke marker — only on real boot
   if (PHONE) document.body.classList.add("lab-pocket"); // v5 marker — phone tier actually rendering
+  /* v5 transmission — armed ONLY here, on real boot: the field
+     reports narrate a world that is actually rendering. */
+  document.body.classList.add("lab-transmission");
+  bootLine("LINK ESTABLISHED · BEGIN DESCENT");
+  txType(TX[Math.min(F, Math.round(progress()))]);
+  addEventListener("lab:chapter", (e) => txType(TX[e.detail]));
   releaseIntro();
 }
