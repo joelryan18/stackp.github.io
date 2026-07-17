@@ -24,7 +24,8 @@
    signature). In-world SDF type (troika) names each chapter.
    Loader % is REAL asset progress. Master grade pass, synth
    sound behind a toggle, adaptive DPR governor — same proven
-   systems as about3d. Fallbacks: <680px / reduced-motion /
+   systems as about3d. v5: phones render too (PHONE tier — a
+   lighter cut of the MID world). Fallbacks: reduced-motion /
    GL or asset failure → body.lab-no3d + the DOM fallback
    article; no-JS unhides it via <noscript>.
    ============================================================ */
@@ -301,15 +302,19 @@ if (soundBtn) {
    ------------------------------------------------------------ */
 const canvas = document.getElementById("labfx");
 const no3d = () => { document.body.classList.add("lab-no3d"); loadTarget = 1; releaseIntro(); };
-if (!canvas || reduced || innerWidth < 680) {
+if (!canvas || reduced) {
   no3d();
 } else {
   start().catch((err) => { console.warn("[labfx] 3D disabled:", err); no3d(); });
 }
 
 async function start() {
-  const MID = innerWidth < 1100 || matchMedia("(pointer: coarse)").matches;
-  const DPR = Math.min(devicePixelRatio || 1, MID ? 1.25 : 1.5);
+  /* v5 tiers, chosen at boot (resizing across a boundary keeps the
+     boot tier — same policy MID has had since v2): PHONE < 680 is a
+     lighter cut of the MID world, not a different one. */
+  const PHONE = innerWidth < 680;
+  const MID = PHONE || innerWidth < 1100 || matchMedia("(pointer: coarse)").matches;
+  const DPR = Math.min(devicePixelRatio || 1, PHONE ? 1.1 : MID ? 1.25 : 1.5);
   let W = innerWidth, H = innerHeight;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, stencil: false, powerPreference: "high-performance" });
@@ -538,7 +543,7 @@ async function start() {
   const rand = () => Math.random();
 
   /* wall spiral — the descent itself */
-  const WALL = MID ? 720 : 1380;
+  const WALL = PHONE ? 460 : MID ? 720 : 1380;
   for (let i = 0; i < WALL; i++) {
     const t = i / WALL;
     const y = -2.5 - t * 41 + (rand() - 0.5) * 1.6;
@@ -557,7 +562,7 @@ async function start() {
     plan.push({ pos, quat: q.clone().multiply(qTwist), scale: 0.45 + rand() * 1.0, birth: 0.55 + t * 2.55 + rand() * 0.22, tint });
   }
   /* surface garden — a frozen ring under the hero gem */
-  const GARDEN = MID ? 110 : 170;
+  const GARDEN = PHONE ? 70 : MID ? 110 : 170;
   for (let i = 0; i < GARDEN; i++) {
     const a = rand() * Math.PI * 2;
     const r = 4.6 + rand() * 5.4;
@@ -571,7 +576,7 @@ async function start() {
      deep-tinted: these sit closest to the final camera, and at v2's
      brighter facet response full-size shards read as screen-filling
      slabs (v1 could afford it — its bodies were near-silhouettes). */
-  const CORE = MID ? 100 : 160;
+  const CORE = PHONE ? 70 : MID ? 100 : 160;
   for (let i = 0; i < CORE; i++) {
     dir.set(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize();
     const r = 4.0 + rand() * 2.8;
@@ -783,7 +788,7 @@ async function start() {
   });
 
   /* ---- drift dust — depth cue along the whole shaft ---- */
-  const DN = MID ? 300 : 520;
+  const DN = PHONE ? 180 : MID ? 300 : 520;
   const dgeo = new THREE.BufferGeometry();
   const dpos = new Float32Array(DN * 3);
   const dseed = new Float32Array(DN);
@@ -1087,7 +1092,7 @@ async function start() {
   if (document.body.classList.contains("lab-in")) { grow.base = 0.6; dustU.uBoot.value = 1; }
 
   /* ---- adaptive quality governor (about3d pattern) ---- */
-  const QCAPS = MID ? [1.25, 1.0, 0.8] : [1.5, 1.15, 0.9];
+  const QCAPS = PHONE ? [1.1, 0.9, 0.75] : MID ? [1.25, 1.0, 0.8] : [1.5, 1.15, 0.9];
   let qIdx = 0, emaMs = 16.7, qCooldown = 120, lastT = 0, dprNow = DPR;
   if (MID) shardUniforms.uDisp.value = 0; // coarse tier: single refraction tap
   const applyQ = () => {
@@ -1102,7 +1107,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
@@ -1144,7 +1149,7 @@ async function start() {
     camera.lookAt(curLook);
     rollState += (gsap.utils.clamp(-0.05, 0.05, scrollVel * 0.006) - rollState) * 0.06;
     camera.rotateZ(rollState + Math.sin(t * 0.16) * 0.006);
-    const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac - 4 * charge; // v4: charge pinches the lens
+    const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac - 4 * charge + (PHONE ? 6 : 0); // v4: charge pinch; v5: portrait breathes wider
     if (Math.abs(camera.fov - fv) > 0.01) { camera.fov += (fv - camera.fov) * 0.06; camera.updateProjectionMatrix(); }
 
     /* shaft follows so the tube never ends */
@@ -1233,7 +1238,7 @@ async function start() {
     gradeUniforms.uAberration.value = velEnergy;
     tintTmp.copy(CH_TINT[fa]).lerp(CH_TINT[Math.min(F, fa + 1)], frac);
     gradeUniforms.uTint.value.lerp(tintTmp, 0.06);
-    const targetBloom = (CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5 + charge * 0.45;
+    const targetBloom = ((CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5 + charge * 0.45) * (PHONE ? 0.85 : 1); // small screens amplify halo
     bloomPass.strength += (targetBloom - bloomPass.strength) * 0.08;
     camera.position.z -= chapterPulse * 0.5;
 
@@ -1246,5 +1251,6 @@ async function start() {
 
   document.body.classList.add("fx-on");
   document.body.classList.add("lab-crystalline"); // v2 QA/smoke marker — only on real boot
+  if (PHONE) document.body.classList.add("lab-pocket"); // v5 marker — phone tier actually rendering
   releaseIntro();
 }
