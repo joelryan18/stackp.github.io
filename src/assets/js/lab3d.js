@@ -367,12 +367,27 @@ async function start() {
   camera.position.set(0, 4.6, 13.5);
 
   /* ---- shaft backdrop — an inward-facing gradient tube ---- */
+  const shaftUniforms = { uTime: { value: 0 }, uCamY: { value: 0 } };
   const shaft = new THREE.Mesh(
     new THREE.CylinderGeometry(17, 15, 84, 40, 1, true),
     new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: `varying vec3 vW; void main(){ vW = (modelMatrix * vec4(position,1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      uniforms: shaftUniforms,
+      vertexShader: /* glsl */ `
+        uniform float uTime, uCamY;
+        varying vec3 vW;
+        void main(){
+          vec3 pos = position;
+          /* v5 BREATHING — the tunnel walls pulse like lungs near camera.
+             Radial displacement (xz only, not y) with a slow sine wave
+             scaled by proximity to the camera. Breathes ±3% at peak. */
+          float distFromCam = abs(pos.y - uCamY);
+          float proximity = smoothstep(20.0, 5.0, distFromCam); // 1 near, 0 far
+          float breath = 0.03 * sin(uTime * 0.4 + pos.y * 0.1) * proximity;
+          pos.xz *= 1.0 + breath;
+          vW = (modelMatrix * vec4(pos, 1.0)).xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }`,
       fragmentShader: /* glsl */ `
         uniform float uTime; varying vec3 vW;
         void main(){
@@ -402,6 +417,8 @@ async function start() {
     uMatcapInt: { value: matcapInt }, // sampled along refract(v,n) — internal light
     uPulse: { value: 0 }, // chapter hand-off shockwave
     uDisp: { value: 1 }, // chromatic dispersion on/off — governor drops it before DPR
+    uMorph: { value: 0 }, // v5 TRANSCENDENT — morph state 0=dormant 1=transcendent
+    uCamPos: { value: new THREE.Vector3() }, // v5: camera position for proximity morphing
     /* v4 RESONANCE — 4-slot pointer-strike ring buffer: xyz = world
        hit on the shaft wall, w = birth time (−100 = empty slot) */
     uRip: {
@@ -420,7 +437,8 @@ async function start() {
     vertexShader: /* glsl */ `
       attribute vec3 aTint;
       attribute float aBirth, aSeed;
-      uniform float uTime, uGrow;
+      uniform float uTime, uGrow, uMorph;
+      uniform vec3 uCamPos;
       uniform vec4 uRip[4];
       uniform vec4 uWave;
       varying vec3 vTint, vN, vV;
@@ -448,7 +466,25 @@ async function start() {
         float wAge = uTime - uWave.w;
         float wd = abs(distance(org, uWave.xyz) - wAge * 9.0);
         vRip = min(vRip + step(0.0, wAge) * smoothstep(2.8, 0.0, wd) * exp(-wAge * 1.1), 1.25);
+
+        /* v5 MORPHING — crystals transform shape based on proximity to
+           camera. Near camera (< 8u) they elongate and twist; this is the
+           "transcendent" state where geometry becomes fluid. */
+        float distToCam = distance(org, uCamPos);
+        float proximity = smoothstep(12.0, 4.0, distToCam);
+        float morphAmt = uMorph * proximity * g; // only morph grown crystals
+
         vec3 p = position * (s * (1.0 + 0.055 * vRip));
+        /* morph: elongate along Y + slight twist */
+        p.y *= 1.0 + morphAmt * 0.35;
+        float twist = morphAmt * 0.4 * (p.y / length(position));
+        float co = cos(twist);
+        float si = sin(twist);
+        p.xz = mat2(co, -si, si, co) * p.xz;
+        /* pulsing displacement along normal — kept faint so the facet
+           read (the matcaps' whole job) survives the morph */
+        p += normal * morphAmt * 0.05 * sin(uTime * 2.0 + aSeed * 31.0);
+
         vec4 wp = instanceMatrix * vec4(p, 1.0);
         /* glacial idle sway */
         wp.x += sin(uTime * 0.22 + aSeed * 17.0) * 0.05;
@@ -1120,40 +1156,83 @@ async function start() {
 
   let warpState = 0, contactState = 0, rollState = 0, prevChapter = 0, chapterPulse = 0;
   const clock = new THREE.Clock();
+
+  /* v5 SPRING CAMERA — a real damped harmonic oscillator per axis
+     (semi-implicit Euler) instead of exponential lerp. ζ just under
+     critical gives the rig mass: a whisper of overshoot when the
+     rail bends direction, then a clean settle. reduced-motion never
+     reaches here (the no3d gate), so no snap path is needed. */
+  const CAM_W = 4.4, CAM_Z = 0.85; // ω rad/s ≈ lerp-0.055 responsiveness, damping ratio
+  const camVel = new THREE.Vector3(), lookVel = new THREE.Vector3();
+  const springV3 = (cur, vel, tgt, dt) => {
+    /* a = ω²(target−x) − 2ζω·v — integrate v before x (stable) */
+    vel.x += (CAM_W * CAM_W * (tgt.x - cur.x) - 2 * CAM_Z * CAM_W * vel.x) * dt;
+    vel.y += (CAM_W * CAM_W * (tgt.y - cur.y) - 2 * CAM_Z * CAM_W * vel.y) * dt;
+    vel.z += (CAM_W * CAM_W * (tgt.z - cur.z) - 2 * CAM_Z * CAM_W * vel.z) * dt;
+    cur.addScaledVector(vel, dt);
+  };
+
+  /* v5 DILATED WORLD CLOCK — time thickens with depth. ACCUMULATED
+     (labT += dt·dilation), never t×dilation: a falling multiplier on
+     absolute time runs uTime BACKWARDS mid-descent, which would hand
+     every v4 ripple/wave stamped "now" a negative age and silently
+     kill the resonance systems at depth. The world's visuals and the
+     strike/wave stamps share this clock; the governor, grade grain
+     and DOM stay on real time. */
+  let labT = 0, timeDilation = 1, lastRealT = 0;
+
   renderer.setAnimationLoop(() => {
     if (hidden) return;
     const t = clock.getElapsedTime();
+    const dt = Math.min(1 / 30, Math.max(1e-4, t - lastRealT)); // clamp tab-back spikes
+    lastRealT = t;
     governQuality(t);
-    shardUniforms.uTime.value = t;
-    heroU.uTime.value = t;
-    heartU.uTime.value = t;
-    dustU.uTime.value = t;
-    shaft.material.uniforms.uTime.value = t;
 
     const cp = progress();
     const fa = Math.min(F - 1, Math.floor(cp));
     const frac = Math.min(1, cp - fa);
 
+    /* dilation 1.0 at the surface → ~0.42 at the core; the world
+       clock only ever moves forward, just slower the deeper you are */
+    timeDilation += ((1 - cp * 0.145) - timeDilation) * 0.02;
+    labT += dt * timeDilation;
+    const wt = labT; // world time — every in-world visual reads this
+
+    shardUniforms.uTime.value = wt;
+    heroU.uTime.value = wt;
+    heartU.uTime.value = wt;
+    dustU.uTime.value = wt;
+    shaft.material.uniforms.uTime.value = wt;
+
     /* growth sweeps with depth */
     shardUniforms.uGrow.value = grow.base + cp * 0.9;
 
-    /* camera travel + parallax + banking */
+    /* v5 MORPHING — crystals near camera become transcendent.
+       Morph strength ramps up as you descend (more fluid deeper down). */
+    const morphTarget = Math.min(1, cp * 0.35 + charge * 0.4);
+    shardUniforms.uMorph.value += (morphTarget - shardUniforms.uMorph.value) * 0.04;
+
+    /* camera travel + parallax + banking — sprung, not lerped */
     posCurve.getPoint(cp / F, camPos);
     lookCurve.getPoint(cp / F, camLook);
-    camPos.x += pxN * 0.6 + Math.sin(t * 0.3) * 0.1;
-    camPos.y += pyN * 0.35 + Math.cos(t * 0.24) * 0.06;
+    camPos.x += pxN * 0.6 + Math.sin(wt * 0.3) * 0.1;
+    camPos.y += pyN * 0.35 + Math.cos(wt * 0.24) * 0.06;
     camPos.z += (0.6 - grow.base) * 4.5; // boot dolly-in
-    curPos.lerp(camPos, 0.055);
-    curLook.lerp(camLook, 0.055);
+    springV3(curPos, camVel, camPos, dt);
+    springV3(curLook, lookVel, camLook, dt);
     camera.position.copy(curPos);
     camera.lookAt(curLook);
     rollState += (gsap.utils.clamp(-0.05, 0.05, scrollVel * 0.006) - rollState) * 0.06;
-    camera.rotateZ(rollState + Math.sin(t * 0.16) * 0.006);
+    camera.rotateZ(rollState + Math.sin(wt * 0.16) * 0.006);
     const fv = KEYS[fa].f + (KEYS[Math.min(F, fa + 1)].f - KEYS[fa].f) * frac - 4 * charge + (PHONE ? 6 : 0); // v4: charge pinch; v5: portrait breathes wider
     if (Math.abs(camera.fov - fv) > 0.01) { camera.fov += (fv - camera.fov) * 0.06; camera.updateProjectionMatrix(); }
 
+    /* v5: feed camera position to shaders for proximity effects */
+    shardUniforms.uCamPos.value.copy(curPos);
+
     /* shaft follows so the tube never ends */
     shaft.position.y = curPos.y - 14;
+    shaftUniforms.uCamY.value = curPos.y; // v5: feed camera Y for breathing proximity
 
     /* depth-band culling — a band draws only if (a) its earliest
        birth is inside the growth front (else all scale-0) and (b) it
@@ -1170,32 +1249,32 @@ async function start() {
     }
 
     /* godlight lives at the surface, aura at the core */
-    sun.u.uTime.value = t;
-    aura.u.uTime.value = t;
+    sun.u.uTime.value = wt;
+    aura.u.uTime.value = wt;
     sun.u.uOp.value = grow.base / 0.6 * Math.max(0, 1 - cp * 0.75);
     aura.u.uOp.value = Math.max(0, 1 - Math.abs(cp - (F - 0.85)) * 0.75);
     sunCone.visible = sun.u.uOp.value > 0.01;
     auraCone.visible = aura.u.uOp.value > 0.01;
 
     /* vein caustic sheets live around chapter 2 only */
-    caustU.uTime.value = t;
+    caustU.uTime.value = wt;
     caustU.uOp.value = Math.max(0, 1 - Math.abs(cp - 2.0) * 1.4);
     for (let ci = 0; ci < caustics.length; ci++) {
       const cm = caustics[ci];
       cm.visible = caustU.uOp.value > 0.01;
       if (!cm.visible) continue;
-      cm.position.y = cm.userData.baseY + Math.sin(t * 0.11 + ci * 2.4) * 0.9;
-      cm.rotation.z = t * 0.02 * (ci % 2 ? -1 : 1);
+      cm.position.y = cm.userData.baseY + Math.sin(wt * 0.11 + ci * 2.4) * 0.9;
+      cm.rotation.z = wt * 0.02 * (ci % 2 ? -1 : 1);
     }
 
     /* gems */
-    heroGem.rotation.y = t * 0.22;
-    heroGem.rotation.x = Math.sin(t * 0.17) * 0.14;
-    heroGem.position.y = 4.3 + Math.sin(t * 0.5) * 0.16 + Math.min(1, cp) * 10;
+    heroGem.rotation.y = wt * 0.22;
+    heroGem.rotation.x = Math.sin(wt * 0.17) * 0.14;
+    heroGem.position.y = 4.3 + Math.sin(wt * 0.5) * 0.16 + Math.min(1, cp) * 10;
     heroU.uOp.value = Math.max(0, 1 - cp * 1.1);
     heroGem.visible = heroU.uOp.value > 0.01;
-    heartGem.rotation.y = -t * 0.3;
-    heartGem.rotation.z = Math.sin(t * 0.21) * 0.12;
+    heartGem.rotation.y = -wt * 0.3;
+    heartGem.rotation.z = Math.sin(wt * 0.21) * 0.12;
     const heartNear = Math.max(0, 1 - Math.abs(cp - (F - 0.6)) * 0.9);
     /* v4 CHARGE — armed only near the heart; hold ramps ~1.1s to
        full, releasing (or drifting away) drains fast. Drives the
@@ -1204,7 +1283,7 @@ async function start() {
     charge += ((charging && chargeArmed ? 1 : 0) - charge) * (charging ? 0.035 : 0.1);
     chargeCue.classList.toggle("is-on", chargeArmed);
     heartU.uEnergy.value += ((heartNear + chapterPulse + charge * 1.7) - heartU.uEnergy.value) * 0.06;
-    heartGem.scale.setScalar(2.1 + Math.sin(t * 1.8) * 0.05 * (1 + heartU.uEnergy.value));
+    heartGem.scale.setScalar(2.1 + Math.sin(wt * 1.8) * 0.05 * (1 + heartU.uEnergy.value));
 
     /* in-world chapter names — proximity fade (troika strokes need
        fillOpacity/strokeOpacity, not material.opacity) */
@@ -1216,7 +1295,7 @@ async function start() {
       if (!g.obj.visible) continue;
       g.obj.fillOpacity = 0.07 * g.k;
       g.obj.strokeOpacity = 0.55 * g.k;
-      g.obj.position.y = g.base[1] + Math.sin(t * 0.28 + g.at * 2.0) * 0.14;
+      g.obj.position.y = g.base[1] + Math.sin(wt * 0.28 + g.at * 2.0) * 0.14;
       g.obj.position.x = g.base[0] + pxN * -0.35;
     }
 
