@@ -1,0 +1,145 @@
+---
+layout: layouts/hub.njk
+title: "stackwith.me — a one-person studio shipping software in public"
+description: "Three live projects built from one desk: the AXON agent platform, the Stackime anime tracker, and an engineering blog. No mockups — everything here is deployed and running."
+ogTitle: "stackwith.me — build in public, ship for real"
+permalink: "index.html"
+---
+    <section class="hub__hero">
+      <div class="hub__herocore">
+        <p class="eyebrow">[ <span class="eyebrow__blip"></span> STACKWITH.ME · ONE-PERSON SOFTWARE STUDIO ]</p>
+        <h1 class="hub__title"><span class="ln"><span>Build in public.</span></span><span class="ln"><span>Ship for <em class="hub__grad">real</em>.</span></span></h1>
+        <p class="hub__sub">Three live projects — an autonomous-agent platform, an anime community tracker, and an engineering blog — designed, deployed, and documented from one desk. No mockups. Everything on this site is running.</p>
+        <div class="hub__actions">
+          <a class="btn btn--signal" href="/axon.html">Start with AXON <b>→</b></a>
+          <a class="btn btn--ghost" href="/blog/">Read the blog</a>
+        </div>
+      </div>
+      <p class="hub__hint" aria-hidden="true">SCROLL — THE WORK IS BELOW ↓</p>
+    </section>
+
+    <section class="hub__work" aria-labelledby="work-title">
+      <div class="hub__sechead" data-hubreveal>
+        <p class="eyebrow">[ THE WORK ]</p>
+        <h2 class="hub__h2" id="work-title">Three projects, live right now.</h2>
+      </div>
+      <div class="hub__stack">
+        <a class="hubcard" href="/axon.html" data-hub="axon">
+          <div class="hubcard__body">
+            <span class="hubcard__kicker">01 · PRODUCT</span>
+            <h3 class="hubcard__name">AXON</h3>
+            <p class="hubcard__desc">An autonomous-agent platform for software teams: it senses events, reasons across the stack, acts with guardrails — and writes a full reasoning trace for every run. Real checkout, real auth, real plans.</p>
+            <ul class="hubchips" aria-label="Built with">
+              <li>Razorpay checkout</li>
+              <li>Supabase auth</li>
+              <li>Reasoning traces</li>
+            </ul>
+            <span class="hubcard__cta">Enter AXON <b>→</b></span>
+          </div>
+          <div class="hubcard__viz hubcard__viz--axon" aria-hidden="true">
+            <svg viewBox="0 0 48 28"><path d="M2 14h9l4-10 9 20 4-10h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </div>
+        </a>
+
+        <a class="hubcard" href="/anime.html" data-hub="stackime">
+          <div class="hubcard__body">
+            <span class="hubcard__kicker">02 · COMMUNITY</span>
+            <h3 class="hubcard__name">STACKIME</h3>
+            <p class="hubcard__desc">An anime tracker with a shared community catalog. Discover what's trending and airing through live AniList data, keep your own list, and browse everyone else's — no account needed to look around.</p>
+            <ul class="hubchips" aria-label="Built with">
+              <li>AniList GraphQL</li>
+              <li>Community catalog</li>
+              <li>Discover rails</li>
+            </ul>
+            <span class="hubcard__cta">Open Stackime <b>→</b></span>
+          </div>
+          <div class="hubcard__viz hubcard__viz--kime" aria-hidden="true">
+            <svg viewBox="0 0 48 28"><path d="M6 3v22l18-11z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M30 7h14M30 14h14M30 21h9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+        </a>
+
+        <a class="hubcard" href="/blog/" data-hub="blog">
+          <div class="hubcard__body">
+            <span class="hubcard__kicker">03 · WRITING</span>
+            <h3 class="hubcard__name">THE BLOG</h3>
+            <p class="hubcard__desc">Field notes from building the other two — agents and guardrails, orchestration latency, audit trails. Written after shipping, not before, so the essays document what actually happened.</p>
+            <ul class="hubchips" aria-label="Built with">
+              <li>Three essays so far</li>
+              <li>No paywall</li>
+              <li>Updated as things ship</li>
+            </ul>
+            <span class="hubcard__cta">Read the notes <b>→</b></span>
+          </div>
+          <div class="hubcard__viz hubcard__viz--blog" aria-hidden="true">
+            <svg viewBox="0 0 48 28"><path d="M4 5h40M4 12h40M4 19h26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="41" cy="22" r="2.4" fill="currentColor" stroke="none"/></svg>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="hub__about" aria-labelledby="about-title">
+      <div class="hub__sechead" data-hubreveal>
+        <p class="eyebrow">[ THE STUDIO ]</p>
+        <h2 class="hub__h2" id="about-title">One desk. Full stack. Receipts.</h2>
+      </div>
+      <div class="hub__aboutcols">
+        <div class="hub__aboutcopy" data-hubreveal>
+          <p>Most personal sites are portfolios of finished things. stackwith.me is the opposite: every project here is live and keeps evolving, and the seams are left visible on purpose. When AXON's orchestration latency improves, the datasheet on its page changes. When Stackime gains a discovery rail, it ships to the same URL you visited yesterday.</p>
+          <p>The working rule is simple: <b>if it's on the site, it's real.</b> Prices are exact, limits are stated, and the numbers published anywhere here are targets we actually hold ourselves to — never inflated, never rounded in our favor. If a feature isn't finished, the page says so instead of pretending.</p>
+          <p>Under the hood it's a deliberately boring, verifiable stack: a static Eleventy site, hand-written CSS on a small set of design tokens, esbuild bundles, Supabase for auth and community data, and a headless-Chrome smoke harness that must pass before anything deploys. No trackers beyond consent-gated ads, no dark patterns, no third-party fonts phoning home.</p>
+        </div>
+        <ul class="hub__values">
+          <li class="hub__value" data-hubreveal>
+            <b>Written down first</b>
+            <p>Plans and specs are committed to the repo before code ships — and the blog documents what actually happened, including the mistakes.</p>
+          </li>
+          <li class="hub__value" data-hubreveal>
+            <b>Honest by default</b>
+            <p>"Coming soon" means a disabled button, not a mailing-list trap. Copy is held to the same tolerance as the code.</p>
+          </li>
+          <li class="hub__value" data-hubreveal>
+            <b>Tested before deploy</b>
+            <p>Every push runs a browser-level smoke suite across every page. If a check fails, nothing goes live.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="hub__posts" aria-labelledby="posts-title">
+      <div class="hub__postshead" data-hubreveal>
+        <div>
+          <p class="eyebrow">[ FROM THE BLOG ]</p>
+          <h2 class="hub__h2" id="posts-title">Latest field notes.</h2>
+        </div>
+        <a class="hub__postsall" href="/blog/">All posts <b>→</b></a>
+      </div>
+      <div class="hub__postgrid">
+        <a class="postcard" href="/blog/why-automation-needs-an-audit-trail.html" data-hubreveal>
+          <time class="postcard__date" datetime="2026-06-24">JUN 24, 2026</time>
+          <h3 class="postcard__title">Your automation is only as good as its audit trail</h3>
+          <p class="postcard__desc">An agent that can't explain itself is a liability wearing a productivity costume. How reasoning traces turn "it did something" into "it did exactly this, for exactly this reason."</p>
+          <span class="postcard__cta">Read <b>→</b></span>
+        </a>
+        <a class="postcard" href="/blog/engineering-sub-40ms-orchestration.html" data-hubreveal>
+          <time class="postcard__date" datetime="2026-06-10">JUN 10, 2026</time>
+          <h3 class="postcard__title">Engineering sub-40ms orchestration: reflexes, not workflows</h3>
+          <p class="postcard__desc">A nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.</p>
+          <span class="postcard__cta">Read <b>→</b></span>
+        </a>
+        <a class="postcard" href="/blog/guardrails-are-a-feature.html" data-hubreveal>
+          <time class="postcard__date" datetime="2026-05-28">MAY 28, 2026</time>
+          <h3 class="postcard__title">Guardrails are a feature, not friction</h3>
+          <p class="postcard__desc">The fastest way to lose an ops team's trust is an agent with root and no rules. Scoped permissions, approval gates, and why constraints make autonomy shippable.</p>
+          <span class="postcard__cta">Read <b>→</b></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="hub__cta" aria-label="Start exploring" data-hubreveal>
+      <h2 class="hub__ctatitle">Poke around — it's all live.</h2>
+      <p class="hub__ctasub">Try the agent platform, browse the anime catalog, or read how it's built. And if you want to talk, there's a human on the other end.</p>
+      <div class="hub__actions">
+        <a class="btn btn--signal" href="/axon.html#plans">See AXON plans</a>
+        <a class="btn btn--ghost" href="/contact.html">Get in touch</a>
+      </div>
+    </section>

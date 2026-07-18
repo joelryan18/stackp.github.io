@@ -1,254 +1,187 @@
-/* ============================================================
-   stackwith.me — hub3d.js · "The Spectrum"
-   Three braided signal ribbons (one per channel: AXON lime,
-   Stackime magenta, Log cyan) + particle dust, graded through
-   EffectComposer → UnrealBloom → ACES OutputPass.
-   Hovering a channel card/chip excites its ribbon (uniform).
-   DOM part (reveals, tilt, load choreography) runs everywhere;
-   WebGL boots only on capable desktop, else .hub-no3d fallback.
-   ============================================================ */
+/* hub — "The Workshop Catalog"
+   No WebGL. Three canvas-2D device screens (scope / wave / feed),
+   a live LCD clock, and reveal choreography with safe defaults:
+   without JS everything is visible and static.
+   Honesty contract: body.wf-on is added ONLY after every screen
+   has a context and the first frame has actually drawn.
+   QA hook: window.__hubQ() -> { frames, screens, clock }. */
 
-import * as THREE from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+const ACID = "#B8FF3C";
+const ACID_DIM = "rgba(184,255,60,0.34)";
+const ACID_FAINT = "rgba(184,255,60,0.12)";
+const PLATE = "#15160F";
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const hoverFine = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-/* ------------------------------------------------------------
-   DOM choreography — safe on every device, no WebGL required
-   ------------------------------------------------------------ */
-document.body.classList.add("fx-dom");
-requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add("hub-in")));
+let frames = 0;
+let clockTicks = 0;
 
-const revealables = document.querySelectorAll("[data-hubreveal]");
-if (reduced || !("IntersectionObserver" in window)) {
-  revealables.forEach((el) => el.classList.add("in"));
-} else {
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
-  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
-  revealables.forEach((el) => io.observe(el));
-}
-
-/* card tilt — pointer devices only */
-if (hoverFine && !reduced) {
-  document.querySelectorAll(".hubcard").forEach((card) => {
-    let raf = 0;
-    card.addEventListener("pointermove", (ev) => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = card.getBoundingClientRect();
-        const px = (ev.clientX - r.left) / r.width - 0.5;
-        const py = (ev.clientY - r.top) / r.height - 0.5;
-        card.style.transform = `perspective(900px) rotateX(${(-py * 7).toFixed(2)}deg) rotateY(${(px * 9).toFixed(2)}deg) translateY(-6px)`;
-      });
-    });
-    card.addEventListener("pointerleave", () => { card.style.transform = ""; });
-  });
-}
-
-/* channel hover → ribbon excitement (no-op until 3D boots) */
-const exciteTargets = [0, 0, 0];
-document.querySelectorAll("[data-ch]").forEach((el) => {
-  const i = parseInt(el.dataset.ch, 10);
-  if (Number.isNaN(i) || i < 0 || i > 2) return;
-  const on = () => { exciteTargets[i] = 1; };
-  const off = () => { exciteTargets[i] = 0; };
-  el.addEventListener("pointerenter", on);
-  el.addEventListener("pointerleave", off);
-  el.addEventListener("focusin", on);
-  el.addEventListener("focusout", off);
-});
-
-/* ------------------------------------------------------------
-   WebGL spectrum — desktop, motion-ok, canvas present
-   ------------------------------------------------------------ */
-const canvas = document.getElementById("hubfx");
-if (!canvas || reduced || window.innerWidth < 680) {
-  document.body.classList.add("hub-no3d");
-} else {
-  try { start(); }
-  catch (err) { console.warn("[hubfx] 3D disabled:", err); document.body.classList.add("hub-no3d"); }
-}
-
-function start() {
-  const VOID = 0x04060c;
-  const CHANNELS = [
-    { color: new THREE.Color(0xb8ff3c), phase: 0.0, freq: 1.0, amp: 1.35, y: 0.5, z: 0.0 },   // AXON
-    { color: new THREE.Color(0xff4fa3), phase: 2.1, freq: 0.78, amp: 1.5, y: -0.7, z: -2.6 }, // Stackime
-    { color: new THREE.Color(0x4fc4ff), phase: 4.2, freq: 1.28, amp: 1.1, y: 1.5, z: 2.2 },   // Log
-  ];
-
-  const MID = window.innerWidth < 1100 || matchMedia("(pointer: coarse)").matches;
-  const DPR = Math.min(devicePixelRatio || 1, MID ? 1.25 : 1.5);
-  const N_DUST = MID ? 500 : 1100;
-
-  let W = window.innerWidth, H = window.innerHeight;
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, stencil: false, powerPreference: "high-performance" });
-  renderer.setPixelRatio(DPR);
-  renderer.setSize(W, H);
-  renderer.setClearColor(VOID, 1);
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
-
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(VOID, 16, 44);
-  const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 80);
-  camera.position.set(0, 0.4, 13);
-
-  /* ---- ribbons ---- */
-  const ribbonUniforms = [];
-  for (const ch of CHANNELS) {
-    const uniforms = {
-      uTime: { value: 0 },
-      uAmp: { value: ch.amp },
-      uPhase: { value: ch.phase },
-      uFreq: { value: ch.freq },
-      uExcite: { value: 0 },
-      uColor: { value: ch.color },
-    };
-    const mat = new THREE.ShaderMaterial({
-      uniforms,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      vertexShader: /* glsl */ `
-        uniform float uTime, uAmp, uPhase, uFreq, uExcite;
-        varying vec2 vUv; varying float vGlow;
-        void main() {
-          vUv = uv;
-          vec3 p = position;
-          float x = p.x;
-          float w1 = sin(x * 0.28 * uFreq + uTime * 0.85 + uPhase);
-          float w2 = sin(x * 0.13 * uFreq - uTime * 0.5 + uPhase * 1.7) * 0.6;
-          float w3 = sin(x * 0.55 * uFreq + uTime * 1.6) * 0.3 * (0.35 + uExcite);
-          p.y += (w1 + w2 + w3) * uAmp * (1.0 + uExcite * 1.5);
-          p.z += cos(x * 0.21 + uTime * 0.35 + uPhase) * 1.15;
-          vGlow = 0.55 + 0.45 * sin(x * 0.9 + uTime * 2.1 + uPhase);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-        }`,
-      fragmentShader: /* glsl */ `
-        uniform vec3 uColor; uniform float uExcite;
-        varying vec2 vUv; varying float vGlow;
-        void main() {
-          float edge = smoothstep(0.0, 0.5, vUv.y) * smoothstep(1.0, 0.5, vUv.y);
-          float xfade = smoothstep(0.0, 0.09, vUv.x) * smoothstep(1.0, 0.91, vUv.x);
-          float a = edge * edge * xfade * (0.45 + 0.55 * vGlow) * (0.4 + 0.9 * uExcite);
-          gl_FragColor = vec4(uColor * (0.68 + 1.7 * uExcite + 0.5 * vGlow), a);
-        }`,
-    });
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(72, 1.6, 360, 1), mat);
-    mesh.position.set(0, ch.y, ch.z);
-    mesh.frustumCulled = false;
-    scene.add(mesh);
-    ribbonUniforms.push(uniforms);
-  }
-
-  /* ---- dust ---- */
-  const dustGeo = new THREE.BufferGeometry();
-  const pos = new Float32Array(N_DUST * 3);
-  const col = new Float32Array(N_DUST * 3);
-  const seed = new Float32Array(N_DUST);
-  for (let i = 0; i < N_DUST; i++) {
-    pos[i * 3] = (Math.random() - 0.5) * 76;
-    pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
-    pos[i * 3 + 2] = -9 + Math.random() * 15;
-    const c = CHANNELS[i % 3].color;
-    col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
-    seed[i] = Math.random();
-  }
-  dustGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  dustGeo.setAttribute("aColor", new THREE.BufferAttribute(col, 3));
-  dustGeo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
-  const dustUniforms = { uTime: { value: 0 }, uPx: { value: DPR } };
-  const dust = new THREE.Points(dustGeo, new THREE.ShaderMaterial({
-    uniforms: dustUniforms,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    vertexShader: /* glsl */ `
-      attribute vec3 aColor; attribute float aSeed;
-      uniform float uTime, uPx;
-      varying vec3 vC; varying float vA;
-      void main() {
-        vC = aColor;
-        vec3 p = position;
-        p.y += sin(uTime * 0.25 + aSeed * 21.0) * 0.7;
-        p.x += cos(uTime * 0.18 + aSeed * 13.0) * 0.5;
-        vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        vA = 0.14 + 0.4 * (0.5 + 0.5 * sin(uTime * (0.8 + aSeed * 1.4) + aSeed * 40.0));
-        gl_PointSize = (1.4 + aSeed * 2.8) * uPx * (14.0 / max(1.0, -mv.z));
-        gl_Position = projectionMatrix * mv;
-      }`,
-    fragmentShader: /* glsl */ `
-      varying vec3 vC; varying float vA;
-      void main() {
-        float d = length(gl_PointCoord - 0.5);
-        gl_FragColor = vec4(vC, smoothstep(0.5, 0.12, d) * vA);
-      }`,
-  }));
-  dust.frustumCulled = false;
-  scene.add(dust);
-
-  /* ---- composer ---- */
-  const composer = new EffectComposer(renderer);
-  composer.setPixelRatio(DPR);
-  composer.setSize(W, H);
-  composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.78, 0.7, 0.2));
-  composer.addPass(new OutputPass());
-
-  /* ---- interaction state ---- */
-  const excite = [0, 0, 0];
-  let ptrX = 0, ptrY = 0, camX = 0, camY = 0;
-  if (hoverFine) {
-    addEventListener("pointermove", (e) => {
-      ptrX = (e.clientX / W - 0.5) * 2;
-      ptrY = (e.clientY / H - 0.5) * 2;
-    }, { passive: true });
-  }
-
-  let visible = true, hidden = false;
-  const onScroll = () => {
-    const o = Math.max(0, 1 - scrollY / (innerHeight * 1.2));
-    canvas.style.opacity = o.toFixed(3);
-    visible = o > 0.015;
+/* ---------- LCD clock ---------- */
+function startClock() {
+  const el = document.getElementById("wfClock");
+  if (!el) return false;
+  const tick = () => {
+    el.textContent = new Date().toLocaleTimeString("en-GB", { hour12: false });
+    clockTicks++;
   };
-  addEventListener("scroll", onScroll, { passive: true });
-  document.addEventListener("visibilitychange", () => { hidden = document.hidden; });
-
-  addEventListener("resize", () => {
-    W = innerWidth; H = innerHeight;
-    camera.aspect = W / H;
-    camera.updateProjectionMatrix();
-    renderer.setSize(W, H);
-    composer.setSize(W, H);
-  });
-
-  const clock = new THREE.Clock();
-  renderer.setAnimationLoop(() => {
-    if (hidden || !visible) return;
-    const t = clock.getElapsedTime();
-    for (let i = 0; i < 3; i++) {
-      excite[i] += (exciteTargets[i] - excite[i]) * 0.06;
-      ribbonUniforms[i].uTime.value = t;
-      ribbonUniforms[i].uExcite.value = excite[i];
-    }
-    dustUniforms.uTime.value = t;
-    camX += (ptrX * 1.1 - camX) * 0.03;
-    camY += (-ptrY * 0.7 - camY) * 0.03;
-    camera.position.x = camX;
-    camera.position.y = 0.4 + camY;
-    camera.lookAt(0, 0.2, 0);
-    composer.render();
-  });
-
-  onScroll();
-  document.body.classList.add("fx-on");
+  tick();
+  setInterval(tick, 1000);
+  return true;
 }
+
+/* ---------- device screens ---------- */
+function mountScreen(canvas) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const s = { canvas, ctx, kind: canvas.dataset.screen, w: 0, h: 0, dpr: 1, visible: true, t: Math.random() * 100 };
+  const size = () => {
+    const r = canvas.parentElement.getBoundingClientRect();
+    s.dpr = Math.min(devicePixelRatio || 1, 2);
+    s.w = Math.max(1, Math.round(r.width * s.dpr));
+    s.h = Math.max(1, Math.round(r.height * s.dpr));
+    canvas.width = s.w;
+    canvas.height = s.h;
+  };
+  size();
+  addEventListener("resize", size);
+  return s;
+}
+
+function drawScope(s, t) {
+  const { ctx, w, h } = s;
+  ctx.fillStyle = PLATE;
+  ctx.fillRect(0, 0, w, h);
+  const u = w / 100;
+  /* graticule dots */
+  ctx.fillStyle = "rgba(184,255,60,0.09)";
+  for (let gx = 8; gx < 100; gx += 12)
+    for (let gy = 12; gy < 100; gy += 22) ctx.fillRect(gx * u, (gy / 100) * h, 1.5, 1.5);
+  /* heartbeat trace — the brand mark, sweeping */
+  const mid = h * 0.55, amp = h * 0.3;
+  const beat = (x) => {
+    const p = ((x * 0.011 + t * 0.14) % 1 + 1) % 1;
+    if (p < 0.14) return 0;
+    if (p < 0.2) return -Math.sin((p - 0.14) / 0.06 * Math.PI) * 0.22;
+    if (p < 0.3) return Math.sin((p - 0.2) / 0.1 * Math.PI) * 1;
+    if (p < 0.42) return -Math.sin((p - 0.3) / 0.12 * Math.PI) * 0.36;
+    return Math.sin(p * 21 + t) * 0.02;
+  };
+  ctx.beginPath();
+  for (let x = 0; x <= 100; x += 0.75) {
+    const y = mid - beat(x) * amp;
+    x === 0 ? ctx.moveTo(x * u, y) : ctx.lineTo(x * u, y);
+  }
+  ctx.strokeStyle = ACID;
+  ctx.lineWidth = Math.max(1.4, s.dpr * 1.1);
+  ctx.shadowColor = ACID;
+  ctx.shadowBlur = 8 * s.dpr;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  /* readout */
+  ctx.fillStyle = ACID_DIM;
+  ctx.font = `${9 * s.dpr}px "JetBrains Mono", monospace`;
+  ctx.fillText("TRACE LIVE", 8 * s.dpr, 13 * s.dpr);
+}
+
+function drawWave(s, t) {
+  const { ctx, w, h } = s;
+  ctx.fillStyle = PLATE;
+  ctx.fillRect(0, 0, w, h);
+  const n = 36, gap = w / n;
+  const play = ((t * 0.06) % 1 + 1) % 1;
+  for (let i = 0; i < n; i++) {
+    const v = 0.24 + 0.62 * Math.abs(Math.sin(i * 1.7 + 0.35) * Math.cos(i * 0.31 + t * 0.7));
+    const bh = v * h * 0.62;
+    const x = i * gap + gap * 0.28, y = h * 0.78 - bh;
+    ctx.fillStyle = i / n <= play ? ACID : ACID_FAINT;
+    ctx.fillRect(x, y, gap * 0.44, bh);
+  }
+  /* playhead */
+  const px = play * w;
+  ctx.fillStyle = "rgba(233,231,225,0.75)";
+  ctx.fillRect(px, h * 0.08, Math.max(1, s.dpr), h * 0.78);
+  ctx.fillStyle = ACID_DIM;
+  ctx.font = `${9 * s.dpr}px "JetBrains Mono", monospace`;
+  ctx.fillText("EP " + String(1 + Math.floor(play * 12)).padStart(2, "0") + " / 12", 8 * s.dpr, 13 * s.dpr);
+}
+
+const FEED = [
+  "2026-06-24  AUTOMATION NEEDS AN AUDIT TRAIL",
+  "2026-06-10  SUB-40MS ORCHESTRATION",
+  "2026-05-28  GUARDRAILS ARE A FEATURE",
+  "----------  ------------------------------",
+];
+function drawFeed(s, t) {
+  const { ctx, w, h } = s;
+  ctx.fillStyle = PLATE;
+  ctx.fillRect(0, 0, w, h);
+  const lh = 15 * s.dpr;
+  const scroll = (t * 0.5 * lh) % (FEED.length * lh);
+  ctx.font = `${9.5 * s.dpr}px "JetBrains Mono", monospace`;
+  for (let i = -1; i < h / lh + FEED.length; i++) {
+    const idx = ((i % FEED.length) + FEED.length) % FEED.length;
+    const y = h - (i * lh - scroll) - lh * 0.6;
+    if (y < -lh || y > h + lh) continue;
+    const head = y > h - lh * 1.6;                       /* freshly printed line */
+    ctx.fillStyle = head ? ACID : ACID_DIM;
+    ctx.fillText(FEED[idx], 8 * s.dpr, y);
+  }
+  /* printer head */
+  ctx.fillStyle = "rgba(233,231,225,0.5)";
+  ctx.fillRect(0, h - 2 * s.dpr, w, s.dpr);
+}
+
+const DRAW = { scope: drawScope, wave: drawWave, feed: drawFeed };
+
+/* ---------- boot ---------- */
+try {
+  const canvases = [...document.querySelectorAll("canvas.wf-screen")];
+  const screens = canvases.map(mountScreen).filter(Boolean);
+
+  if (screens.length && screens.length === canvases.length) {
+    /* only burn cycles on screens actually in view */
+    const io = new IntersectionObserver((es) => {
+      for (const e of es) {
+        const s = screens.find((x) => x.canvas === e.target);
+        if (s) s.visible = e.isIntersecting;
+      }
+    }, { rootMargin: "120px" });
+    screens.forEach((s) => io.observe(s.canvas));
+
+    const drawAll = (t) => {
+      for (const s of screens) if (s.visible) DRAW[s.kind]?.(s, s.t + t);
+      frames++;
+    };
+    drawAll(0); /* first frame before claiming anything works */
+
+    if (!reduced) {
+      let last = 0;
+      const loop = (ms) => {
+        if (!document.hidden && ms - last > 33) { last = ms; drawAll(ms / 1000); }
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+      addEventListener("resize", () => drawAll(performance.now() / 1000));
+    } else {
+      addEventListener("resize", () => drawAll(0));
+    }
+
+    startClock();
+    document.body.classList.add("wf-on");           /* honesty marker: screens render */
+
+    /* reveal choreography — armed only here, so no-JS stays visible */
+    if (!reduced) {
+      document.body.classList.add("wf-anim");
+      const rio = new IntersectionObserver((es) => {
+        for (const e of es) if (e.isIntersecting) { e.target.classList.add("in"); rio.unobserve(e.target); }
+      }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
+      document.querySelectorAll("[data-wf]").forEach((el) => rio.observe(el));
+    }
+  } else {
+    startClock(); /* clock is DOM-only; keep it honest even if canvas fails */
+  }
+} catch (e) {
+  /* any failure: page stays static and fully readable, no wf-on claim */
+}
+
+window.__hubQ = () => ({ frames, screens: document.querySelectorAll("canvas.wf-screen").length, clock: clockTicks });

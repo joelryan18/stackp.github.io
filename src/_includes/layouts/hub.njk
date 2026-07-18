@@ -1,62 +1,78 @@
 ---
 layout: layouts/base.njk
-bodyClass: page hub-body
+bodyClass: hub-body
+themeColor: "#E4E2DC"
 ---
 <a class="skip-link" href="#main">Skip to content</a>
 
-<canvas class="hubfx" id="hubfx" aria-hidden="true"></canvas>
-<div class="hubfx-scrim" aria-hidden="true"></div>
-
-<header class="nav is-scrolled">
-  <a href="/" class="nav__brand" aria-label="stackwith.me home">
-    <span class="nav__mark" aria-hidden="true">
-      <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-    </span>
-    <span class="nav__word">STACKWITH.ME</span>
-  </a>
-  <nav class="nav__links" aria-label="Primary">
-    <a href="/blog/" data-index="01">Blog</a>
-    <a href="/about.html" data-index="02">About</a>
-    <a href="/contact.html" data-index="03">Contact</a>
-  </nav>
+<header class="wf-nav">
+  <div class="wf-nav__in">
+    <a href="/" class="wf-brand" aria-label="stackwith.me home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <b>STACKWITH.ME</b>
+    </a>
+    <span class="wf-nav__rev" aria-hidden="true">REV 2026.07.18</span>
+    <nav class="wf-nav__links" aria-label="Primary">
+      <a href="/lab.html">Lab</a>
+      <a href="/game.html">Arena</a>
+      <a href="/blog/">Blog</a>
+      <a href="/about.html">About</a>
+      <a href="/contact.html">Contact</a>
+    </nav>
+  </div>
 </header>
 
-<main id="main" class="hub">
+<main id="main" class="wf">
 {{ content | safe }}
 </main>
 
-<footer class="footer hubfoot">
-  <div class="hubfoot__cols">
-    <div class="hubfoot__brand">
-      <span class="nav__mark" aria-hidden="true">
-        <svg viewBox="0 0 28 28"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
-      </span>
-      <b>STACKWITH.ME</b>
-      <p>One stack, many signals — an autonomous-agent instrument, a community anime tracker, and the notes written while building them.</p>
+<div class="wf-plate">
+  <section class="wf-cta" aria-label="Get in touch">
+    <div>
+      <p class="wf-stamp">[ THE BENCH IS OPEN ]</p>
+      <h2 class="wf-cta__title">Try the machines,<br>or talk to the builder.</h2>
+      <p class="wf-cta__sub">Everything in the catalog is deployed and running right now. Start with AXON's plans, or send a message — one person reads and answers all of it.</p>
     </div>
-    <div class="hubfoot__col">
-      <h4>SECTIONS</h4>
-      <a href="/axon.html">AXON</a>
-      <a href="/anime.html">Stackime</a>
-      <a href="/blog/">Blog</a>
+    <div class="wf-cta__acts">
+      <a class="wf-key wf-key--acid" href="/axon.html#plans">See AXON plans <b>→</b></a>
+      <a class="wf-key wf-key--plate" href="/contact.html">Get in touch</a>
     </div>
-    <div class="hubfoot__col">
-      <h4>COMPANY</h4>
-      <a href="/about.html">About</a>
-      <a href="/contact.html">Contact</a>
+  </section>
+
+  <footer class="wf-foot">
+    <div class="wf-foot__cols">
+      <div class="wf-foot__brand">
+        <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M2 14h5l3-7 6 14 3-7h7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        <b>STACKWITH.ME</b>
+        <p>A one-person software workshop. Three products live in production, built, tested, and shipped from one desk.</p>
+      </div>
+      <div class="wf-foot__col">
+        <h4>CATALOG</h4>
+        <a href="/axon.html">AXON</a>
+        <a href="/anime.html">Stackime</a>
+        <a href="/blog/">Field notes</a>
+        <a href="/lab.html">The Lab</a>
+        <a href="/game.html">Signal Strike</a>
+      </div>
+      <div class="wf-foot__col">
+        <h4>WORKSHOP</h4>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+      <div class="wf-foot__col">
+        <h4>LEGAL</h4>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
     </div>
-    <div class="hubfoot__col">
-      <h4>LEGAL</h4>
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
+    <p class="wf-foot__word" aria-hidden="true">STACKWITH.ME</p>
+    <div class="wf-foot__base">
+      <span>© <span id="year">2026</span> STACKWITH.ME</span>
+      <span><a href="/privacy.html">PRIVACY</a> · <a href="/terms.html">TERMS</a> · <a href="/about.html">ABOUT</a> · <a href="/contact.html">CONTACT</a></span>
+      <span>BUILT BY HAND · NO MOCKUPS</span>
     </div>
-  </div>
-  <div class="footer__base">
-    <span>© <span id="year">2026</span> stackwith.me</span>
-    <span><a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a></span>
-    <span>MADE&nbsp;WITH&nbsp;INTENT</span>
-  </div>
-</footer>
+  </footer>
+</div>
 
 <script type="application/ld+json">
 {
@@ -64,7 +80,7 @@ bodyClass: page hub-body
   "@type": "WebSite",
   "name": "stackwith.me",
   "url": "{{ site.url }}/",
-  "description": "One stack, many signals: AXON the autonomous agent instrument, Stackime anime tracking, and the Signal Log blog."
+  "description": "A one-person software workshop shipping in public: the AXON agent platform, the Stackime anime tracker, and engineering field notes."
 }
 </script>
 <script type="module" src="{{ assets.hub3d }}"></script>

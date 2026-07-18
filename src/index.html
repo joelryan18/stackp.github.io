@@ -1,121 +1,178 @@
 ---
 layout: layouts/hub.njk
-title: "stackwith.me — one stack, many signals"
-description: "Everything I'm building, in one place: AXON the autonomous agent instrument, Stackime anime tracking, and the Signal Log blog — transparent engineering, honest copy, one consistent stack."
-ogTitle: "stackwith.me — one stack, many signals"
+title: "stackwith.me — a one-person software workshop. Three products, live."
+description: "Software, built like hardware. A one-person workshop with three products in production: the AXON agent platform, the Stackime anime tracker, and engineering field notes. Every spec on this page is real."
+ogTitle: "stackwith.me — software, built like hardware"
 permalink: "index.html"
 ---
-    <section class="hub__hero">
-      <div class="hub__herocore">
-        <p class="eyebrow">[ <span class="eyebrow__blip"></span> STACKWITH.ME · INDEPENDENT SOFTWARE STUDIO ]</p>
-        <h1 class="hub__title"><span class="ln"><span>One stack.</span></span><span class="ln"><span>Many <em class="hub__spectrum">signals</em>.</span></span></h1>
-        <p class="hub__sub">Everything I'm building, live in one place — an autonomous-agent instrument, a community anime tracker, and the engineering notes written while building both. A working studio, not a brochure.</p>
-        <div class="hub__actions">
-          <a class="btn btn--signal" href="/axon.html">Explore AXON <b>→</b></a>
-          <a class="btn btn--ghost" href="/blog/">Read the Signal Log</a>
+    <section class="wf-panel wf-section wf-hero">
+      <div class="wf-hero__top">
+        <p class="wf-stamp wf-stamp--box">STACKWITH.ME · ONE-PERSON SOFTWARE WORKSHOP</p>
+        <p class="wf-stamp">EST 2026 · IN PRODUCTION</p>
+      </div>
+      <h1 class="wf-title"><span class="ln">Software,</span><span class="ln">built like <em class="etch">hardware.</em></span></h1>
+      <p class="wf-hero__sub">Three products are live right now — an autonomous-agent platform, an anime community tracker, and the engineering notes written while building both. <b>One person builds, tests, and ships all of it.</b> Every spec below is real: exact prices, real dates, checks that actually run.</p>
+      <div class="wf-hero__base">
+        <div class="wf-hero__acts">
+          <a class="wf-key wf-key--acid" href="/axon.html">Enter AXON <b>→</b></a>
+          <a class="wf-key" href="#catalog">Browse the catalog <b>↓</b></a>
         </div>
-      </div>
-      <div class="hub__tuner" aria-label="Channels">
-        <span class="hub__tunerlabel">TUNE&nbsp;IN&nbsp;/</span>
-        <a class="tuner__chip" href="#ch-axon" data-ch="0"><i></i>CH·01 <b>AXON</b></a>
-        <a class="tuner__chip" href="#ch-kime" data-ch="1"><i></i>CH·02 <b>STACKIME</b></a>
-        <a class="tuner__chip" href="#ch-log" data-ch="2"><i></i>CH·03 <b>LOG</b></a>
-      </div>
-    </section>
-
-    <section class="hub__grid" aria-label="Sections">
-      <a class="hubcard" href="/axon.html" data-hub="axon" data-ch="0" id="ch-axon" data-hubreveal>
-        <span class="hubcard__top"><span class="hubcard__index">CH·01</span><span class="hubcard__tag">PRODUCT</span></span>
-        <span class="hubcard__mark" aria-hidden="true">
-          <svg viewBox="0 0 48 28"><path d="M2 14h9l4-10 9 20 4-10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
-        </span>
-        <h2 class="hubcard__name">AXON</h2>
-        <p class="hubcard__desc">The autonomous agent instrument. Senses, reasons, acts — a nervous system for your software, with a full reasoning trace for every run.</p>
-        <span class="hubcard__cta">Enter the instrument <b>→</b></span>
-      </a>
-
-      <a class="hubcard" href="/anime.html" data-hub="stackime" data-ch="1" id="ch-kime" data-hubreveal>
-        <span class="hubcard__top"><span class="hubcard__index">CH·02</span><span class="hubcard__tag">COMMUNITY</span></span>
-        <span class="hubcard__mark" aria-hidden="true">
-          <svg viewBox="0 0 48 28"><path d="M6 3v22l18-11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M30 7h14M30 14h14M30 21h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </span>
-        <h2 class="hubcard__name">STACKIME</h2>
-        <p class="hubcard__desc">Anime tracking with a community catalog — discover what's trending and airing, keep your own list, and share it with everyone.</p>
-        <span class="hubcard__cta">Open the catalog <b>→</b></span>
-      </a>
-
-      <a class="hubcard" href="/blog/" data-hub="blog" data-ch="2" id="ch-log" data-hubreveal>
-        <span class="hubcard__top"><span class="hubcard__index">CH·03</span><span class="hubcard__tag">WRITING</span></span>
-        <span class="hubcard__mark" aria-hidden="true">
-          <svg viewBox="0 0 48 28"><path d="M4 5h40M4 12h40M4 19h26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="41" cy="22" r="2.4" fill="currentColor" stroke="none"/></svg>
-        </span>
-        <h2 class="hubcard__name">SIGNAL LOG</h2>
-        <p class="hubcard__desc">Field notes on agents, guardrails, latency, and the engineering of trustworthy automation.</p>
-        <span class="hubcard__cta">Read the notes <b>→</b></span>
-      </a>
-    </section>
-
-    <section class="hub__about" aria-labelledby="about-title">
-      <p class="eyebrow" data-hubreveal>[ WHAT THIS IS ]</p>
-      <h2 class="hub__h2" id="about-title" data-hubreveal>A studio you can watch working.</h2>
-      <div class="hub__aboutcols">
-        <div class="hub__aboutcopy" data-hubreveal>
-          <p>Most personal sites are portfolios of finished things. stackwith.me is the opposite: every section here is a live project that keeps evolving, and the seams are left visible on purpose. When AXON's orchestration latency improves, the datasheet on its page changes. When Stackime gains a discovery rail, it ships to the same URL you visited yesterday.</p>
-          <p>The connecting thread is a single engineering philosophy: <b>autonomy needs an audit trail, guardrails are a feature, and marketing copy should be held to product tolerance.</b> The numbers published here are design targets we hold ourselves to — never inflated, never rounded in our favor. If a feature isn't finished, the page says so.</p>
-          <p>Everything runs on one deliberately boring, verifiable stack — a static Eleventy site, hand-written CSS on a small set of design tokens, esbuild bundles, Supabase for auth and community data, and a CDP smoke harness that must pass before anything deploys. No trackers beyond consent-gated ads, no dark patterns, no third-party fonts phoning home.</p>
-        </div>
-        <ul class="hub__values">
-          <li class="hub__value" data-ch="0" data-hubreveal>
-            <b>Transparent engineering</b>
-            <p>Plans, specs, and trade-offs are written down before code ships — and the blog documents what actually happened, including the mistakes.</p>
-          </li>
-          <li class="hub__value" data-ch="1" data-hubreveal>
-            <b>Honest copy, exact numbers</b>
-            <p>Prices are exact, limits are stated, and "coming soon" means the button is disabled — not a mailing-list trap.</p>
-          </li>
-          <li class="hub__value" data-ch="2" data-hubreveal>
-            <b>One consistent stack</b>
-            <p>The same tokens, tooling, and quality bar power every section, so improvements in one place lift all of them.</p>
-          </li>
-        </ul>
+        <dl class="wf-lcd" aria-label="Workshop status">
+          <div><dt>Local time</dt><dd id="wfClock">--:--:--</dd></div>
+          <div><dt>Units live</dt><dd>3 / 3</dd></div>
+          <div><dt>Smoke checks</dt><dd>266 PASS</dd></div>
+          <div><dt>Last ship</dt><dd>2026-07-18</dd></div>
+        </dl>
       </div>
     </section>
 
-    <section class="hub__posts" aria-labelledby="posts-title">
-      <div class="hub__postshead" data-hubreveal>
+    <section class="wf-units" id="catalog" aria-labelledby="catalog-title">
+      <div class="wf-head" data-wf>
         <div>
-          <p class="eyebrow">[ SIGNAL LOG ]</p>
-          <h2 class="hub__h2" id="posts-title">Latest from the blog.</h2>
+          <p class="wf-stamp">[ PRODUCT CATALOG ]</p>
+          <h2 class="wf-h2" id="catalog-title">Three units in production.</h2>
         </div>
-        <a class="hub__postsall" href="/blog/">All posts <b>→</b></a>
+        <p class="wf-stamp">ALL DEPLOYED · SAME STACK · SAME DESK</p>
       </div>
-      <div class="hub__postgrid">
-        <a class="postcard" href="/blog/why-automation-needs-an-audit-trail.html" data-hubreveal>
-          <time class="postcard__date" datetime="2026-06-24">JUN 24, 2026</time>
-          <h3 class="postcard__title">Your automation is only as good as its audit trail</h3>
-          <p class="postcard__desc">An agent that can't explain itself is a liability wearing a productivity costume. How reasoning traces turn "it did something" into "it did exactly this, for exactly this reason."</p>
-          <span class="postcard__cta">Read <b>→</b></span>
-        </a>
-        <a class="postcard" href="/blog/engineering-sub-40ms-orchestration.html" data-hubreveal>
-          <time class="postcard__date" datetime="2026-06-10">JUN 10, 2026</time>
-          <h3 class="postcard__title">Engineering sub-40ms orchestration: reflexes, not workflows</h3>
-          <p class="postcard__desc">A nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.</p>
-          <span class="postcard__cta">Read <b>→</b></span>
-        </a>
-        <a class="postcard" href="/blog/guardrails-are-a-feature.html" data-hubreveal>
-          <time class="postcard__date" datetime="2026-05-28">MAY 28, 2026</time>
-          <h3 class="postcard__title">Guardrails are a feature, not friction</h3>
-          <p class="postcard__desc">The fastest way to lose an ops team's trust is an agent with root and no rules. Scoped permissions, approval gates, and why constraints make autonomy shippable.</p>
-          <span class="postcard__cta">Read <b>→</b></span>
-        </a>
+
+      <article class="wf-unit" data-wf>
+        <div class="wf-unit__meta">
+          <div class="wf-unit__id">
+            <p class="wf-stamp wf-stamp--box">UNIT 01</p>
+            <p class="wf-stamp">SN 2026-07-05</p>
+          </div>
+          <div>
+            <h3 class="wf-unit__name">AXON</h3>
+            <p class="wf-unit__role">Autonomous-agent platform</p>
+          </div>
+          <p class="wf-unit__desc">Agents that sense events across your stack, reason about them, and act with guardrails — writing a full reasoning trace for every run. Real checkout, real auth, real plans you can buy today.</p>
+          <dl class="wf-spec">
+            <div><dt>Function</dt><dd>Event-driven agents with audit trails</dd></div>
+            <div><dt>Checkout</dt><dd>Razorpay, live keys</dd></div>
+            <div><dt>Auth</dt><dd>Supabase — Google sign-in</dd></div>
+            <div><dt>Plans</dt><dd>₹5 Hobby · ₹6,999 Studio, one-time</dd></div>
+          </dl>
+          <a class="wf-key" href="/axon.html" data-unit="axon">Open unit 01 <b>→</b></a>
+        </div>
+        <div class="wf-unit__bay">
+          <div class="wf-face">
+            <i class="wf-screw"></i><i class="wf-screw"></i>
+            <div class="wf-face__bar"><span class="wf-led" aria-hidden="true"></span><b>AXON</b><i>MODEL AX-01</i></div>
+            <div class="wf-face__screen"><canvas class="wf-screen" data-screen="scope" aria-hidden="true"></canvas></div>
+            <div class="wf-face__foot"><span>Reasoning trace</span><span class="wf-face__vents" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="wf-unit" data-wf>
+        <div class="wf-unit__meta">
+          <div class="wf-unit__id">
+            <p class="wf-stamp wf-stamp--box">UNIT 02</p>
+            <p class="wf-stamp">SN 2026-07-08</p>
+          </div>
+          <div>
+            <h3 class="wf-unit__name">STACKIME</h3>
+            <p class="wf-unit__role">Anime tracker · community catalog</p>
+          </div>
+          <p class="wf-unit__desc">Track what you watch and browse a shared community catalog. Discover what's trending and airing through live AniList data — no account needed to look around, Google sign-in to keep your own list.</p>
+          <dl class="wf-spec">
+            <div><dt>Function</dt><dd>Personal lists + public catalog</dd></div>
+            <div><dt>Data</dt><dd>AniList GraphQL, live</dd></div>
+            <div><dt>Browsing</dt><dd>Open — no account required</dd></div>
+            <div><dt>Lists</dt><dd>Per-user, Google sign-in</dd></div>
+          </dl>
+          <a class="wf-key" href="/anime.html" data-unit="stackime">Open unit 02 <b>→</b></a>
+        </div>
+        <div class="wf-unit__bay">
+          <div class="wf-face">
+            <i class="wf-screw"></i><i class="wf-screw"></i>
+            <div class="wf-face__bar"><span class="wf-led" aria-hidden="true"></span><b>STACKIME</b><i>MODEL SK-02</i></div>
+            <div class="wf-face__screen"><canvas class="wf-screen" data-screen="wave" aria-hidden="true"></canvas></div>
+            <div class="wf-face__foot"><span>Now airing</span><span class="wf-face__vents" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="wf-unit" data-wf>
+        <div class="wf-unit__meta">
+          <div class="wf-unit__id">
+            <p class="wf-stamp wf-stamp--box">UNIT 03</p>
+            <p class="wf-stamp">SN 2026-05-28</p>
+          </div>
+          <div>
+            <h3 class="wf-unit__name">FIELD NOTES</h3>
+            <p class="wf-unit__role">Engineering blog</p>
+          </div>
+          <p class="wf-unit__desc">Notes from building the other two units — agents and guardrails, orchestration latency, audit trails. Written after shipping, not before, so every essay documents what actually happened.</p>
+          <dl class="wf-spec">
+            <div><dt>Function</dt><dd>Ship reports and engineering essays</dd></div>
+            <div><dt>Volume</dt><dd>3 essays published</dd></div>
+            <div><dt>Latest</dt><dd>2026-06-24</dd></div>
+            <div><dt>Paywall</dt><dd>None</dd></div>
+          </dl>
+          <a class="wf-key" href="/blog/" data-unit="blog">Open unit 03 <b>→</b></a>
+        </div>
+        <div class="wf-unit__bay">
+          <div class="wf-face">
+            <i class="wf-screw"></i><i class="wf-screw"></i>
+            <div class="wf-face__bar"><span class="wf-led" aria-hidden="true"></span><b>FIELD NOTES</b><i>MODEL FN-03</i></div>
+            <div class="wf-face__screen"><canvas class="wf-screen" data-screen="feed" aria-hidden="true"></canvas></div>
+            <div class="wf-face__foot"><span>Printing latest</span><span class="wf-face__vents" aria-hidden="true"></span></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="wf-panel wf-section wf-practice" aria-labelledby="practice-title">
+      <div class="wf-head wf-head--flush" data-wf>
+        <div>
+          <p class="wf-stamp">[ QUALITY CONTROL ]</p>
+          <h2 class="wf-h2" id="practice-title">How the workshop runs.</h2>
+        </div>
+        <p class="wf-stamp">EVERY UNIT · EVERY SHIP</p>
+      </div>
+      <div class="wf-practice__grid wf-practice__copy">
+        <div class="wf-qc" data-wf>
+          <div class="wf-qc__row"><b>Written down first</b><span class="wf-qc__pass">QC · PASS</span></div>
+          <p>Plans and specs are committed to the repository before the code that implements them. When a build deviates from its plan, the deviation is recorded inline — and the blog documents what actually happened afterwards, including the mistakes and the dead ends.</p>
+        </div>
+        <div class="wf-qc" data-wf>
+          <div class="wf-qc__row"><b>Tested before deploy</b><span class="wf-qc__pass">QC · PASS</span></div>
+          <p>Every push runs a browser-level smoke suite across every page of this site — 266 checks as of July 2026, from checkout flows to WebGL boot markers. If a single check fails, nothing goes live. The suite count on this page is updated when the suite changes.</p>
+        </div>
+        <div class="wf-qc" data-wf>
+          <div class="wf-qc__row"><b>Honest by default</b><span class="wf-qc__pass">QC · PASS</span></div>
+          <p>Prices are exact, limits are stated, and "coming soon" means a disabled button — not a mailing-list trap. Copy is held to the same tolerance as the code: if a feature isn't finished, the page says so instead of pretending it exists.</p>
+        </div>
       </div>
     </section>
 
-    <section class="hub__cta" aria-label="Start exploring" data-hubreveal>
-      <h2 class="hub__ctatitle">Pick a signal and follow it.</h2>
-      <p class="hub__ctasub">Start with the instrument, browse the catalog, or read how it's all built — and if you want to talk, there's a human on the other end.</p>
-      <div class="hub__actions">
-        <a class="btn btn--signal" href="/axon.html#plans">See AXON plans</a>
-        <a class="btn btn--ghost" href="/contact.html">Get in touch</a>
+    <section class="wf-notes" aria-labelledby="notes-title">
+      <div class="wf-head" data-wf>
+        <div>
+          <p class="wf-stamp">[ FIELD NOTES ]</p>
+          <h2 class="wf-h2" id="notes-title">Latest from the bench.</h2>
+        </div>
+        <a class="wf-notes__all" href="/blog/">All notes →</a>
+      </div>
+      <div class="wf-notes__list" data-wf>
+        <a class="wf-note" href="/blog/why-automation-needs-an-audit-trail.html">
+          <time datetime="2026-06-24">2026-06-24</time>
+          <h3>Your automation is only as good as its audit trail</h3>
+          <span class="wf-note__go" aria-hidden="true">↗</span>
+          <p>An agent that can't explain itself is a liability wearing a productivity costume. How reasoning traces turn "it did something" into "it did exactly this, for exactly this reason."</p>
+        </a>
+        <a class="wf-note" href="/blog/engineering-sub-40ms-orchestration.html">
+          <time datetime="2026-06-10">2026-06-10</time>
+          <h3>Engineering sub-40ms orchestration: reflexes, not workflows</h3>
+          <span class="wf-note__go" aria-hidden="true">↗</span>
+          <p>A nervous system doesn't convene a meeting to pull a hand off a stove. Why agent hand-offs must live at the edge, and what we cut to get coordination under forty milliseconds.</p>
+        </a>
+        <a class="wf-note" href="/blog/guardrails-are-a-feature.html">
+          <time datetime="2026-05-28">2026-05-28</time>
+          <h3>Guardrails are a feature, not friction</h3>
+          <span class="wf-note__go" aria-hidden="true">↗</span>
+          <p>The fastest way to lose an ops team's trust is an agent with root and no rules. Scoped permissions, approval gates, and why constraints make autonomy shippable.</p>
+        </a>
       </div>
     </section>
