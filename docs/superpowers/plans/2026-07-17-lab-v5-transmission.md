@@ -55,7 +55,7 @@ One fiction — a recovery descent — carried by five climates and a live log.
   (c) Core breakdown: grade uBreak (window around cp 3.2, amplified by charge)
   → occasional hash-gated scanline tears + CA spike. Commit.
 
-- [ ] **Task 5 — Pocket chrome + touch feel** (pocket plan tasks 2–3).
+- [x] **Task 5 — Pocket chrome + touch feel** (pocket plan tasks 2–3).
   ≤680px: HUD compact instead of hidden (smaller type, inset corners,
   safe-area-inset-bottom on pill/cue), overscroll containment, viewport-fit
   check (base.njk, add only if missing). Coarse pointers: drag-to-ring

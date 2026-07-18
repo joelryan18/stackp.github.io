@@ -1172,6 +1172,16 @@ async function start() {
     }
   };
   if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
+  else {
+    /* v5 touch feel — drag-to-ring: while a finger is down, moving it
+       paints strikes along the wall (the same sweep gates apply, so a
+       scroll flick lands at most a couple of rings, not a flood) */
+    let dragging = false;
+    addEventListener("pointerdown", () => { dragging = true; }, { passive: true });
+    addEventListener("pointerup", () => { dragging = false; }, { passive: true });
+    addEventListener("pointercancel", () => { dragging = false; }, { passive: true });
+    addEventListener("pointermove", (e) => { if (dragging) strike(e.clientX, e.clientY, false); }, { passive: true });
+  }
   addEventListener("pointerdown", (e) => strike(e.clientX, e.clientY, true), { passive: true });
 
   /* v4 CORE CHARGE — inside THE CORE the pointer becomes an

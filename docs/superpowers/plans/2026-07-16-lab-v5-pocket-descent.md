@@ -33,7 +33,7 @@ instead of an article.
   /tmp/lab-qa.mjs --mobile: fx-on + lab-pocket + chapters + console
   clean. Commit.
 
-- [ ] **Task 2 — Touch-fit DOM chrome.** ≤680px LAB CSS: HUD stays but
+- [x] **Task 2 — Touch-fit DOM chrome.** ≤680px LAB CSS: HUD stays but
   compact (smaller readout/pct, corners inset, safe-area-inset-bottom);
   sound pill compact; charge cue above the safe area; intro word scale
   verified. `.lab-body { overscroll-behavior-y: none }` to stop
@@ -41,7 +41,7 @@ instead of an article.
   (viewport-fit=cover — add only if missing, without touching other
   pages). --mobile screenshots at 0/30/60/99%. Commit.
 
-- [ ] **Task 3 — Touch feel.** Today continuous strikes are hover-fine
+- [x] **Task 3 — Touch feel.** Today continuous strikes are hover-fine
   only; add a coarse-pointer path: while a pointer is down, pointermove
   strikes (drag-to-ring). Taps and hold-to-charge already work on touch.
   Verify with --mobile QA probes (drag sequence → rip count climbs,
