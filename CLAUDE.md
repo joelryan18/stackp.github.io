@@ -8,8 +8,11 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 ## Current state (2026-07-18)
 
 - **/game.html "Signal Strike" + Homepage v4 "The Workshop Catalog" —
-  BUILT + FULLY QA'd 2026-07-18, NOT YET COMMITTED/PUSHED** (this session
-  finished the game task; hub redesign came from the same working tree).
+  SHIPPED LIVE 2026-07-18** (commits 5ac261a lab v6.1 stone fix /
+  4d4f0af hub v4 / 7694a37 game; push user-sanctioned same session;
+  Actions deploy success; live-verified: hub wf-on + 3 screens +
+  __hubQ + clock + game links, /game.html full live playtest incl.
+  victory path w/ JS errors NONE, all hashed assets 200).
   Two features ride together in the working tree:
   (a) **GAME** — first-person last-node-standing arena shooter, new
   bundles `game3d.js` (~2500 lines, own hashed esm entry) + `game.css`
@@ -71,10 +74,8 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   backed up `.claude/wip-backup/`, QA shots `.claude/wf-qa/`). Smoke
   section 2 fully rewritten for it. Hub nav + footer link /game.html
   ("Arena" / "Signal Strike"); sitemap +game.html.
-  **NEXT STEP: commit (hub commit + game commit) then push — push was
-  USER-GATED and not yet given. After push: live-verify stackwith.me
-  (hub wf-on, game boots, glb/css/js 200s, console clean) + spot-check
-  a real supa room cross-network.**
+  Shipped + live-verified as above; only remaining nice-to-have:
+  spot-check a real supa room cross-network (two different machines).
 
 - **/lab.html v6 "Deep Signal — The Ruin" SHIPPED 2026-07-18** (user:
   proceed + "shiip it live"; plan `docs/superpowers/plans/2026-07-18-
