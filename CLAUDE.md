@@ -7,6 +7,75 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-18)
 
+- **/game.html "Signal Strike" + Homepage v4 "The Workshop Catalog" —
+  BUILT + FULLY QA'd 2026-07-18, NOT YET COMMITTED/PUSHED** (this session
+  finished the game task; hub redesign came from the same working tree).
+  Two features ride together in the working tree:
+  (a) **GAME** — first-person last-node-standing arena shooter, new
+  bundles `game3d.js` (~2500 lines, own hashed esm entry) + `game.css`
+  (own hashed css via base.njk `extraStylesheet`/`themeColor`
+  frontmatter hooks) + `layouts/game.njk` + `src/game.html`. Fortnite
+  lineage: steered glider drop, 6-phase shrinking storm
+  (STORM_PHASES), floor loot, siphon +20 shield/kill, placement +
+  spectate-your-killer. Valorant lineage: 2 hitscan weapons w/
+  authored recoil patterns (`pat` arrays, view-punch springs; spread =
+  base+move+air, ADS trims DMR), headshot capsule + dink, hardlight
+  barrier (Q, 300hp/30s/18s cd), tactical HUD + minimap + kill feed.
+  11 bot AI (proximity acquisition — humans spotted at 70u vs bots
+  45u, ≤2 bots pressure one human, real LOS checks, bots fight EACH
+  OTHER + take storm damage → real kill feed). Deterministic island
+  (seed 1187, 6 tinted districts + antenna plaza, 138 colliders).
+  Synth audio only (no samples). Honesty: body `game-live` only after
+  first rendered frame; <960px/coarse/reduced/no-GL → `game-no3d`
+  reading article. QA hooks: `__gameQ()` (incl. `net` block);
+  `__gameDrive` ONLY under `?sim=1` (look/key/fire/barrier/warp/
+  aimNearest/ff(s)=synchronous 30Hz sim steps/winTest).
+  (b) **SQUAD LINK** — online co-op up to 4 humans + bots fill to 12.
+  Three transports, one interface (`?net=stub|bc`, default supa):
+  Supabase Realtime broadcast+presence (SAME project/publishable key
+  as checkout/anime; `window.__gameNetCfg` QA override),
+  BroadcastChannel (same browser), scripted stub peer "DRONE" (smoke).
+  Authority: every client owns its own player + shots (favor-the-
+  shooter); earliest joinT hosts bots+storm (txBots 8Hz / txStorm 2Hz
+  / txSnap 10Hz on setInterval so backgrounded tabs keep announcing);
+  host-leave → silent promotion (`recomputeHost`, "SIGNAL AUTHORITY
+  ASSUMED"). Room = 4-char code, invite link `?room=CODE` auto-joins;
+  `?mp=host|join` QA autoflows. Wire msgs validated: `saneDmg` clamp
+  0–220, Number.isFinite gates on snaps/shots/barriers, peers map
+  capped 16, all names through `feedName` sanitizer before innerHTML
+  feeds. Honesty markers: `game-squad` ONLY on supa relay,
+  `game-squad-local` on bc, stub sets NEITHER. Fallback copy: relay
+  honestly disclosed, "solo matches never open a connection at all"
+  (smoke-pinned string). `pagehide` → transport leave.
+  QA: **smoke 291 ALL PASS** (suite includes 2f: 18 game checks — solo
+  sim match end-to-end + 5 squad-stub checks + honest-fallback,
+  hub footer now pins /game.html). Drivers: `/tmp/game-qa.mjs` (solo
+  full playtest: deploy→land→tracking-fire kill→barrier→storm ff→end→
+  redeploy→victory, JS errors NONE) + `/tmp/game-squad-qa.mjs`
+  (3 stages: stub / bc two-tab incl. barrier replication + host
+  promotion + match resolution under new authority / **REAL Supabase
+  Realtime two-tab** — room live, presence sync, single host, go over
+  the wire, snapshots flow, leave shrinks roster — ALL PASS).
+  Two-tab QA gotchas: spawn each CDP tab via `Target.createTarget
+  {newWindow:true}` + `Emulation.setFocusEmulationEnabled` + chrome
+  flags `--disable-background-timer-throttling
+  --disable-renderer-backgrounding --disable-backgrounding-occluded-
+  windows`, else the unfocused tab's rAF loop stalls (its glider never
+  lands, snapshots freeze mid-air). Peer-kill probes need TRACKING
+  fire (re-aim every ~90ms in-page while trigger held) — one aim+burst
+  misses an orbiting target.
+  (c) **HUB v4 "Workshop Catalog"** (was the long-stashed WIP, now a
+  full redesign in tree: `wf-*` classes, light plate `#E4E2DC` theme,
+  3 device screens w/ live canvas draws, `__hubQ()` QA hook, LCD
+  clock, honesty pins ₹5/₹6,999; hub3d.js rewritten 413 lines; old WIP
+  backed up `.claude/wip-backup/`, QA shots `.claude/wf-qa/`). Smoke
+  section 2 fully rewritten for it. Hub nav + footer link /game.html
+  ("Arena" / "Signal Strike"); sitemap +game.html.
+  **NEXT STEP: commit (hub commit + game commit) then push — push was
+  USER-GATED and not yet given. After push: live-verify stackwith.me
+  (hub wf-on, game boots, glb/css/js 200s, console clean) + spot-check
+  a real supa room cross-network.**
+
 - **/lab.html v6 "Deep Signal — The Ruin" SHIPPED 2026-07-18** (user:
   proceed + "shiip it live"; plan `docs/superpowers/plans/2026-07-18-
   lab-v6-ruin.md`, all boxes checked): commits `894d037`→`ccd40b8`,

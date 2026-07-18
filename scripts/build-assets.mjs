@@ -46,15 +46,15 @@ const builds = [
   },
   {
     ...common,
-    entryPoints: ["src/assets/js/neural3d.js", "src/assets/js/hub3d.js", "src/assets/js/about3d.js", "src/assets/js/lab3d.js"],
+    entryPoints: ["src/assets/js/neural3d.js", "src/assets/js/hub3d.js", "src/assets/js/about3d.js", "src/assets/js/lab3d.js", "src/assets/js/game3d.js"],
     format: "esm",
-    plugins: [manifestPlugin({ "src/assets/js/neural3d.js": "neural3d", "src/assets/js/hub3d.js": "hub3d", "src/assets/js/about3d.js": "about3d", "src/assets/js/lab3d.js": "lab3d" })],
+    plugins: [manifestPlugin({ "src/assets/js/neural3d.js": "neural3d", "src/assets/js/hub3d.js": "hub3d", "src/assets/js/about3d.js": "about3d", "src/assets/js/lab3d.js": "lab3d", "src/assets/js/game3d.js": "game3d" })],
   },
   {
     ...common,
-    entryPoints: ["src/assets/css/styles.css"],
+    entryPoints: ["src/assets/css/styles.css", "src/assets/css/game.css"],
     external: ["*.woff2"],
-    plugins: [manifestPlugin({ "src/assets/css/styles.css": "styles" })],
+    plugins: [manifestPlugin({ "src/assets/css/styles.css": "styles", "src/assets/css/game.css": "gamecss" })],
   },
 ];
 

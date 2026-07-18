@@ -72,7 +72,7 @@ let failed = 0;
 const check = (name, ok, extra = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${ok ? "" : "  " + extra}`); if (!ok) failed++; };
 
 /* ---- 1 · every page loads clean, correct head, no ads before consent ---- */
-for (const p of ["/", "/axon.html", "/about.html", "/lab.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
+for (const p of ["/", "/axon.html", "/about.html", "/lab.html", "/game.html", "/contact.html", "/privacy.html", "/terms.html", "/checkout.html?plan=hobby", "/anime.html"]) {
   await metrics(1440, 900);
   await go(BASE + p, 3200);
   check(`${p} no JS exceptions`, exceptions.length === 0, JSON.stringify(exceptions.slice(0, 3)));
@@ -84,21 +84,22 @@ for (const p of ["/", "/axon.html", "/about.html", "/lab.html", "/contact.html",
   await evalJs("localStorage.clear()");
 }
 
-/* ---- 2 · hub homepage ---- */
+/* ---- 2 · hub homepage ("The Workshop Catalog") ---- */
 await go(BASE + "/", 3000);
-check("hub: 3 cards with correct hrefs", (await evalJs(`[...document.querySelectorAll(".hubcard")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/anime.html,/blog/");
+check("hub: 3 unit CTAs with correct hrefs", (await evalJs(`[...document.querySelectorAll("a[data-unit]")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/anime.html,/blog/");
 check("hub: title brand", (await evalJs("document.title")).includes("stackwith.me"));
 check("hub: no nerve canvas", !(await evalJs(`!!document.querySelector(".nerve")`)));
 check("hub: no AXON hero", !(await evalJs(`!!document.querySelector(".hero__title")`)));
-check("hub: nav brand is stackwith.me", (await evalJs(`document.querySelector(".nav__word")?.textContent`)) === "STACKWITH.ME");
-check("hub: hero CTAs", (await evalJs(`[...document.querySelectorAll(".hub__hero .hub__actions a")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,/blog/");
-check("hub: fx canvas present", await evalJs(`!!document.querySelector("canvas.hubfx")`));
-check("hub: spectrum 3d booted", await evalJs(`document.body.classList.contains("fx-on")`));
-check("hub: hero choreography armed", await evalJs(`document.body.classList.contains("fx-dom") && document.body.classList.contains("hub-in")`));
-check("hub: 3 tuner chips excite channels", (await evalJs(`[...document.querySelectorAll(".tuner__chip")].map((a) => a.dataset.ch).join(",")`)) === "0,1,2");
-check("hub: about section has substantive copy", (await evalJs(`document.querySelector(".hub__aboutcopy")?.textContent.trim().length`)) >= 400);
-check("hub: 3 blog post cards", (await evalJs(`document.querySelectorAll(".postcard").length`)) === 3 && (await evalJs(`[...document.querySelectorAll(".postcard")].every((a) => a.getAttribute("href").startsWith("/blog/"))`)));
-check("hub: footer sitemap links", await evalJs(`["/privacy.html","/terms.html","/about.html","/contact.html","/axon.html","/anime.html","/blog/"].every((h) => !!document.querySelector('.hubfoot a[href="' + h + '"]'))`));
+check("hub: nav brand is stackwith.me", (await evalJs(`document.querySelector(".wf-brand b")?.textContent`)) === "STACKWITH.ME");
+check("hub: hero CTAs", (await evalJs(`[...document.querySelectorAll(".wf-hero__acts a")].map((a) => a.getAttribute("href")).join(",")`)) === "/axon.html,#catalog");
+check("hub: 3 device screens present", (await evalJs(`document.querySelectorAll("canvas.wf-screen").length`)) === 3);
+check("hub: workshop booted (honesty marker)", await evalJs(`document.body.classList.contains("wf-on")`));
+check("hub: screens actually draw frames", await evalJs(`new Promise((res) => setTimeout(() => res(window.__hubQ && window.__hubQ().frames > 2), 400))`));
+check("hub: LCD clock is live", await evalJs(`/^\\d{2}:\\d{2}:\\d{2}$/.test(document.getElementById("wfClock")?.textContent || "") && window.__hubQ().clock >= 1`));
+check("hub: exact spec honesty pins", await evalJs(`document.body.textContent.includes("₹6,999") && document.body.textContent.includes("₹5")`));
+check("hub: QC section has substantive copy", (await evalJs(`document.querySelector(".wf-practice")?.textContent.trim().length`)) >= 400);
+check("hub: 3 field-note rows", (await evalJs(`document.querySelectorAll(".wf-note").length`)) === 3 && (await evalJs(`[...document.querySelectorAll(".wf-note")].every((a) => a.getAttribute("href").startsWith("/blog/"))`)));
+check("hub: footer sitemap links", await evalJs(`["/privacy.html","/terms.html","/about.html","/contact.html","/axon.html","/anime.html","/blog/","/lab.html","/game.html"].every((h) => !!document.querySelector('.wf-foot a[href="' + h + '"]'))`));
 
 /* ---- 2b · axon page runtime ---- */
 await go(BASE + "/axon.html", 4000);
@@ -206,6 +207,42 @@ await go(BASE + "/lab.html", 4000);
 check("lab-m: pocket world boots", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("fx-on") && document.body.classList.contains("lab-pocket") ? res(true) : (document.body.classList.contains("lab-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab-m: HUD visible", await evalJs(`getComputedStyle(document.querySelector(".lab-hud")).display !== "none" && getComputedStyle(document.getElementById("labSound")).display !== "none"`));
 check("lab-m: tap strikes", await evalJs(`(async () => { dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidth * 0.6, clientY: innerHeight * 0.3 })); dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.6, clientY: innerHeight * 0.3 })); const t0 = Date.now(); return await new Promise((res) => { const poll = () => document.body.classList.contains("lab-resonant") ? res(true) : (Date.now() - t0 > 4000 ? res(false) : setTimeout(poll, 200)); poll(); }); })()`));
+await metrics(1440, 900);
+
+/* ---- 2f · game page (Signal Strike — arena shooter) ---- */
+await go(BASE + "/game.html", 4000);
+check("game: world booted (honesty marker)", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("game-live") ? res(true) : (document.body.classList.contains("game-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("game: lobby menu shown with DEPLOY", await evalJs(`document.getElementById("gMenu").classList.contains("is-on") && document.getElementById("gPlay").textContent.trim() === "DEPLOY"`));
+check("game: frames actually rendering", await evalJs(`new Promise((res) => { const f0 = window.__gameQ().frames; setTimeout(() => res(window.__gameQ().frames > f0 + 5), 600); })`));
+check("game: own hashed css bundle served", await evalJs(`!![...document.styleSheets].find((s) => s.href && s.href.includes("/assets/game."))`));
+check("game: arena seeded (12 combatants, colliders up)", await evalJs(`(() => { const q = window.__gameQ(); return q.alive === 12 && q.botsAlive === 11 && q.colliders > 100; })()`));
+/* sim-mode match: deploy → land → storm advances → bots fight to a winner */
+await go(BASE + "/game.html?sim=1", 4000);
+await evalJs(`document.getElementById("gPlay").click()`);
+await sleep(500);
+check("game: match starts on deploy (sim)", await evalJs(`(() => { const q = window.__gameQ(); return q.match && q.p.gliding; })()`));
+check("game: HUD went live", await evalJs(`document.getElementById("gHud").classList.contains("is-live")`));
+await evalJs(`window.__gameDrive.look(Math.PI, -1.3)`);
+check("game: glider lands", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => !window.__gameQ().p.gliding ? res(true) : (Date.now() - t0 > 14000 ? res(false) : setTimeout(poll, 300)); poll(); })`));
+check("game: barrier places + collides", await evalJs(`(() => { window.__gameDrive.barrier(); return window.__gameQ().barriers === 1; })()`));
+check("game: storm shrinks + match resolves (ff)", await evalJs(`(() => { const q = window.__gameDrive.ff(500); return q.stormR < 150 && q.over; })()`), await evalJs(`JSON.stringify(window.__gameQ())`));
+check("game: end screen with placement", await evalJs(`new Promise((res) => setTimeout(() => res(document.getElementById("gEnd").classList.contains("is-on") && /#\\s*\\d+/.test(document.getElementById("gEndStats").textContent)), 2600))`));
+check("game: kill feed recorded eliminations", (await evalJs(`document.getElementById("gFeed").children.length`)) >= 0 && await evalJs(`window.__gameQ().alive <= 1`));
+/* squad link over the offline stub wire — the REAL room/replica/damage
+   pipeline with a scripted phantom peer, zero network */
+await go(BASE + "/game.html?net=stub&sim=1", 4000);
+await evalJs(`document.getElementById("gHost").click()`);
+check("game: squad room live, phantom peer in roster", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.getElementById("gSquadState").textContent === "ROOM LIVE" && document.getElementById("gRoster").children.length === 2 ? res(true) : (Date.now() - t0 > 5000 ? res(false) : setTimeout(poll, 200)); poll(); })`));
+check("game: stub wire claims NO online honesty marker", await evalJs(`!document.body.classList.contains("game-squad") && !document.body.classList.contains("game-squad-local")`));
+await evalJs(`document.getElementById("gPlay").click()`);
+check("game: squad deploy trims bots for the roster", await evalJs(`new Promise((res) => setTimeout(() => { const q = window.__gameQ(); res(q.match && q.net.started && q.botsAlive === 10 && q.net.peersAlive === 1 && q.alive === 12); }, 600))`), await evalJs(`JSON.stringify(window.__gameQ())`));
+check("game: peer replica snaps into the world", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => { const n = window.__gameQ().net.peer0; n && n.rig ? res(true) : (Date.now() - t0 > 6000 ? res(false) : setTimeout(poll, 250)); }; poll(); })`));
+check("game: wire damage reaches the player", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => window.__gameQ().p.sh < 75 ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 300)); poll(); })`), await evalJs(`JSON.stringify(window.__gameQ().p)`));
+/* honest fallback: small viewport = game-no3d + reading article */
+await metrics(720, 900);
+await go(BASE + "/game.html", 3000);
+check("game: small viewport honest fallback", await evalJs(`document.body.classList.contains("game-no3d") && getComputedStyle(document.querySelector(".game-fallback")).display === "block"`));
+check("game: fallback copy substantive + honest", await evalJs(`(() => { const t = document.querySelector(".game-fallback__body").textContent; return t.length > 800 && t.includes("eleven AI units") && t.includes("pointer lock") && t.includes("room code") && t.includes("solo matches never open a connection"); })()`));
 await metrics(1440, 900);
 
 /* ---- 3 · consent gating ---- */
