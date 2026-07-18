@@ -176,7 +176,22 @@ await evalJs(`dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidt
 await sleep(2400);
 check("lab: core charge responds", (await evalJs(`window.__labQ?.().charge`)) > 0.3, `charge=${await evalJs(`window.__labQ?.().charge`)}`);
 await evalJs(`dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.5, clientY: innerHeight * 0.5 }))`);
+/* v5 transmission — still parked in THE CORE (cp≈3.1): climate accent
+   must be the chapter's own, the field-report chrome must be live */
+check("lab: transmission log paints", await evalJs(`document.body.classList.contains("lab-transmission") && (document.getElementById("labTx")?.textContent || "").length > 4`), await evalJs(`document.getElementById("labTx")?.textContent`));
+check("lab: climate accent travels with depth", (await evalJs(`getComputedStyle(document.body).getPropertyValue("--labAcc").trim().toUpperCase()`)) === "#B8FF3C", await evalJs(`getComputedStyle(document.body).getPropertyValue("--labAcc").trim()`));
+check("lab: depth meter counts metres", await evalJs(`/^.?[\\d,]+$/.test((document.getElementById("labPct")?.textContent || "").trim()) && (document.getElementById("labPct")?.textContent || "").replace(/\\D/g, "") > 100`), await evalJs(`document.getElementById("labPct")?.textContent`));
+/* v5 cascade — a deliberate tap must echo to neighbouring crystals */
+check("lab: strike cascade echoes", await evalJs(`(async () => { const q0 = window.__labQ?.().echo ?? 0; dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidth * 0.72, clientY: innerHeight * 0.35 })); dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.72, clientY: innerHeight * 0.35 })); const t0 = Date.now(); return await new Promise((res) => { const poll = () => (window.__labQ?.().echo ?? 0) > q0 ? res(true) : (Date.now() - t0 > 3000 ? res(false) : setTimeout(poll, 150)); poll(); }); })()`), `echo=${await evalJs(`window.__labQ?.().echo`)}`);
 await evalJs(`scrollTo(0, 0); window.__labLenis && window.__labLenis.scrollTo(0, { immediate: true })`);
+
+/* ---- 2e · lab pocket (v5: phones render the real descent) ---- */
+await metrics(390, 844, true);
+await go(BASE + "/lab.html", 4000);
+check("lab-m: pocket world boots", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("fx-on") && document.body.classList.contains("lab-pocket") ? res(true) : (document.body.classList.contains("lab-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("lab-m: HUD visible", await evalJs(`getComputedStyle(document.querySelector(".lab-hud")).display !== "none" && getComputedStyle(document.getElementById("labSound")).display !== "none"`));
+check("lab-m: tap strikes", await evalJs(`(async () => { dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidth * 0.6, clientY: innerHeight * 0.3 })); dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.6, clientY: innerHeight * 0.3 })); const t0 = Date.now(); return await new Promise((res) => { const poll = () => document.body.classList.contains("lab-resonant") ? res(true) : (Date.now() - t0 > 4000 ? res(false) : setTimeout(poll, 200)); poll(); }); })()`));
+await metrics(1440, 900);
 
 /* ---- 3 · consent gating ---- */
 await evalJs("localStorage.clear()");
