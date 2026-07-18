@@ -23,6 +23,8 @@ const BUNDLES = {
   // rdo: v3 matcaps are 1024² — UASTC RDO halves them (~840→~445 KB) with no visible loss on soft gradients
   lab: { script: "assets-src/lab/gen_crystals.py", tmp: "/tmp/lab-assets", glb: "lab-crystals", matcap: "lab-matcap", extraMatcaps: ["lab-matcap-int"], rdo: true },
   about: { script: "assets-src/about/gen_instrument.py", tmp: "/tmp/about-assets", glb: "about-instrument", matcap: "about-matcap" },
+  // v6 ruin set-pieces: geometry only — reuses the lab matcaps at runtime
+  labgeo: { script: "assets-src/lab/gen_setpieces.py", tmp: "/tmp/labgeo-assets", glb: "lab-setpieces", matcap: null },
 };
 
 const run = (cmd, args) => {
@@ -45,7 +47,7 @@ for (const [name, b] of picked) {
   if (!process.argv.includes("--no-bake")) {
     run(BLENDER, ["--background", "--factory-startup", "--python", b.script, "--", b.tmp]);
   }
-  for (const f of [`${b.tmp}/${b.glb}-raw.glb`, `${b.tmp}/${b.matcap}.png`]) {
+  for (const f of [`${b.tmp}/${b.glb}-raw.glb`, ...(b.matcap ? [`${b.tmp}/${b.matcap}.png`] : [])]) {
     if (!existsSync(f)) { console.error(`[3d] missing ${f} — run without --no-bake`); process.exit(1); }
   }
 
@@ -53,14 +55,14 @@ for (const [name, b] of picked) {
   run("npx", ["gltf-transform", "draco", `${b.tmp}/${b.glb}-raw.glb`, `${OUT}/${b.glb}.glb`]);
 
   // 3 · KTX2 the matcap(s) (UASTC — all soft gradients, ETC1S bands)
-  for (const m of [b.matcap, ...(b.extraMatcaps || [])]) {
+  for (const m of [...(b.matcap ? [b.matcap] : []), ...(b.extraMatcaps || [])]) {
     if (!existsSync(`${b.tmp}/${m}.png`)) { console.error(`[3d] missing ${b.tmp}/${m}.png — run without --no-bake`); process.exit(1); }
     run(TOKTX, ["--t2", "--encode", "uastc", "--uastc_quality", "3",
       ...(b.rdo ? ["--uastc_rdo_l", "1.5", "--uastc_rdo_d", "8192"] : []),
       "--zcmp", "19", "--genmipmap", "--assign_oetf", "srgb", `${OUT}/${m}.ktx2`, `${b.tmp}/${m}.png`]);
   }
 
-  console.log(`[3d] ${name} ok — glb ${kb(`${OUT}/${b.glb}.glb`)}, matcap ${kb(`${OUT}/${b.matcap}.ktx2`)}`);
+  console.log(`[3d] ${name} ok — glb ${kb(`${OUT}/${b.glb}.glb`)}${b.matcap ? `, matcap ${kb(`${OUT}/${b.matcap}.ktx2`)}` : ""}`);
 }
 
 // 4 · runtime decoders, served next to the assets
