@@ -483,10 +483,13 @@ async function start() {
     uMorph: { value: 0 }, // v5 TRANSCENDENT — morph state 0=dormant 1=transcendent
     uCamPos: { value: new THREE.Vector3() }, // v5: camera position for proximity morphing
     uHaze: { value: new THREE.Color(0.008, 0.011, 0.024) }, // v5 climates — aerial fade color, derived from the chapter air
-    /* v4 RESONANCE — 4-slot pointer-strike ring buffer: xyz = world
-       hit on the shaft wall, w = birth time (−100 = empty slot) */
+    uCharge: { value: 0 }, // v5 — while the heart charges, near crystals inhale toward the lens
+    /* v4→v5 RESONANCE — 6-slot pointer-strike ring buffer: xyz = world
+       hit on the shaft wall, w = birth time (−100 = empty slot). Two
+       extra slots carry the v5 echo cascade without eating sweep memory. */
     uRip: {
       value: [
+        new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
         new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
         new THREE.Vector4(0, 0, 0, -100), new THREE.Vector4(0, 0, 0, -100),
       ],
@@ -501,9 +504,9 @@ async function start() {
     vertexShader: /* glsl */ `
       attribute vec3 aTint;
       attribute float aBirth, aSeed;
-      uniform float uTime, uGrow, uMorph;
+      uniform float uTime, uGrow, uMorph, uCharge;
       uniform vec3 uCamPos;
-      uniform vec4 uRip[4];
+      uniform vec4 uRip[6];
       uniform vec4 uWave;
       varying vec3 vTint, vN, vV;
       varying float vSeed, vY, vRip;
@@ -517,7 +520,7 @@ async function start() {
            not as jelly. Branchless: dead slots contribute 0. */
         vec3 org = vec3(instanceMatrix[3]);
         float rip = 0.0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 6; i++) {
           float age = uTime - uRip[i].w;
           float live = step(0.0, age) * step(age, 1.6);
           rip += live * smoothstep(3.6, 0.5, distance(org, uRip[i].xyz))
@@ -552,6 +555,11 @@ async function start() {
         p += normal * morphAmt * 0.035 * sin(uTime * 2.0 + aSeed * 31.0);
 
         vec4 wp = instanceMatrix * vec4(p, 1.0);
+        /* v5 CHARGE inhale — while the heart is fed, crystals within
+           ~25u lean toward the lens as rigid bodies (whole-instance
+           offset, same trick as the ripple swell): the world holds
+           its breath with you, and snaps back on release. */
+        wp.xyz += (uCamPos - org) * (uCharge * 0.045 * smoothstep(25.0, 6.0, distToCam));
         /* glacial idle sway */
         wp.x += sin(uTime * 0.22 + aSeed * 17.0) * 0.05;
         wp.z += cos(uTime * 0.19 + aSeed * 23.0) * 0.05;
@@ -985,6 +993,7 @@ async function start() {
     uWarp: { value: 0 },
     uGrain: { value: 0.055 }, // v2: lighter grain — facet edges stay crisp
     uContact: { value: 0 },
+    uBreak: { value: 0 }, // v5 — reality tears near the core (scanline rips + CA spike, hash-gated)
     uTint: { value: new THREE.Color(0.35, 0.5, 0.62) },
   };
   /* NOTE: ShaderPass CLONES the uniforms of a plain shader object —
@@ -996,7 +1005,7 @@ async function start() {
     fragmentShader: /* glsl */ `
       precision highp float;
       uniform sampler2D tDiffuse;
-      uniform float uTime, uAberration, uWarp, uGrain, uContact;
+      uniform float uTime, uAberration, uWarp, uGrain, uContact, uBreak;
       uniform vec2 uResolution;
       uniform vec3 uTint;
       varying vec2 vUv;
@@ -1013,8 +1022,17 @@ async function start() {
         uv = 0.5 + c * (1.0 - uContact * 0.04);
         uv.x += sin(uv.y * 12.0 + uTime * 3.4) * 0.006 * uWarp;
         uv.y += cos(uv.x * 9.0 - uTime * 2.6) * 0.004 * uWarp;
+        /* v5 BREAK — passing the source, the signal itself degrades:
+           hash-gated horizontal band tears (3px rows, re-rolled 24×/s)
+           shove the image sideways and spike the fringe. Gated so it
+           FLICKERS — a constant offset would read as a bug, a 2%-of-
+           rows stutter reads as transmission strain. */
+        float tearRow = floor(vUv.y * uResolution.y / 3.0);
+        float tearRoll = hash(vec2(tearRow, floor(uTime * 24.0)));
+        float tear = step(1.0 - uBreak * 0.028, tearRoll) * step(0.001, uBreak);
+        uv.x += (hash(vec2(tearRow, 7.7)) - 0.5) * 0.06 * tear * uBreak;
         float edge = dot(c, c);
-        float amt = uAberration * 0.002 + edge * 0.0026 + uWarp * 0.005;
+        float amt = uAberration * 0.002 + edge * 0.0026 + uWarp * 0.005 + tear * uBreak * 0.004;
         vec2 dir = normalize(c + 1e-4);
         vec3 col = vec3(
           texture2D(tDiffuse, uv + dir * amt).r,
@@ -1096,13 +1114,20 @@ async function start() {
   /* ---- v4 RESONANCE: pointer strikes ring the shaft wall ----
      Analytic ray→cylinder hit (the crystals live on the wall at
      r≈8.6–12.2 and the camera rail stays inside it) — no Raycaster,
-     no per-instance attribute writes: 4 uniform slots drive every
+     no per-instance attribute writes: 6 uniform slots drive every
      shard. Hover-fine pointers excite continuously as they sweep;
-     coarse pointers strike on tap. */
+     coarse pointers strike on tap. v5 ECHO CASCADE: a deliberate
+     strike (tap, or first contact after a pause) finds up to two
+     neighbouring crystal origins within 5u and re-rings them at
+     +120/220ms — the wall answers in sequence, not all at once. */
   const RIP_R = 9.4;
   const ripDir = new THREE.Vector3();
-  let ripSlot = 0, ripLastT = -10, ripCount = 0;
+  let ripSlot = 0, ripLastT = -10, ripCount = 0, echoCount = 0;
   let ripX = 1e9, ripY = 1e9, ripZ = 1e9;
+  const ripWrite = (x, y, z) => {
+    shardUniforms.uRip.value[ripSlot].set(x, y, z, shardUniforms.uTime.value);
+    ripSlot = (ripSlot + 1) % 6;
+  };
   const strike = (cx, cy, force) => {
     const now = shardUniforms.uTime.value;
     const o = camera.position;
@@ -1118,12 +1143,33 @@ async function start() {
     /* gate sweeps: ≥90ms between strikes AND ≥1.2u travel on the
        wall, so idle jitter never restrikes; taps bypass both */
     if (!force && (now - ripLastT < 0.09 || dx * dx + dy * dy + dz * dz < 1.44)) return;
-    shardUniforms.uRip.value[ripSlot].set(hx, hy, hz, now);
-    ripSlot = (ripSlot + 1) % 4;
+    /* cascade only on deliberate contact — sweeps stay single-voice so
+       painting the wall never floods the 6-slot ring */
+    const cascade = force || now - ripLastT > 0.45;
+    ripWrite(hx, hy, hz);
     ripX = hx; ripY = hy; ripZ = hz; ripLastT = now;
     if (chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
     if (readout) { readout.classList.remove("is-ping"); void readout.offsetWidth; readout.classList.add("is-ping"); } // HUD registers the strike
     if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
+    if (!cascade) return;
+    /* nearest two seeded origins in the 1.2–5u shell around the hit
+       (inside 1.2u is the struck crystal itself, already ringing) */
+    let n1 = null, n2 = null, d1 = 25, d2 = 25;
+    for (const it of plan) {
+      const ex = it.pos.x - hx, ey = it.pos.y - hy, ez = it.pos.z - hz;
+      const dd = ex * ex + ey * ey + ez * ez;
+      if (dd < 1.44 || dd >= d2) continue;
+      if (dd < d1) { n2 = n1; d2 = d1; n1 = it.pos; d1 = dd; }
+      else { n2 = it.pos; d2 = dd; }
+    }
+    for (const [np, ms] of [[n1, 120], [n2, 220]]) {
+      if (!np) break;
+      setTimeout(() => {
+        ripWrite(np.x, np.y, np.z);
+        echoCount += 1;
+        if (chimeRef) chimeRef(np.x, np.y, np.z); // the echo is audible — a fainter, later ring
+      }, ms);
+    }
   };
   if (hoverFine) addEventListener("pointermove", (e) => strike(e.clientX, e.clientY, false), { passive: true });
   addEventListener("pointerdown", (e) => strike(e.clientX, e.clientY, true), { passive: true });
@@ -1228,7 +1274,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, tx: txEl ? txEl.textContent : "", bootLines, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, echo: echoCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, tx: txEl ? txEl.textContent : "", bootLines, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
@@ -1367,6 +1413,7 @@ async function start() {
        heart's own energy, bloom, FOV pinch and the drone filter. */
     chargeArmed = heartNear > 0.15;
     charge += ((charging && chargeArmed ? 1 : 0) - charge) * (charging ? 0.035 : 0.1);
+    shardUniforms.uCharge.value = charge; // v5 inhale — the field leans in while you hold
     chargeCue.classList.toggle("is-on", chargeArmed);
     heartU.uEnergy.value += ((heartNear + chapterPulse + charge * 1.7) - heartU.uEnergy.value) * 0.06;
     heartGem.scale.setScalar(2.1 + Math.sin(wt * 1.8) * 0.05 * (1 + heartU.uEnergy.value));
@@ -1408,6 +1455,10 @@ async function start() {
     gradeUniforms.uWarp.value = warpState;
     gradeUniforms.uContact.value = contactState;
     gradeUniforms.uAberration.value = velEnergy;
+    /* v5 BREAK — the tear window sits just past the heart (cp≈3.2,
+       the moment you pass the source): faint on its own, violent
+       while the charge is held. Zero everywhere else. */
+    gradeUniforms.uBreak.value = Math.max(0, 1 - Math.abs(cp - 3.2) * 2.6) * (0.35 + charge * 0.65);
     tintTmp.copy(CH_TINT[fa]).lerp(CH_TINT[Math.min(F, fa + 1)], frac);
     gradeUniforms.uTint.value.lerp(tintTmp, 0.06);
     const targetBloom = ((CH_BLOOM[fa] + (CH_BLOOM[Math.min(F, fa + 1)] - CH_BLOOM[fa]) * frac) + chapterPulse * 0.5 + charge * 0.45) * (PHONE ? 0.85 : 1); // small screens amplify halo

@@ -23,12 +23,12 @@ defective) and folds in the open boxes of `2026-07-16-lab-v5-pocket-descent.md`.
 
 One fiction — a recovery descent — carried by five climates and a live log.
 
-- [ ] **Task 1 — Foundation.** Hand spring camera (pos+look, overshoot ~ζ0.85,
+- [x] **Task 1 — Foundation.** Hand spring camera (pos+look, overshoot ~ζ0.85,
   reduced-motion unaffected — no3d path), accumulated dilated clock `labT`
   (world visuals + stamps; governor/grade-grain stay on real t), morph tune
   (pulse 0.08→0.05), `npm rm motion`. Build + QA screenshots. Commit.
 
-- [ ] **Task 2 — Five climates.** Per-chapter atmosphere: CH_FOG drives
+- [x] **Task 2 — Five climates.** Per-chapter atmosphere: CH_FOG drives
   scene.fog + clearColor + shaft uTop/uDeep + shard uHaze (aerial fade —
   replaces the hardcoded vec3), all lerped in the loop. DOM follows: JS sets
   `--labAcc`/`--labAccSoft` on :root per chapter (ice #9FD8FF → cyan #4FC4FF →
@@ -36,7 +36,7 @@ One fiction — a recovery descent — carried by five climates and a live log.
   `var(--labAcc, …)` for cursor dot/ring, cue line, readout ping, sound-pill
   on-state, intro bar — with color transitions so the chrome *travels*. Commit.
 
-- [ ] **Task 3 — Descent log (signature).** (a) Loader transcript
+- [x] **Task 3 — Descent log (signature).** (a) Loader transcript
   `.lab-intro__log`: real boot milestones with real ms (GL context, glb+matcaps
   loaded, world built with true instance count, font). (b) HUD depth meter:
   `DEPTH −0,000 M` (scroll depth × 4,600 m fiction; #labPct kept). (c) One
@@ -47,7 +47,7 @@ One fiction — a recovery descent — carried by five climates and a live log.
   kicker → "[ SIGNAL RECOVERED ]". Honesty: `lab-transmission` body class only
   when the log actually paints; gated on fx-on so no3d never claims it. Commit.
 
-- [ ] **Task 4 — World mechanics.** (a) Strike cascade: uRip 4→6 slots;
+- [x] **Task 4 — World mechanics.** (a) Strike cascade: uRip 4→6 slots;
   strike() scans plan origins for ≤2 neighbors within 5u, schedules echo
   ripples at +120/220 ms (direct slot writes, no recursion), `__labQ().echo`.
   (b) Charge inhale: shard vertex uCharge pulls instance origins toward the
