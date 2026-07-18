@@ -5,7 +5,78 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 **Work in THIS directory (`~/Projects/axon-site`) only.**
 
-## Current state (2026-07-16)
+## Current state (2026-07-18)
+
+- **/lab.html v6 "Deep Signal — The Ruin" SHIPPED 2026-07-18** (user:
+  proceed + "shiip it live"; plan `docs/superpowers/plans/2026-07-18-
+  lab-v6-ruin.md`, all boxes checked): commits `894d037`→`ccd40b8`,
+  built ON TOP of v5. The shaft is revealed as BUILT — one authored
+  stone remnant per chapter. (a) ASSETS — second authored-geometry
+  bundle for lab: `assets-src/lab/gen_setpieces.py` (deterministic,
+  headless Blender) → `build-3d.mjs` "labgeo" bundle (matcap:null →
+  steps 1–2 only) → `lab-setpieces.glb` 42.6KB Draco, 6 named nodes
+  (Gate broken hex portal w/ tumbled lintel half, Slab0/1/2 sheared
+  strata w/ band beds in VERTEX COLOR R, Cradle 3-arm machine w/
+  arm-param vcol + empty hex keystone socket at local (0,0.85,3.9),
+  GateFar intact twin). **CRITICAL AXIS LESSON (adversarial review
+  caught it, whole set shipped-fixed in `ccd40b8`): geometry authored
+  Y-up (three convention) MUST export with `export_yup=False` — the
+  default True axis-converts Blender-Z-up→glTF-Y-up and lands
+  authored-Y-up geometry ON ITS SIDE (gate columns spanning −Z,
+  keystone missing the socket by ~7u). Also: a mesh with NO COLOR_0
+  gets three's WHITE default in a ShaderMaterial `attribute vec4
+  color` — bake vcol 0 explicitly (gates got full-tint washed).**
+  (b) RUNTIME — runtime finds nodes BY NAME (all 6 guarded, missing →
+  no3d); 11 placed pieces (Gate ON the rail where it crosses y≈−2.5
+  via curve walk, 8-slab spiral stair r 8.2–9.0 / y −9.2..−19.1,
+  Cradle (0,−51.2,0)×1.45 rotY 0.5, GateFar (0,1.2,−13.5) standing
+  behind the hero gem); stone dual-matcap ShaderMaterial darker than
+  crystal (deep-navy discipline), sediment bands lerp toward climate
+  via `uBand` sharing the LIVE gradeUniforms.uTint Color INSTANCE,
+  band-visibility culled with the shards. (c) STONE RESONANCE — wall
+  strikes within per-piece reach (`userData.ringR2`, default 23≈4.8u;
+  **Cradle 104≈10.2u — it sits ON the axis, default reach can never
+  meet r 9.4 wall hits**) write 1-slot `uStoneRip` pulse + REPLACE the
+  crystal chime (exclusive voice): `chimeRef(hx,hy,hz,octDrop)` drops
+  exactly one octave, oct 0 = the 48Hz drone root itself. (d) KEYSTONE
+  — `lab-memory` localStorage ledger {v:1,visits,charges,keystoneAt,
+  lastISO} (corrupt JSON self-repairs; storage-throw → session-only
+  silently); first charge-release seats a 0.34-scale gem twin (shares
+  heart uniforms) into the socket via gsap bounce.out drop, STILL
+  SEATED every visit after; revisit boot line `SIGNAL LOG · VISIT NN ·
+  KEYSTONE SEATED`; `__labQ()` +{stoneRip,ruin:11,keystone,visits}.
+  `lab-ruin` honesty marker added ONLY in the armed-loop boot block
+  (with lab-crystalline et al — markers mean RENDERING, not parsed).
+  Smoke 2d +6 (glb>30k / lab-ruin poll / keystone seats / ledger
+  persists / stone answers at 30% scroll 21-strike sweep / honest
+  fallback strings "Cradle"+"keystone socket"+"local storage"), suite
+  **265 ALL PASS** with HUB WIP path-scope-stashed (popped clean, no
+  conflict). Live-verified real Chrome on stackwith.me/lab.html twice
+  (mechanics driver + full chapter pass): lab-ruin, ruin 11, stoneRip
+  2, keystone seat→reload→VISIT 02 line, chapters 00→04, charge/
+  reticle/cascade intact, console NONE, glb 200 at 42,620B, homepage
+  untouched hub3d.5XGXAZ7X. QA drivers: /tmp/lab-v6-qa.mjs (8149/9349;
+  live variant = sed BASE→stackwith.me), /tmp/lab-qa.mjs (8147, --live/
+  --mobile). Probe gotchas: strike sweeps for stone must run at ~30%
+  scroll (slabs) — Gate straddles the rail INSIDE the r 9.4 strike
+  cylinder so wall strikes can't reach it; repeated top-level `const`
+  across separate CDP Runtime.evaluate calls SHARE the page lexical
+  scope and throw silently — wrap every evaluate in `{ }`.
+
+- **/lab.html v5 "Deep Signal — Transmission" SHIPPED 2026-07-17**
+  (commits `9f77d16`→`8b1390e`; ship note reconstructed from git —
+  the session that shipped it ended before writing this entry): built
+  ON TOP of v4. Task 1 opened the gate: **phones now get the descent**
+  (PHONE tier + `lab-pocket` marker only when the phone tier actually
+  renders; the <680 lab-no3d block moved to the truly-degraded path).
+  Then: real spring camera + monotonic dilated clock; five per-chapter
+  CLIMATES (each chapter its own air/accent — QA asserts acc #9FD8FF/
+  #4FC4FF/#FF4FA3/#B8FF3C/#E9F2FF); the descent LOG (`lab-transmission`
+  boot-block marker, field-report lines `txType`/TX per chapter, DEPTH
+  meter readout); world mechanics — echo cascade (deliberate strikes
+  echo through the 2 nearest seeded origins at 120/220ms), charge
+  inhale, core breakdown; pocket chrome + touch drag-to-ring. Honest
+  v5 fallback copy + smoke → **258 ALL PASS** at `8b1390e`.
 
 - **/lab.html v4 "Deep Signal — Resonance" SHIPPED 2026-07-16** (user chose
   "Evolve lab to v4" via question; plan `docs/superpowers/plans/2026-07-16-
