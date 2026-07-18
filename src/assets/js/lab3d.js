@@ -1155,10 +1155,15 @@ async function start() {
         vec3 v = normalize(vV);
         float ndv = abs(dot(n, v));
         vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
-        /* stone body — the crystal matcap squared over a DARK mineral
-           base. Stone must sit a full stop below the crystals: the
-           ruin is the shadow the crystals grew against. */
-        vec3 col = mc * mc * vec3(0.20, 0.23, 0.30) * 0.7;
+        /* stone body — matcap over a DARK mineral base + a small
+           ambient floor. mc is NOT squared here (that discipline is
+           for the bright crystals): the matcap center is dark, so
+           squared × dark-base left camera-facing stone PURE BLACK —
+           the gates read as floating black slabs (v6.1 fix). Stone
+           still sits a full stop below the crystals: the ruin is the
+           shadow the crystals grew against. */
+        vec3 col = vec3(0.020, 0.026, 0.038)
+                 + mc * vec3(0.16, 0.19, 0.26) * 0.85;
         col += vec3(0.03, 0.045, 0.075) * (1.0 - ndv);      /* cold rim */
         float fr = pow(1.0 - ndv, 3.0);
         col += uBand * fr * 0.30;                            /* climate breathes on the edges */
