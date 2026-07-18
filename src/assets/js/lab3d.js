@@ -387,13 +387,14 @@ async function start() {
   const draco = new DRACOLoader(manager).setDecoderPath("/assets/3d/draco/");
   const gltfLoader = new GLTFLoader(manager).setDRACOLoader(draco);
   const ktx2 = new KTX2Loader(manager).setTranscoderPath("/assets/3d/basis/").detectSupport(renderer);
-  const [gltf, matcap, matcapInt] = await Promise.all([
+  const [gltf, geoGltf, matcap, matcapInt] = await Promise.all([
     gltfLoader.loadAsync("/assets/3d/lab-crystals.glb"),
+    gltfLoader.loadAsync("/assets/3d/lab-setpieces.glb"), // v6 ruin architecture
     ktx2.loadAsync("/assets/3d/lab-matcap.ktx2"),
     ktx2.loadAsync("/assets/3d/lab-matcap-int.ktx2"),
   ]);
   loadTarget = 1;
-  bootLine("CRYSTAL ARCHIVE DECODED · 3 ASSETS");
+  bootLine("CRYSTAL ARCHIVE DECODED · 4 ASSETS");
   matcap.colorSpace = THREE.SRGBColorSpace;
   matcapInt.colorSpace = THREE.SRGBColorSpace;
 
@@ -1102,6 +1103,124 @@ async function start() {
   const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
   const curPos = new THREE.Vector3(...KEYS[0].p), curLook = new THREE.Vector3(...KEYS[0].l);
 
+  /* ============================================================
+     v6 THE RUIN — the shaft is revealed as BUILT. One authored
+     stone remnant per chapter (lab-setpieces.glb): the broken Gate
+     the rail passes through, sheared strata slabs spiraling the
+     descent, the machined Cradle holding the heart, and the Gate's
+     INTACT twin standing at the surface horizon — the bookend.
+     Stone shares the crystal matcap but reads as a different
+     substance: darker body, no dispersion, sediment bands and the
+     Cradle's charge strip carried in baked vertex color R.
+     ============================================================ */
+  const geoNodes = {};
+  geoGltf.scene.traverse((o) => { if (o.isMesh) geoNodes[o.name] = o.geometry; });
+  if (!geoNodes.Gate || !geoNodes.Cradle) throw new Error("setpieces glb missing nodes");
+  /* shared uniform OBJECTS (spread by reference — a clone would give
+     the loop dead copies, the ShaderPass lesson) */
+  const stoneShared = {
+    uTime: { value: 0 },
+    uCharge: { value: 0 },
+    uStoneRip: { value: new THREE.Vector4(0, 0, 0, -100) }, // 1-slot stone ring (Task 3 wires strikes)
+    uBand: { value: gradeUniforms.uTint.value }, // chapter tint — same Color INSTANCE, lerps for free
+    uHaze: shardUniforms.uHaze,                  // same aerial air as the crystals
+  };
+  const stoneMatOf = (strip) => new THREE.ShaderMaterial({
+    uniforms: { ...stoneShared, uMatcap: { value: matcap }, uStrip: { value: strip } },
+    fog: false,
+    vertexShader: /* glsl */ `
+      attribute vec4 color;
+      uniform float uTime;
+      varying vec3 vN, vV, vWp;
+      varying float vCol;
+      void main(){
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vec4 mv = viewMatrix * wp;
+        vN = normalize((viewMatrix * vec4(mat3(modelMatrix) * normal, 0.0)).xyz);
+        vV = -mv.xyz;
+        vWp = wp.xyz;
+        vCol = color.r;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D uMatcap;
+      uniform float uTime, uCharge, uStrip;
+      uniform vec4 uStoneRip;
+      uniform vec3 uBand, uHaze;
+      varying vec3 vN, vV, vWp;
+      varying float vCol;
+      void main(){
+        vec3 n = normalize(vN);
+        vec3 v = normalize(vV);
+        float ndv = abs(dot(n, v));
+        vec3 mc = texture2D(uMatcap, n.xy * 0.49 + 0.5).rgb;
+        /* stone body — the crystal matcap squared over a DARK mineral
+           base. Stone must sit a full stop below the crystals: the
+           ruin is the shadow the crystals grew against. */
+        vec3 col = mc * mc * vec3(0.20, 0.23, 0.30) * 0.7;
+        col += vec3(0.03, 0.045, 0.075) * (1.0 - ndv);      /* cold rim */
+        float fr = pow(1.0 - ndv, 3.0);
+        col += uBand * fr * 0.30;                            /* climate breathes on the edges */
+        /* sediment bands (slabs) — baked vcol strips lit by the
+           chapter tint; the ruin agrees with the air around it */
+        col += uBand * vCol * 0.30 * (1.0 - uStrip);
+        /* charge strip (Cradle arms) — vcol is the 0..1 arm-length
+           param; the lime fill climbs root→grip while you hold */
+        float fill = step(vCol, uCharge * 1.05) * step(0.02, vCol) * uStrip;
+        col += vec3(0.72, 1.0, 0.24) * fill * (0.5 + 0.5 * sin(uTime * 9.0));
+        /* stone answers strikes slowly — a deep pulse, not a flash */
+        float age = uTime - uStoneRip.w;
+        float ring = step(0.0, age) * exp(-age * 1.4) * smoothstep(6.0, 0.8, distance(vWp, uStoneRip.xyz));
+        col += uBand * ring * 0.5;
+        float dist = length(vV);
+        col = mix(uHaze, col, smoothstep(36.0, 22.0, dist)); /* same aerial fade as the shards */
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  });
+  const setPieces = [];
+  const placeStone = (geo, strip, pos, ry, scale, tiltZ = 0) => {
+    const m = new THREE.Mesh(geo, stoneMatOf(strip));
+    m.position.copy(pos);
+    m.rotation.y = ry;
+    if (tiltZ) m.rotation.z = tiltZ;
+    m.scale.setScalar(scale);
+    scene.add(m);
+    setPieces.push(m);
+    return m;
+  };
+  /* the GATE straddles the rail where it crosses y≈−2.5 — found on the
+     actual curve so the camera provably passes through the frame */
+  {
+    const gp = new THREE.Vector3(), gt = new THREE.Vector3();
+    let tAt = 0.08;
+    for (let tt = 0.02; tt < 0.3; tt += 0.005) {
+      posCurve.getPoint(tt, gp);
+      if (gp.y <= -2.5) { tAt = tt; break; }
+    }
+    posCurve.getPoint(tAt, gp);
+    posCurve.getTangent(tAt, gt);
+    const gate = placeStone(geoNodes.Gate, 0, gp, Math.atan2(gt.x, gt.z), 1.0);
+    gate.rotation.x = -0.12; // lintel leans a breath into the descent
+  }
+  /* strata stair — 8 hand-posed slabs spiraling the DESCENT chapter */
+  const SLAB_POSE = [
+    [0, -9.2, 2.1, 8.4, 0.4, 1.5, 0.06], [1, -10.6, 3.3, 8.8, 1.7, 1.2, -0.08],
+    [2, -12.1, 4.4, 8.2, 2.9, 1.6, 0.10], [0, -13.4, 5.6, 9.0, 4.1, 1.3, -0.05],
+    [1, -15.0, 0.5, 8.6, 5.4, 1.7, 0.08], [2, -16.4, 1.6, 8.3, 0.3, 1.2, -0.11],
+    [0, -17.7, 2.8, 8.9, 1.5, 1.5, 0.04], [1, -19.1, 3.9, 8.5, 2.8, 1.3, -0.07],
+  ];
+  for (const [vi, y, a, r, ry, sc, tz] of SLAB_POSE) {
+    placeStone(geoNodes[`Slab${vi}`], 0,
+      new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r), ry, sc, tz);
+  }
+  /* the CRADLE rises to hold the heart (gem y −46.5, scale 2.1) */
+  const cradle = placeStone(geoNodes.Cradle, 1, new THREE.Vector3(0, -51.2, 0), 0.5, 1.45);
+  /* GateFar — the INTACT twin on the surface horizon, fog-shrouded
+     behind the hero gem: you meet the ruin's whole self first, then
+     descend through what broke */
+  placeStone(geoNodes.GateFar, 0, new THREE.Vector3(0, 1.2, -13.5), 0.35, 1.55);
+  document.body.classList.add("lab-ruin"); // v6 QA marker — only after real node lookup
+
   /* pointer parallax */
   let pxN = 0, pyN = 0;
   if (hoverFine) {
@@ -1340,6 +1459,11 @@ async function start() {
     const wt = labT; // world time — every in-world visual reads this
 
     shardUniforms.uTime.value = wt;
+    stoneShared.uTime.value = wt;
+    stoneShared.uCharge.value = charge;
+    /* ruin culling — same rule as the shard bands: outside the 36u
+       aerial fade a set-piece has already melted into the haze */
+    for (const sp of setPieces) sp.visible = Math.abs(sp.position.y - curPos.y) < 41;
     heroU.uTime.value = wt;
     heartU.uTime.value = wt;
     dustU.uTime.value = wt;
