@@ -1241,7 +1241,7 @@ async function start() {
      +120/220ms — the wall answers in sequence, not all at once. */
   const RIP_R = 9.4;
   const ripDir = new THREE.Vector3();
-  let ripSlot = 0, ripLastT = -10, ripCount = 0, echoCount = 0;
+  let ripSlot = 0, ripLastT = -10, ripCount = 0, echoCount = 0, stoneRipCount = 0;
   let ripX = 1e9, ripY = 1e9, ripZ = 1e9;
   const ripWrite = (x, y, z) => {
     shardUniforms.uRip.value[ripSlot].set(x, y, z, shardUniforms.uTime.value);
@@ -1267,6 +1267,19 @@ async function start() {
     const cascade = force || now - ripLastT > 0.45;
     ripWrite(hx, hy, hz);
     ripX = hx; ripY = hy; ripZ = hz; ripLastT = now;
+    /* v6 STONE RESONANCE — a strike landing near a ruin piece rings
+       STONE instead of crystal: one deep pulse (uStoneRip slot) and a
+       chime an octave down. The ruin answers in a different voice. */
+    for (const sp of setPieces) {
+      if (!sp.visible) continue;
+      const sdx = sp.position.x - hx, sdy = sp.position.y - hy, sdz = sp.position.z - hz;
+      if (sdx * sdx + sdy * sdy + sdz * sdz < 23) { // ≈4.8u reach
+        stoneShared.uStoneRip.value.set(hx, hy, hz, now);
+        stoneRipCount += 1;
+        if (chimeRef) chimeRef(hx, hy - 24, hz); // depth drops the octave — stone speaks low
+        break;
+      }
+    }
     if (chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
     if (readout) { readout.classList.remove("is-ping"); void readout.offsetWidth; readout.classList.add("is-ping"); } // HUD registers the strike
     if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
@@ -1312,6 +1325,41 @@ async function start() {
   chargeCue.id = "labCharge";
   chargeCue.textContent = "[ HOLD TO CHARGE ]";
   document.body.appendChild(chargeCue);
+  /* ---- v6 THE KEYSTONE — memory made physical. The survey keeps a
+     tiny ledger in localStorage; your first full discharge seats a
+     gem fragment into the Cradle's socket, and it is STILL SEATED on
+     every future visit. Storage failure (private mode) degrades to
+     session-only silently — the fiction never claims what it can't
+     keep. ---- */
+  const MEMK = "lab-memory";
+  let mem = { v: 1, visits: 0, charges: 0, keystoneAt: 0, lastISO: "" };
+  let memPersists = false;
+  try {
+    const stored = JSON.parse(localStorage.getItem(MEMK) || "null");
+    if (stored && stored.v === 1) mem = stored;
+    mem.visits += 1;
+    localStorage.setItem(MEMK, JSON.stringify(mem));
+    memPersists = true;
+  } catch {}
+  const memSave = () => { if (memPersists) try { localStorage.setItem(MEMK, JSON.stringify(mem)); } catch {} };
+  addEventListener("pagehide", () => { mem.lastISO = new Date().toISOString(); memSave(); });
+  /* the fragment: a 0.55-scale twin of the heart gem over the socket
+     (plinth local (0,0.85,3.9) × cradle scale 1.45, rotY 0.5, at y −51.2) */
+  const KS_POS = (() => {
+    const p = new THREE.Vector3(0, 0.95, 3.9).multiplyScalar(1.45).applyAxisAngle(UP, 0.5);
+    return p.add(new THREE.Vector3(0, -51.2, 0));
+  })();
+  const keystone = new THREE.Mesh(gemGeo, gemMatOf(heartU)); // shares the heart's live uniforms
+  keystone.scale.setScalar(0.34);
+  keystone.position.copy(KS_POS);
+  keystone.visible = mem.charges > 0; // seated from a prior visit
+  scene.add(keystone);
+  const seatKeystone = (animate) => {
+    keystone.visible = true;
+    if (!animate) return;
+    keystone.position.y = KS_POS.y + 5;
+    gsap.to(keystone.position, { y: KS_POS.y, duration: 1.4, ease: "bounce.out", delay: 0.5 });
+  };
   const chargeRelease = () => {
     chargeCue.classList.remove("is-hot");
     if (!charging) return;
@@ -1320,6 +1368,9 @@ async function start() {
     shardUniforms.uWave.value.set(0, -46.5, 0, shardUniforms.uTime.value); // the heart
     releaseKick = Math.min(1, charge);
     if (thumpRef) thumpRef(charge);
+    if (mem.charges === 0) { mem.keystoneAt = Date.now(); seatKeystone(true); } // first discharge seats the fragment
+    mem.charges += 1;
+    memSave();
   };
   addEventListener("pointerdown", () => { if (chargeArmed) { charging = true; chargeCue.classList.add("is-hot"); } }, { passive: true });
   addEventListener("pointerup", chargeRelease, { passive: true });
@@ -1403,7 +1454,7 @@ async function start() {
     dustU.uPx.value = dprNow;
     gradeUniforms.uResolution.value.set(W * dprNow, H * dprNow);
   };
-  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, echo: echoCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, tx: txEl ? txEl.textContent : "", bootLines, emaMs: Math.round(emaMs) }); // QA introspection hook
+  window.__labQ = () => ({ qIdx, dpr: dprNow, disp: shardUniforms.uDisp.value, rip: ripCount, echo: echoCount, stoneRip: stoneRipCount, chime: chimeCount, charge: +charge.toFixed(3), pocket: PHONE, ruin: setPieces.length, keystone: keystone.visible, visits: mem.visits, tx: txEl ? txEl.textContent : "", bootLines, emaMs: Math.round(emaMs) }); // QA introspection hook
   const governQuality = (t) => {
     const dt = Math.min(100, (t - lastT) * 1000);
     lastT = t;
@@ -1612,6 +1663,8 @@ async function start() {
   /* v5 transmission — armed ONLY here, on real boot: the field
      reports narrate a world that is actually rendering. */
   document.body.classList.add("lab-transmission");
+  /* v6 revisit line — every field derived from the real ledger */
+  if (mem.visits > 1) bootLine(`SIGNAL LOG · VISIT ${String(mem.visits).padStart(2, "0")}${mem.charges > 0 ? " · KEYSTONE SEATED" : ""}`);
   bootLine("LINK ESTABLISHED · BEGIN DESCENT");
   txType(TX[Math.min(F, Math.round(progress()))]);
   addEventListener("lab:chapter", (e) => txType(TX[e.detail]));
