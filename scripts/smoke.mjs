@@ -151,9 +151,11 @@ check("lab: world booted from baked assets", await evalJs(`new Promise((res) => 
 check("lab: boot loader auto-dismisses", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => { const i = document.getElementById("labIntro"); (!i || i.classList.contains("is-done")) ? res(true) : (Date.now() - t0 > 12000 ? res(false) : setTimeout(poll, 250)); }; poll(); })`));
 check("lab: in-world type booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-type-on") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab: crystalline v2 world booted", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-crystalline") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
+check("lab: ruin architecture stands (v6)", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("lab-ruin") ? res(true) : (Date.now() - t0 > 9000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("lab: HUD readout mounted", await evalJs(`/^0[0-4] \\//.test(document.getElementById("labReadout")?.textContent || "")`));
 check("lab: scroll track is a descent", await evalJs(`document.documentElement.scrollHeight >= innerHeight * 4.5`));
 check("lab: draco glb served (v3 high-poly)", await evalJs(`fetch("/assets/3d/lab-crystals.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 20000)`));
+check("lab: setpieces glb served (v6 ruin)", await evalJs(`fetch("/assets/3d/lab-setpieces.glb").then(async (r) => r.ok && (await r.arrayBuffer()).byteLength > 30000)`));
 check("lab: ktx2 matcap served", await evalJs(`fetch("/assets/3d/lab-matcap.ktx2").then((r) => r.ok)`));
 check("lab: ktx2 interior matcap served", await evalJs(`fetch("/assets/3d/lab-matcap-int.ktx2").then((r) => r.ok)`));
 check("lab: draco decoder served", await evalJs(`fetch("/assets/3d/draco/draco_decoder.wasm").then((r) => r.ok)`));
@@ -161,6 +163,7 @@ check("lab: basis transcoder served", await evalJs(`fetch("/assets/3d/basis/basi
 check("lab: sound toggle mounted", await evalJs(`!!document.getElementById("labSound")`));
 check("lab: sound toggle flips", await evalJs(`(() => { const b = document.getElementById("labSound"); b.click(); const on = b.getAttribute("aria-pressed") === "true"; b.click(); return on; })()`));
 check("lab: fallback article substantive", (await evalJs(`document.querySelector(".lab-fallback")?.textContent.trim().length`)) >= 400);
+check("lab: fallback tells the ruin honestly", await evalJs(`(() => { const t = document.querySelector(".lab-fallback")?.textContent || ""; return t.includes("Cradle") && t.includes("keystone socket") && t.includes("local storage"); })()`));
 check("lab: end card links", (await evalJs(`[...document.querySelectorAll(".lab-end a")].map((a) => a.getAttribute("href")).join(",")`)) === "/about.html,/");
 await evalJs(`(() => { const y = document.documentElement.scrollHeight - innerHeight; scrollTo(0, y); window.__labLenis && window.__labLenis.scrollTo(y, { immediate: true }); })()`);
 await sleep(1800);
@@ -176,6 +179,10 @@ await evalJs(`dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidt
 await sleep(2400);
 check("lab: core charge responds", (await evalJs(`window.__labQ?.().charge`)) > 0.3, `charge=${await evalJs(`window.__labQ?.().charge`)}`);
 await evalJs(`dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.5, clientY: innerHeight * 0.5 }))`);
+/* v6 keystone — the release above was a full discharge: the fragment
+   must seat and the localStorage ledger must record the charge */
+check("lab: keystone seats on first discharge", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => window.__labQ?.().keystone ? res(true) : (Date.now() - t0 > 4000 ? res(false) : setTimeout(poll, 200)); poll(); })`));
+check("lab: survey ledger persists the charge", await evalJs(`(() => { try { const m = JSON.parse(localStorage.getItem("lab-memory") || "null"); return !!m && m.v === 1 && m.charges >= 1 && m.visits >= 1; } catch { return false; } })()`));
 /* v5 transmission — still parked in THE CORE (cp≈3.1): climate accent
    must be the chapter's own, the field-report chrome must be live */
 check("lab: transmission log paints", await evalJs(`document.body.classList.contains("lab-transmission") && (document.getElementById("labTx")?.textContent || "").length > 4`), await evalJs(`document.getElementById("labTx")?.textContent`));
@@ -183,6 +190,14 @@ check("lab: climate accent travels with depth", (await evalJs(`getComputedStyle(
 check("lab: depth meter counts metres", await evalJs(`/^.?[\\d,]+$/.test((document.getElementById("labPct")?.textContent || "").trim()) && (document.getElementById("labPct")?.textContent || "").replace(/\\D/g, "") > 100`), await evalJs(`document.getElementById("labPct")?.textContent`));
 /* v5 cascade — a deliberate tap must echo to neighbouring crystals */
 check("lab: strike cascade echoes", await evalJs(`(async () => { const q0 = window.__labQ?.().echo ?? 0; dispatchEvent(new PointerEvent("pointerdown", { clientX: innerWidth * 0.72, clientY: innerHeight * 0.35 })); dispatchEvent(new PointerEvent("pointerup", { clientX: innerWidth * 0.72, clientY: innerHeight * 0.35 })); const t0 = Date.now(); return await new Promise((res) => { const poll = () => (window.__labQ?.().echo ?? 0) > q0 ? res(true) : (Date.now() - t0 > 3000 ? res(false) : setTimeout(poll, 150)); poll(); }); })()`), `echo=${await evalJs(`window.__labQ?.().echo`)}`);
+/* v6 stone resonance — strikes swept across the DESCENT strata must
+   ring at least one ruin piece in the stone voice */
+await evalJs(`(() => { const y = Math.round((document.documentElement.scrollHeight - innerHeight) * 0.3); scrollTo(0, y); window.__labLenis && window.__labLenis.scrollTo(y, { immediate: true }); })()`);
+await sleep(8000); // camera lerp settle into the strata spiral
+check("lab: stone answers in its own voice", await evalJs(`(async () => { for (let i = 0; i <= 20; i++) { dispatchEvent(new PointerEvent("pointermove", { clientX: innerWidth * (0.05 + 0.045 * i), clientY: innerHeight * (0.2 + 0.025 * i) })); await new Promise((r) => setTimeout(r, 120)); } const t0 = Date.now(); return await new Promise((res) => { const poll = () => (window.__labQ?.().stoneRip ?? 0) > 0 ? res(true) : (Date.now() - t0 > 4000 ? res(false) : setTimeout(poll, 200)); poll(); }); })()`), `stoneRip=${await evalJs(`window.__labQ?.().stoneRip`)}`);
+/* v6 revisit — reload with the ledger present: fragment already seated */
+await go(BASE + "/lab.html", 4000);
+check("lab: keystone still seated on revisit", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => { const q = window.__labQ?.(); if (q && q.keystone && q.visits >= 2) return res(true); (Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 300)); }; poll(); })`), await evalJs(`JSON.stringify(window.__labQ?.() && { keystone: window.__labQ().keystone, visits: window.__labQ().visits })`));
 await evalJs(`scrollTo(0, 0); window.__labLenis && window.__labLenis.scrollTo(0, { immediate: true })`);
 
 /* ---- 2e · lab pocket (v5: phones render the real descent) ---- */

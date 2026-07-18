@@ -253,14 +253,14 @@ if (soundBtn) {
      the octave (the shaft gets graver as you descend), strike x
      pans the voice. Gated by soundOn; ≤6 live voices, ≥110ms apart. */
   let lastChime = 0, chimeVoices = 0;
-  chimeRef = (hx, hy, hz) => {
+  chimeRef = (hx, hy, hz, octDrop = 0) => {
     if (!AC || !soundOn || chimeVoices >= 6) return;
     const now = AC.currentTime;
     if (now - lastChime < 0.11) return;
     lastChime = now;
     const PENTA = [0, 3, 5, 7, 10];
     const deg = PENTA[Math.abs(Math.floor(((Math.atan2(hz, hx) + Math.PI) / (Math.PI * 2)) * 5)) % 5];
-    const oct = hy > -12 ? 3 : hy > -30 ? 2 : 1;
+    const oct = Math.max(0, (hy > -12 ? 3 : hy > -30 ? 2 : 1) - octDrop); // oct 0 = the 48Hz drone root itself
     const f0 = 48 * Math.pow(2, oct + deg / 12);
     const g = AC.createGain();
     g.gain.setValueAtTime(0, now);
@@ -1115,7 +1115,8 @@ async function start() {
      ============================================================ */
   const geoNodes = {};
   geoGltf.scene.traverse((o) => { if (o.isMesh) geoNodes[o.name] = o.geometry; });
-  if (!geoNodes.Gate || !geoNodes.Cradle) throw new Error("setpieces glb missing nodes");
+  for (const nm of ["Gate", "GateFar", "Cradle", "Slab0", "Slab1", "Slab2"])
+    if (!geoNodes[nm]) throw new Error(`setpieces glb missing node ${nm}`); // → no3d fallback
   /* shared uniform OBJECTS (spread by reference — a clone would give
      the loop dead copies, the ShaderPass lesson) */
   const stoneShared = {
@@ -1178,12 +1179,13 @@ async function start() {
       }`,
   });
   const setPieces = [];
-  const placeStone = (geo, strip, pos, ry, scale, tiltZ = 0) => {
+  const placeStone = (geo, strip, pos, ry, scale, tiltZ = 0, ringR2 = 23) => {
     const m = new THREE.Mesh(geo, stoneMatOf(strip));
     m.position.copy(pos);
     m.rotation.y = ry;
     if (tiltZ) m.rotation.z = tiltZ;
     m.scale.setScalar(scale);
+    m.userData.ringR2 = ringR2; // stone-resonance reach², from this piece's origin
     scene.add(m);
     setPieces.push(m);
     return m;
@@ -1214,12 +1216,14 @@ async function start() {
       new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r), ry, sc, tz);
   }
   /* the CRADLE rises to hold the heart (gem y −46.5, scale 2.1) */
-  const cradle = placeStone(geoNodes.Cradle, 1, new THREE.Vector3(0, -51.2, 0), 0.5, 1.45);
+  /* reach 10.2u: wall strikes land at r≈9.4, the Cradle sits ON the axis —
+     the default 4.8u could never reach it. 10.2 rings it only for strikes
+     near its own depth band (√(9.4²+Δy²) ≤ 10.2 ⇒ |Δy| ≲ 4) */
+  const cradle = placeStone(geoNodes.Cradle, 1, new THREE.Vector3(0, -51.2, 0), 0.5, 1.45, 0, 104);
   /* GateFar — the INTACT twin on the surface horizon, fog-shrouded
      behind the hero gem: you meet the ruin's whole self first, then
      descend through what broke */
   placeStone(geoNodes.GateFar, 0, new THREE.Vector3(0, 1.2, -13.5), 0.35, 1.55);
-  document.body.classList.add("lab-ruin"); // v6 QA marker — only after real node lookup
 
   /* pointer parallax */
   let pxN = 0, pyN = 0;
@@ -1270,17 +1274,19 @@ async function start() {
     /* v6 STONE RESONANCE — a strike landing near a ruin piece rings
        STONE instead of crystal: one deep pulse (uStoneRip slot) and a
        chime an octave down. The ruin answers in a different voice. */
+    let stoneHit = false;
     for (const sp of setPieces) {
       if (!sp.visible) continue;
       const sdx = sp.position.x - hx, sdy = sp.position.y - hy, sdz = sp.position.z - hz;
-      if (sdx * sdx + sdy * sdy + sdz * sdz < 23) { // ≈4.8u reach
+      if (sdx * sdx + sdy * sdy + sdz * sdz < sp.userData.ringR2) { // per-piece reach (default ≈4.8u)
         stoneShared.uStoneRip.value.set(hx, hy, hz, now);
         stoneRipCount += 1;
-        if (chimeRef) chimeRef(hx, hy - 24, hz); // depth drops the octave — stone speaks low
+        stoneHit = true;
+        if (chimeRef) chimeRef(hx, hy, hz, 1); // stone speaks exactly one octave low
         break;
       }
     }
-    if (chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
+    if (!stoneHit && chimeRef) chimeRef(hx, hy, hz); // v4 sound — struck wall rings pitched (no-op when sound off)
     if (readout) { readout.classList.remove("is-ping"); void readout.offsetWidth; readout.classList.add("is-ping"); } // HUD registers the strike
     if (++ripCount === 1) document.body.classList.add("lab-resonant"); // v4 QA marker — only on a real strike
     if (!cascade) return;
@@ -1334,17 +1340,20 @@ async function start() {
   const MEMK = "lab-memory";
   let mem = { v: 1, visits: 0, charges: 0, keystoneAt: 0, lastISO: "" };
   let memPersists = false;
-  try {
+  try { // a corrupt ledger starts fresh — the repair write below overwrites it
     const stored = JSON.parse(localStorage.getItem(MEMK) || "null");
     if (stored && stored.v === 1) mem = stored;
-    mem.visits += 1;
+  } catch {}
+  mem.visits += 1;
+  try {
     localStorage.setItem(MEMK, JSON.stringify(mem));
     memPersists = true;
   } catch {}
   const memSave = () => { if (memPersists) try { localStorage.setItem(MEMK, JSON.stringify(mem)); } catch {} };
   addEventListener("pagehide", () => { mem.lastISO = new Date().toISOString(); memSave(); });
-  /* the fragment: a 0.55-scale twin of the heart gem over the socket
-     (plinth local (0,0.85,3.9) × cradle scale 1.45, rotY 0.5, at y −51.2) */
+  /* the fragment: a small twin of the heart gem (scale 0.34 vs the heart's
+     2.1) floating just proud of the socket — socket well local (0,0.85,3.9),
+     fragment at local y 0.95, × cradle scale 1.45, rotY 0.5, at y −51.2 */
   const KS_POS = (() => {
     const p = new THREE.Vector3(0, 0.95, 3.9).multiplyScalar(1.45).applyAxisAngle(UP, 0.5);
     return p.add(new THREE.Vector3(0, -51.2, 0));
@@ -1663,6 +1672,10 @@ async function start() {
   /* v5 transmission — armed ONLY here, on real boot: the field
      reports narrate a world that is actually rendering. */
   document.body.classList.add("lab-transmission");
+  /* v6 marker — the node-lookup throw above guarantees the ruin geometry
+     is real, but the class waits for the armed render loop like every
+     other honesty marker: lab-ruin must mean "the ruin is RENDERING". */
+  document.body.classList.add("lab-ruin");
   /* v6 revisit line — every field derived from the real ledger */
   if (mem.visits > 1) bootLine(`SIGNAL LOG · VISIT ${String(mem.visits).padStart(2, "0")}${mem.charges > 0 ? " · KEYSTONE SEATED" : ""}`);
   bootLine("LINK ESTABLISHED · BEGIN DESCENT");

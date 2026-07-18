@@ -25,6 +25,13 @@
 #
 # Reuses the lab crystal matcaps at runtime — no new bake in this pass.
 # Deterministic: seeded RNG only, fixed counts.
+#
+# AXES: geometry is deliberately authored with **Y as up** (three.js
+# convention), NOT Blender's Z-up — so the export runs with
+# export_yup=False (no axis conversion; the file carries the authored
+# coordinates verbatim). With the default export_yup=True the exporter
+# maps Blender (x,y,z) → glTF (x,z,−y) and every piece lands on its
+# side (the v6 review caught exactly that: gate columns spanning −Z).
 # (scripts/build-3d.mjs "labgeo" bundle draco-compresses the glb; the
 #  bundle sets matcap:null so steps 1–2 run and step 3 is skipped.)
 
@@ -129,7 +136,11 @@ def make_gate(name, broken=True, seed=41):
         # fracture stubs where the beam snapped
         add_box(bm, (0.5, 0.6, 0.6), (0.25, 3.78, 0.0),
                 Matrix.Rotation(math.radians(9), 4, "Y"))
-    return finish(bm, name, bevel_w=0.035)
+    # vcol R = 0 everywhere: gates are BASE rock, no sediment band.
+    # Without a baked COLOR_0 three's missing-attribute default is
+    # WHITE (1,1,1) → the stone shader's uBand·vCol term would wash
+    # both gates with the full chapter tint.
+    return finish(bm, name, bevel_w=0.035, vcol=lambda co: 0.0)
 
 
 gate = make_gate("Gate", broken=True)
@@ -243,6 +254,6 @@ bpy.ops.export_scene.gltf(
     filepath=f"{out_dir}/lab-setpieces-raw.glb",
     export_format="GLB",
     export_apply=True,
-    export_yup=True,
+    export_yup=False,  # geometry is authored Y-up already — see AXES note up top
 )
 print(f"[gen_setpieces] wrote {out_dir}/lab-setpieces-raw.glb")
