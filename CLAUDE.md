@@ -8,8 +8,12 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 ## Current state (2026-07-18)
 
 - **/game.html "Signal Strike" — ARSENAL + CHARACTER RIGS + 3RD-PERSON
-  PASS (in working tree, not yet shipped/pushed; rides ON TOP of the
-  impact & feedback pass below — ship together).** Suite **296 ALL
+  PASS + IMPACT & FEEDBACK PASS — SHIPPED LIVE 2026-07-19** (commit
+  `a169910`, push user-sanctioned "push all"; Actions deploy success;
+  live-verified real Chrome on stackwith.me/game.html?sim=1: boot,
+  arsenal 5 cards, smg+shotgun loadout deploy, 3p rig, land, shotgun
+  shell, ff match resolution, zero JS exc — ALL PASS; hashed assets
+  game3d.NLONVV56.js 789KB + game.QSAXLX2M.css 200). Suite **296 ALL
   PASS** (3 new lobby checks + 2 loadout checks + 1 view check; one
   known flake: "lab: core charge responds" ~charge 0.248 on a slow
   run — passes on re-run). Bespoke driver /tmp/game-v3-qa.mjs ALL PASS
@@ -66,8 +70,8 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   polls (fixed a one-shot-timing flake). Next: ship both passes
   together (build + smoke + push + live verify).
 
-- **/game.html "Signal Strike" — IMPACT & FEEDBACK PASS (in working
-  tree, not yet shipped/pushed).** Five cohesive combat-feel changes,
+- **/game.html "Signal Strike" — IMPACT & FEEDBACK PASS (SHIPPED LIVE
+  2026-07-19 in `a169910`, together with the arsenal pass above).** Five cohesive combat-feel changes,
   all synth-audio-only, seed 1187 untouched, kept OUT of `simStep` so
   the `ff()` fast-forward smoke path stays pure:
   (1) **Trauma screen shake** — `shake.t` + `addTrauma(k)`; applied in
