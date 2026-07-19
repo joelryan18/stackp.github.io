@@ -38,9 +38,21 @@ extraStylesheet: gamecss
     <button class="g-menu__play" id="gPlay" type="button">DEPLOY</button>
     <ul class="g-menu__keys" aria-label="Controls">
       <li><b>WASD</b> move</li><li><b>SHIFT</b> sprint</li><li><b>SPACE</b> jump</li>
-      <li><b>CTRL</b> crouch</li><li><b>LMB</b> fire</li><li><b>RMB</b> aim (LANCE)</li>
+      <li><b>CTRL</b> crouch / slide</li><li><b>LMB</b> fire</li><li><b>RMB</b> aim (LANCE)</li>
       <li><b>R</b> refeed</li><li><b>1/2</b> weapon</li><li><b>Q</b> hardlight wall</li>
+      <li><b>V</b> camera view</li>
     </ul>
+
+    <!-- ARSENAL — pick two weapons into the deploy loadout -->
+    <div class="g-arsenal" id="gArsenal">
+      <p class="g-arsenal__head">ARSENAL <i id="gArsenalSel">PICKING · SLOT 1</i></p>
+      <div class="g-arsenal__slots">
+        <button class="g-arsenal__slot is-sel" id="gSlot0" type="button"><span>SLOT 1</span><b>PULSE-7</b></button>
+        <button class="g-arsenal__slot" id="gSlot1" type="button"><span>SLOT 2</span><b>LANCE-1</b></button>
+      </div>
+      <ul class="g-arsenal__guns" id="gGuns" aria-label="Weapon catalog"></ul>
+      <button class="g-arsenal__view" id="gViewBtn" type="button">CAMERA · FIRST PERSON</button>
+    </div>
     <!-- SQUAD LINK — online rooms with friends (Supabase Realtime relay) -->
     <div class="g-squad" id="gSquad">
       <p class="g-squad__head">SQUAD LINK <i id="gSquadState">OFFLINE</i></p>
@@ -70,6 +82,7 @@ extraStylesheet: gamecss
   <div class="g-vig" id="gVig"></div>
   <div class="g-cross" id="gCross"><i></i><i></i><i></i><i></i><s></s></div>
   <div class="g-hitmark" id="gHitmark"><i></i><i></i><i></i><i></i></div>
+  <div class="g-dmgdir" id="gDmgDir" aria-hidden="true"><i></i></div>
   <div class="g-compass" id="gCompass"></div>
   <p class="g-banner" id="gBanner"></p>
 

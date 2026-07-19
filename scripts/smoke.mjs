@@ -216,11 +216,18 @@ check("game: lobby menu shown with DEPLOY", await evalJs(`document.getElementByI
 check("game: frames actually rendering", await evalJs(`new Promise((res) => { const f0 = window.__gameQ().frames; setTimeout(() => res(window.__gameQ().frames > f0 + 5), 600); })`));
 check("game: own hashed css bundle served", await evalJs(`!![...document.styleSheets].find((s) => s.href && s.href.includes("/assets/game."))`));
 check("game: arena seeded (12 combatants, colliders up)", await evalJs(`(() => { const q = window.__gameQ(); return q.alive === 12 && q.botsAlive === 11 && q.colliders > 100; })()`));
+check("game: arsenal lists 5 weapons, 2 picked into slots", await evalJs(`(() => { const l = document.getElementById("gGuns"); return l.children.length === 5 && l.querySelectorAll("li.is-picked").length === 2; })()`));
+check("game: camera toggle button mounted", await evalJs(`/CAMERA · (FIRST|THIRD) PERSON/.test(document.getElementById("gViewBtn").textContent)`));
 /* sim-mode match: deploy → land → storm advances → bots fight to a winner */
 await go(BASE + "/game.html?sim=1", 4000);
+/* pick a non-default loadout in the lobby: SMG into slot 1, shotgun into slot 2 */
+check("game: arsenal picks persist into the loadout", await evalJs(`(() => { window.__gameDrive.pick(0, 2); const l = window.__gameDrive.pick(1, 3); return l[0] === "smg" && l[1] === "shotgun"; })()`));
 await evalJs(`document.getElementById("gPlay").click()`);
 await sleep(500);
 check("game: match starts on deploy (sim)", await evalJs(`(() => { const q = window.__gameQ(); return q.match && q.p.gliding; })()`));
+check("game: deployed with the picked loadout + right ammo", await evalJs(`(() => { const q = window.__gameQ(); return q.loadout[0] === "smg" && q.loadout[1] === "shotgun" && q.weapon === "smg" && q.ammo[0] === 32 && q.ammo[1] === 6; })()`), await evalJs(`JSON.stringify(window.__gameQ().loadout)`));
+check("game: third person shows own rig, first person hides it", await evalJs(`(async () => { const till = async (fn) => { const t0 = Date.now(); while (Date.now() - t0 < 5000) { if (fn()) return true; await new Promise((r) => setTimeout(r, 150)); } return false; }; window.__gameDrive.view(1); const tp = await till(() => { const q = window.__gameQ(); return q.view === "tp" && q.rig3p; }); window.__gameDrive.view(0); const fp = await till(() => { const q = window.__gameQ(); return q.view === "fp" && !q.rig3p; }); return tp && fp; })()`));
+await evalJs(`try { localStorage.removeItem("game-loadout"); localStorage.removeItem("game-view"); } catch (e) {}`);
 check("game: HUD went live", await evalJs(`document.getElementById("gHud").classList.contains("is-live")`));
 await evalJs(`window.__gameDrive.look(Math.PI, -1.3)`);
 check("game: glider lands", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => !window.__gameQ().p.gliding ? res(true) : (Date.now() - t0 > 14000 ? res(false) : setTimeout(poll, 300)); poll(); })`));

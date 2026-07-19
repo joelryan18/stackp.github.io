@@ -7,6 +7,94 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-18)
 
+- **/game.html "Signal Strike" — ARSENAL + CHARACTER RIGS + 3RD-PERSON
+  PASS (in working tree, not yet shipped/pushed; rides ON TOP of the
+  impact & feedback pass below — ship together).** Suite **296 ALL
+  PASS** (3 new lobby checks + 2 loadout checks + 1 view check; one
+  known flake: "lab: core charge responds" ~charge 0.248 on a slow
+  run — passes on re-run). Bespoke driver /tmp/game-v3-qa.mjs ALL PASS
+  (lobby DOM picks, dupe-swap, burst=exactly-3, shotgun pellets, tp rig
+  visible, ff integrity, zero JS exc). Third-person shot visually
+  verified (rig, boom, crosshair clear).
+  (1) **Weapon catalog 5 + lobby ARSENAL picker** — WEAPONS gained
+  smg WASP-9 (820rpm/16dmg, tiny spreadMove — run-and-gun id),
+  shotgun MAUL-4 (85rpm, 10 pellets × 11 dmg, pellSpread 0.03; max
+  crit aggregate 165 < saneDmg 220 clamp), burst ARC-12 (3-round:
+  burstN/burstIn 0.06/burstGap 0.36). Indexes 0/1 unchanged
+  (rifle/dmr) so default loadout = old game. Per-weapon rStart/rPick/
+  rMax/trace/blurb. `P.loadout` = 2 slots of WEAPONS indices; `wIdx`
+  stays the SLOT; `curW()` resolves. Ammo pickups refill per-weapon.
+  Lobby: `.g-arsenal` panel in game.njk (gSlot0/1, gGuns built from
+  WEAPONS in JS, gArsenalSel, gViewBtn) + CSS; pickWeapon swaps on
+  dupe pick, persists localStorage `game-loadout` (validated on load),
+  applied in resetMatch (lobbyLoadout → P.loadout). `.g-menu__core`
+  now max-height 96dvh + overflow-y auto.
+  (2) **fire() split → fire/stepBurst/fireShot** — trigger queues
+  burstQ for burst weapons, stepBurst paces rounds even off-trigger
+  (in playerStep before mouseDown fire). Shotgun casts all pellets in
+  one fireShot, aggregates dmg per victim (agg Map) + per barrier →
+  ONE hit/hitb wire msg, one dmgNum, one hitmark. sfx/trauma keyed on
+  w.kick>=2 not index; shot msg `d` flag = id==="dmr".
+  (3) **Articulated character rigs** — makeRig rebuilt: core group w/
+  torso/chest-accent/hip/head+visor, pivoted limbs (legL/R, armL/R w/
+  scaled shoulder caps), gun on right arm (rotation.x −90° so arm
+  raise = gun level). Deep-navy suit (emissive 0.055/0.03) + hue
+  ACCENTS only (visor/chest/shoulders MeshBasic) — first cut at 0.16
+  emissive read as a toy-green blob, squash it if it creeps back.
+  `rig.flash(k)` = hit flash (replaces children[0] hack). animRig()
+  poses from state {speed,grounded,crouch,slide,gliding,aim,aimPitch,
+  ready}: run cycle (phase+amp), crouch fold, slide lean-back, air
+  tuck, skydive spread, aim = right arm to pitch + left crossover +
+  head pitch. Used by: bots (botStep + drop + guestBotStep), peer
+  replicas (stepPeers(dt) — now takes dt, interpolates vel.y too),
+  and myRig (the player's OWN body, lime, only visible in tp).
+  Bots got `aimP` (pitch toward target). Peer snaps gained `pt`
+  (pitch, Number.isFinite-gated → old clients safe). removePeerRig
+  now traverses (nested groups) sparing shared rigGunMat/blobMat.
+  (4) **First/third person** — `VIEW` persisted localStorage
+  `game-view` ("fp"/"tp"); V key in-match (banner), gViewBtn in
+  lobby. In loop alive-branch: vm/vmLamp visible only fp; tp adds
+  shoulder offset +0.62/+0.22 and boom z (4.1 walk / 6.2 glide /
+  −2.2 ads tuck) pulled in by rayWorld along ANALYTIC back-vector
+  (matrixWorld is a frame stale — don't use getWorldDirection here);
+  min boom 0.9. camera.position.z reset each frame in fp path. Aim
+  ray/spread/recoil identical in both views (camera basis rotation
+  unchanged). vm/myRig forced correct in spectate/attract branches.
+  QA: __gameQ +{view,rig3p,weapon,ammo,reserve,loadout,lobbyLoadout,
+  burstQ}; __gameDrive +view(v),pick(slot,wi). game.html fallback
+  copy updated (5 weapons/loadout/two cameras). Smoke's tp check
+  polls (fixed a one-shot-timing flake). Next: ship both passes
+  together (build + smoke + push + live verify).
+
+- **/game.html "Signal Strike" — IMPACT & FEEDBACK PASS (in working
+  tree, not yet shipped/pushed).** Five cohesive combat-feel changes,
+  all synth-audio-only, seed 1187 untouched, kept OUT of `simStep` so
+  the `ff()` fast-forward smoke path stays pure:
+  (1) **Trauma screen shake** — `shake.t` + `addTrauma(k)`; applied in
+  `loop()` alive branch ONLY as camera-leaf roll (rotation.z) +
+  positional punch, squared response, incommensurate sines. Roll is
+  around the view axis so the aim ray is invariant — shots stay true.
+  Sources: fire (dmr 0.16 / rifle 0.055), hurtPlayer (0.22 + dmg/90),
+  killPop (0.28), land (0.3), slide-start (0.12). Decays dt*1.9.
+  (2) **Reload viewmodel anim** — gun dips + tilts (rotation.x) on a
+  sin(reloadProgress) curve, off-eyeline mid-reload, snaps back last beat.
+  (3) **Kill pop** `killPop()` — trauma + red `.g-hitmark.is-kill`
+  (scale pop) + lime `.g-vig.is-kill` pulse; wired into botDeathFx(byMe)
+  + onPeerDied(mine).
+  (4) **Directional damage arc** — `#gDmgDir` in game.njk; hurtPlayer
+  gained 4th arg `srcPos`, rotates arc to attacker's view-space bearing.
+  Bots pass `b.pos`; wire hits look up `NET.peers.get(m.bid).pos`.
+  (5) **Slide** — sprint+crouch edge (speed>6.5, grounded, off cd) →
+  1.45x momentum boost, low-friction glide, forced crouch height, fov
+  kick via camera lean, synth scrape, ends on timer/slow/airborne/jump.
+  Consts SLIDE_T/BOOST/CD/MIN_S. `playerStep` ground-accel restructured
+  to skip during slide. Reset in resetMatch.
+  QA hook `__gameQ().p` gained `sliding`; added `.trauma`. game.njk keys
+  + fallback copy mention slide. **Verified:** `npm run build` clean,
+  `npm run smoke` ALL PASS (291), bespoke CDP impact probe ALL PASS
+  (slide/shake/reload/dmgdir/killpop + ff integrity, zero JS exc),
+  in-match screenshot confirms arc+vignette+HUD render.
+
 - **/game.html "Signal Strike" + Homepage v4 "The Workshop Catalog" —
   SHIPPED LIVE 2026-07-18** (commits 5ac261a lab v6.1 stone fix /
   4d4f0af hub v4 / 7694a37 game; push user-sanctioned same session;

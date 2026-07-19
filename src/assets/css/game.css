@@ -19,7 +19,8 @@
   opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .45s var(--ease), visibility .45s; }
 .g-menu.is-on { opacity: 1; visibility: visible; pointer-events: auto; }
 .game-no3d .g-menu { display: none; }
-.g-menu__core { text-align: center; padding: 1rem; max-width: 640px; }
+.g-menu__core { text-align: center; padding: 1rem; max-width: 680px; max-height: 96dvh; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
 .g-menu__eyebrow { font-family: var(--mono); font-size: .62rem; letter-spacing: .34em; color: var(--teal); margin-bottom: 1.1rem; }
 .g-menu__title { font-family: var(--display); font-weight: 700; font-size: clamp(3rem, 9vw, 6rem);
   letter-spacing: .02em; line-height: .95; margin-bottom: .8rem; }
@@ -34,6 +35,38 @@
 .g-menu__keys b { color: var(--text-dim); background: rgba(255,255,255,.06); border: 1px solid var(--line);
   border-radius: 3px; padding: .12rem .4rem; margin-right: .3rem; }
 .g-menu__note { font-family: var(--mono); font-size: .58rem; letter-spacing: .14em; color: var(--faint); }
+
+/* ---------- ARSENAL (lobby loadout picker) ---------- */
+.g-arsenal { margin: 0 auto 1.2rem; max-width: 560px; border: 1px solid var(--line); border-radius: 6px;
+  padding: .9rem 1rem 1rem; background: rgba(10,13,20,.45); backdrop-filter: blur(4px); }
+.g-arsenal__head { font-family: var(--mono); font-size: .6rem; letter-spacing: .3em; color: var(--muted); margin-bottom: .7rem; }
+.g-arsenal__head i { font-style: normal; color: var(--teal); letter-spacing: .18em; }
+.g-arsenal__slots { display: flex; justify-content: center; gap: .6rem; margin-bottom: .7rem; }
+.g-arsenal__slot { font-family: var(--mono); text-align: left; cursor: pointer;
+  background: rgba(255,255,255,.05); border: 1px solid var(--line); border-radius: 4px;
+  padding: .45rem .8rem; min-width: 9rem; transition: border-color .18s; }
+.g-arsenal__slot span { display: block; font-size: .52rem; letter-spacing: .24em; color: var(--faint); margin-bottom: .2rem; }
+.g-arsenal__slot b { font-size: .74rem; letter-spacing: .16em; color: var(--text-dim); }
+.g-arsenal__slot.is-sel { border-color: var(--signal-dim); box-shadow: 0 0 14px rgba(184,255,60,.15); }
+.g-arsenal__slot.is-sel b { color: var(--signal); }
+.g-arsenal__guns { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; list-style: none;
+  padding: 0; margin: 0 0 .8rem; }
+.g-arsenal__guns button { position: relative; font-family: var(--mono); text-align: left; cursor: pointer;
+  background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 4px;
+  padding: .5rem .7rem .55rem; width: 10.2rem; transition: border-color .18s, background .18s; }
+.g-arsenal__guns button:hover { border-color: var(--signal-dim); }
+.g-arsenal__guns b { display: block; font-size: .68rem; letter-spacing: .18em; color: var(--text); margin-bottom: .18rem; }
+.g-arsenal__guns i { display: block; font-style: normal; font-size: .52rem; letter-spacing: .14em; color: var(--teal); margin-bottom: .3rem; }
+.g-arsenal__guns s { display: block; text-decoration: none; font-size: .52rem; letter-spacing: .1em; color: var(--muted); }
+.g-arsenal__guns em { position: absolute; top: .35rem; right: .45rem; font-style: normal; font-family: var(--mono);
+  font-weight: 700; font-size: .6rem; color: var(--signal-ink); background: var(--signal); border-radius: 3px;
+  padding: .05rem .3rem; opacity: 0; }
+.g-arsenal__guns li.is-picked em { opacity: 1; }
+.g-arsenal__guns li.is-picked button { border-color: var(--signal-dim); background: rgba(184,255,60,.07); }
+.g-arsenal__view { font-family: var(--mono); font-size: .6rem; font-weight: 700; letter-spacing: .2em;
+  color: var(--text-dim); background: rgba(255,255,255,.07); border: 1px solid var(--line-strong);
+  border-radius: 4px; padding: .5rem .9rem; cursor: pointer; transition: border-color .18s, color .18s; }
+.g-arsenal__view:hover { border-color: var(--signal-dim); color: var(--signal); }
 
 /* ---------- SQUAD LINK (online rooms) ---------- */
 .g-squad { margin: 0 auto 1.4rem; max-width: 560px; border: 1px solid var(--line); border-radius: 6px;
@@ -73,6 +106,7 @@
 .g-vig { position: absolute; inset: 0; transition: box-shadow .18s; }
 .g-vig.is-hit { box-shadow: inset 0 0 120px rgba(255,60,80,.5); }
 .g-vig.is-storm { box-shadow: inset 0 0 160px rgba(122,80,255,.4); }
+.g-vig.is-kill { box-shadow: inset 0 0 110px rgba(184,255,60,.28); }
 .g-cross { position: absolute; left: 50%; top: 50%; width: 0; height: 0; --gap: 5px; }
 .g-cross i { position: absolute; background: rgba(233,242,255,.92); box-shadow: 0 0 4px rgba(0,0,0,.8); }
 .g-cross i:nth-child(1) { width: 2px; height: 7px; left: -1px; top: calc(-7px - var(--gap)); }
@@ -89,6 +123,15 @@
 .g-hitmark i:nth-child(4) { transform: translate(3px, 6px) rotate(45deg); }
 .g-hitmark.is-on { opacity: 1; }
 .g-hitmark.is-crit i { background: #FFD24A; }
+.g-hitmark.is-kill i { background: #FF5A6E; width: 13px; box-shadow: 0 0 8px rgba(255,90,110,.8); }
+.g-hitmark.is-kill { animation: gKillPop .34s var(--ease); }
+@keyframes gKillPop { 0% { transform: scale(1.7); } 100% { transform: scale(1); } }
+/* directional damage arc — rotated to the attacker's bearing */
+.g-dmgdir { position: absolute; left: 50%; top: 50%; width: 0; height: 0; opacity: 0; transition: opacity .5s; }
+.g-dmgdir.is-on { opacity: 1; transition: opacity .06s; }
+.g-dmgdir i { position: absolute; left: -46px; top: -46px; width: 92px; height: 92px; border-radius: 50%;
+  border: 3px solid transparent; border-top-color: rgba(255,90,110,.9);
+  box-shadow: 0 -2px 12px -4px rgba(255,90,110,.7); }
 .g-compass { position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
   display: flex; gap: 1.15rem; font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; color: var(--faint); }
 .g-compass b { color: var(--text); font-weight: 700; }
