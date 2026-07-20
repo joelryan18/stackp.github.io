@@ -8,8 +8,15 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 ## Current state (2026-07-18)
 
 - **/game.html v4 — SNIPER SCOPE + GRAPHICS PASS + TEAM DEATHMATCH —
-  IN TREE, UNCOMMITTED (2026-07-20), suite 304 ALL PASS, NOT pushed
-  (user hasn't sanctioned a push this session).**
+  SHIPPED LIVE 2026-07-20** (commit `6e0d32e`, push user-sanctioned
+  "push all which is pending"; Actions deploy success; live-verified
+  real Chrome on stackwith.me/game.html?sim=1: boot, fx chain
+  {fxaa,grade,env,bloom} all true, mode picker, br glide, scope
+  overlay, tdm grounded 6v6 ring 85 + 5s respawn + score moves, supa
+  squad room game-squad marker, zero JS exc — ALL PASS; hashed assets
+  game3d.DKC3HKLP.js 809KB + game.ZRYQZZJF.css 200). Suite 304 ALL
+  PASS. GOTCHA: GitHub Actions API JSON has control chars in commit
+  messages — parse with `json.JSONDecoder(strict=False)`.
   (1) **Scope** — LANCE-1 `scope:true`, zoomFov 30→22, ADS ≥0.75 in fp
   = `#gScope` DOM lens (blackout plate w/ radial cutout, ring, hairs,
   mil ticks, lime center dot; `.g-cross.is-scoped` hides crosshair),
@@ -59,8 +66,8 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   send pure EXPRESSIONS to Runtime.evaluate, statement wrappers
   swallow values). Supabase: NO schema changes (Realtime
   broadcast+presence only). game.html copy updated (scope/TDM/post
-  chain paragraphs; all smoke-pinned strings kept). NEXT: user-
-  sanctioned push + live verify on stackwith.me.
+  chain paragraphs; all smoke-pinned strings kept). Remaining
+  nice-to-have: cross-network TDM spot check from two real machines.
 
 - **/game.html "Signal Strike" — ARSENAL + CHARACTER RIGS + 3RD-PERSON
   PASS + IMPACT & FEEDBACK PASS — SHIPPED LIVE 2026-07-19** (commit
