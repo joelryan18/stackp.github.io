@@ -18,6 +18,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { N8AOPass } from "n8ao";
 import { createClient } from "@supabase/supabase-js";
 
 /* ---------- capability gates ---------- */
@@ -2954,7 +2955,29 @@ function start() {
 
   /* post: bloom tuned low — the game must stay readable */
   const composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
+  /* SSAO (n8ao): real contact shadows where towers meet the plate,
+     under crates, in alleys, on the rigs — the depth cue this boxy
+     no-shadow-map world was missing. N8AOPass REPLACES RenderPass
+     (it renders the scene itself), so exactly one of the two is
+     enabled; the governor flips back to the plain pass on slow GPUs.
+     Construction failure → plain pass, silently. */
+  const renderPass = new RenderPass(scene, camera);
+  let ao = null;
+  try {
+    ao = new N8AOPass(scene, camera, innerWidth, innerHeight);
+    ao.configuration.aoRadius = 2.2;
+    ao.configuration.distanceFalloff = 2.6;
+    ao.configuration.intensity = 2.4;
+    ao.configuration.halfRes = true;
+    /* our chain ends in OutputPass — n8ao's own gamma pass on top
+       double-corrects and washes the whole frame near-white */
+    ao.configuration.gammaCorrection = false;
+    ao.setQualityMode("Performance");
+  } catch (e) { ao = null; /* AO optional — the flat-lit look still stands */ }
+  renderPass.enabled = !ao;
+  composer.addPass(renderPass);
+  if (ao) composer.addPass(ao);
+  const aoOff = () => { if (ao) { ao.enabled = false; renderPass.enabled = true; } };
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.55, 0.82);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
@@ -2996,6 +3019,7 @@ function start() {
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
     composer.setSize(innerWidth, innerHeight);
+    ao?.setSize(innerWidth, innerHeight);
     setFxaaRes();
   });
 
@@ -3021,6 +3045,7 @@ function start() {
     if (!qLow && emaMs > 34 && frames > 120) {
       qLow = true; renderer.setPixelRatio(Math.min(DPR, 1));
       bloom.enabled = false; fxaa.enabled = false; grade.enabled = false;
+      aoOff();
       setFxaaRes();
     }
     gradeMat.uniforms.uT.value = t;
@@ -3202,7 +3227,7 @@ function start() {
     mode: M.mode, team: P.team, score: [...M.score],
     respawnIn: P.alive ? 0 : Math.max(0, Math.ceil(P.respawnT)),
     scoped,
-    fx: { fxaa: fxaa.enabled, grade: grade.enabled, bloom: bloom.enabled, env: !!scene.environment },
+    fx: { fxaa: fxaa.enabled, grade: grade.enabled, bloom: bloom.enabled, env: !!scene.environment, ao: !!ao?.enabled },
     view: VIEW ? "tp" : "fp", rig3p: myRig.g.visible,
     weapon: curW().id, ammo: [...P.ammo], reserve: [...P.reserve],
     loadout: P.loadout.map((wi) => WEAPONS[wi].id),

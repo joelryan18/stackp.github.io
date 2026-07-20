@@ -17,7 +17,8 @@
     "@studio-freight/lenis": "1.0.42",
     "@supabase/supabase-js": "2.110.0",
     "gsap": "3.12.5",
-    "postprocessing": "^6.37.0",
+    "n8ao": "^2.0.0",
+    "postprocessing": "^6.35.0",
     "three": "0.160.0",
     "three-mesh-bvh": "^0.9.11",
     "troika-three-text": "^0.52.4"

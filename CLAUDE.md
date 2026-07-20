@@ -17,6 +17,20 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   game3d.DKC3HKLP.js 809KB + game.ZRYQZZJF.css 200). Suite 304 ALL
   PASS. GOTCHA: GitHub Actions API JSON has control chars in commit
   messages — parse with `json.JSONDecoder(strict=False)`.
+  **+ SSAO ADDENDUM (2026-07-20, in tree, needs push sanction):**
+  installed `n8ao` (+ `postprocessing@6.35.0` PINNED — latest peer
+  needs three ≥0.168, site is three 0.160 shared w/ lab/about/hub;
+  6.35.x is the compatible band). N8AOPass REPLACES RenderPass (it
+  renders the scene itself) — both passes exist, exactly one enabled,
+  `aoOff()` flips back to plain RenderPass on qLow (disabling AO alone
+  would render NOTHING). **`ao.configuration.gammaCorrection = false`
+  is mandatory in our chain — n8ao's default gamma pass on top of
+  OutputPass washed the whole frame near-white** (caught by
+  screenshot). aoRadius 2.2 / falloff 2.6 / intensity 2.4 / halfRes /
+  Performance mode. Bundle 809→946KB. `fx.ao` in __gameQ; smoke fx
+  check asserts ao presence only (governor may shed it on
+  swiftshader). Suite 304 ALL PASS + /tmp/game-v4-qa.mjs ALL PASS on
+  the AO bundle.
   (1) **Scope** — LANCE-1 `scope:true`, zoomFov 30→22, ADS ≥0.75 in fp
   = `#gScope` DOM lens (blackout plate w/ radial cutout, ring, hairs,
   mil ticks, lime center dot; `.g-cross.is-scoped` hides crosshair),

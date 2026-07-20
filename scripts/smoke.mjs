@@ -218,7 +218,7 @@ check("game: own hashed css bundle served", await evalJs(`!![...document.styleSh
 check("game: arena seeded (12 combatants, colliders up)", await evalJs(`(() => { const q = window.__gameQ(); return q.alive === 12 && q.botsAlive === 11 && q.colliders > 100; })()`));
 check("game: arsenal lists 5 weapons, 2 picked into slots", await evalJs(`(() => { const l = document.getElementById("gGuns"); return l.children.length === 5 && l.querySelectorAll("li.is-picked").length === 2; })()`));
 check("game: camera toggle button mounted", await evalJs(`/CAMERA · (FIRST|THIRD) PERSON/.test(document.getElementById("gViewBtn").textContent)`));
-check("game: post chain live (fxaa+grade+env+bloom)", await evalJs(`(() => { const f = window.__gameQ().fx; return !!(f && f.fxaa && f.grade && f.env && f.bloom); })()`));
+check("game: post chain live (fxaa+grade+env+bloom, ao wired)", await evalJs(`(() => { const f = window.__gameQ().fx; return !!(f && f.fxaa && f.grade && f.env && f.bloom) && typeof f.ao === "boolean"; })()`));
 check("game: mode picker mounted, BR default", await evalJs(`(() => { const br = document.getElementById("gModeBr"), td = document.getElementById("gModeTdm"); return !!br && !!td && br.classList.contains("is-sel") && !td.classList.contains("is-sel"); })()`));
 /* sim-mode match: deploy → land → storm advances → bots fight to a winner */
 await go(BASE + "/game.html?sim=1", 4000);
