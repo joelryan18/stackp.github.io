@@ -15,6 +15,9 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { createClient } from "@supabase/supabase-js";
 
 /* ---------- capability gates ---------- */
@@ -74,10 +77,10 @@ const WEAPONS = [
   },
   {
     id: "dmr", name: "LANCE-1", rpm: 150, mag: 12, reload: 2.6,
-    dmg: 70, hsMult: 2.3, kick: 2.2, ads: true, zoomFov: 30,
+    dmg: 70, hsMult: 2.3, kick: 2.2, ads: true, zoomFov: 22, scope: true,
     pat: [[0.0, 1.55]], patTail: 1,
     spreadBase: 0.020, spreadAds: 0.0006, spreadMove: 0.030, spreadAir: 0.05,
-    rStart: 48, rPick: 12, rMax: 60, trace: 0xbfe8ff, blurb: "MARKSMAN · ADS ZOOM",
+    rStart: 48, rPick: 12, rMax: 60, trace: 0xbfe8ff, blurb: "MARKSMAN · TELESCOPIC SCOPE",
   },
   {
     id: "smg", name: "WASP-9", rpm: 820, mag: 32, reload: 1.7,
@@ -119,6 +122,19 @@ function loadLoadout() {
     if (Array.isArray(v) && v.length === 2 && v.every((n) => Number.isInteger(n) && WEAPONS[n])) return v;
   } catch (e) { /* corrupt or private mode */ }
   return [...DEFAULT_LOADOUT];
+}
+/* ---------- match modes ----------
+   br: the original battle royale. tdm: 6v6 SIGNAL vs STATIC on a
+   fixed ring — 5s respawns, first team to 30 elims (or best score
+   at 5:00). The lobby picks; in a squad the HOST's pick rides the
+   "go" message so every client starts the same mode. */
+const TDM = { RING: 85, CAP: 30, TIME: 300, RESPAWN: 5, PICKUP_RT: 20 };
+const TEAM_HUES = [COL.lime, COL.magenta];
+const TEAM_NAMES = ["SIGNAL", "STATIC"];
+const TDM_BASE = [[-62, 0], [62, 0]];        /* west vs east — fixed, learnable */
+function loadMode() {
+  try { if (localStorage.getItem("game-mode") === "tdm") return "tdm"; } catch (e) { /* private mode */ }
+  return "br";
 }
 const BOT_NAMES = ["VOLT", "HEX", "NOVA", "RELAY", "FLUX", "ONYX", "PULSE", "CIPHER", "DRIFT", "ECHO", "RUNE"];
 const BOT_HUES = [COL.cyan, COL.magenta, COL.amber, COL.teal, 0x9fd8ff, COL.pearl];
@@ -368,6 +384,17 @@ function start() {
   scene.background = new THREE.Color(0x05070c);
   scene.fog = new THREE.FogExp2(0x070a12, 0.0044);
 
+  /* image-based light: one PMREM'd studio env so every standard
+     material (rigs, guns, crates, the antenna) picks up real
+     reflections instead of reading flat. Intensity is trimmed
+     per-material below — full strength would wash the deep navy. */
+  try {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.06).texture;
+    pmrem.dispose();
+  } catch (e) { /* env optional — flat lights still stand */ }
+  const ENV_I = 0.45;
+
   const camera = new THREE.PerspectiveCamera(74, innerWidth / innerHeight, 0.08, 900);
   const BASE_FOV = 74;
 
@@ -387,21 +414,46 @@ function start() {
 
   const rng = mulberry32(SEED);
 
-  /* ---------- sky: gradient dome + static star points ---------- */
+  /* ---------- storm + ground shared uniforms ---------- */
+  const stormU = {
+    uR: { value: STORM_R0 },          /* current radius */
+    uTR: { value: STORM_R0 },         /* target ring radius */
+    uC: { value: new THREE.Vector2(0, 0) },
+    uTC: { value: new THREE.Vector2(0, 0) },
+    uT: { value: 0 },
+  };
+
+  /* ---------- sky: gradient dome + aurora curtains + moon ---------- */
   {
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
-      uniforms: { uT: { value: 0 } },
+      uniforms: { uT: stormU.uT },      /* shared by reference — loop writes once */
       vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
       fragmentShader: `
-        varying vec3 vP;
+        varying vec3 vP; uniform float uT;
         void main(){
-          float h = normalize(vP).y;
+          vec3 n = normalize(vP);
+          float h = n.y;
+          float az = atan(n.z, n.x);
           vec3 lo = vec3(0.055, 0.075, 0.13);
           vec3 mid = vec3(0.022, 0.030, 0.058);
           vec3 hi = vec3(0.008, 0.010, 0.022);
           vec3 c = mix(lo, mid, smoothstep(-0.08, 0.25, h));
           c = mix(c, hi, smoothstep(0.2, 0.85, h));
+          /* teal horizon glow — the city's own light bleeding up */
+          c += vec3(0.010, 0.030, 0.036) * smoothstep(0.22, 0.0, abs(h - 0.02));
+          /* two slow aurora curtains, lime + cyan, drifting in azimuth */
+          float band1 = 0.30 + 0.07 * sin(az * 3.0 + uT * 0.05);
+          float band2 = 0.44 + 0.06 * sin(az * 2.0 - uT * 0.037 + 2.1);
+          float a1 = smoothstep(0.16, 0.0, abs(h - band1)) * (0.55 + 0.45 * sin(az * 7.0 + uT * 0.11));
+          float a2 = smoothstep(0.13, 0.0, abs(h - band2)) * (0.55 + 0.45 * sin(az * 5.0 - uT * 0.09 + 1.3));
+          c += vec3(0.10, 0.22, 0.05) * a1 * 0.32;
+          c += vec3(0.05, 0.14, 0.20) * a2 * 0.26;
+          /* moon: hard disc + soft halo, fixed high in the north-east */
+          vec3 md = normalize(vec3(0.42, 0.55, -0.72));
+          float mdot = dot(n, md);
+          c += vec3(0.82, 0.88, 1.0) * smoothstep(0.99965, 0.99985, mdot) * 0.9;
+          c += vec3(0.30, 0.36, 0.52) * pow(max(0.0, mdot), 340.0) * 0.5;
           gl_FragColor = vec4(c, 1.0);
         }`,
     });
@@ -418,15 +470,6 @@ function start() {
     scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xbfd4ff, size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0.55, fog: false })));
   }
 
-  /* ---------- storm + ground shared uniforms ---------- */
-  const stormU = {
-    uR: { value: STORM_R0 },          /* current radius */
-    uTR: { value: STORM_R0 },         /* target ring radius */
-    uC: { value: new THREE.Vector2(0, 0) },
-    uTC: { value: new THREE.Vector2(0, 0) },
-    uT: { value: 0 },
-  };
-
   /* ---------- ground ---------- */
   {
     const gMat = new THREE.ShaderMaterial({
@@ -441,9 +484,13 @@ function start() {
       fragmentShader: `
         varying vec3 vW;
         uniform float uR, uTR, uT; uniform vec2 uC, uTC; uniform vec3 uFogC;
+        float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         void main(){
           /* carbon plate + fine grid */
           vec3 col = vec3(0.030, 0.036, 0.050);
+          /* two-scale mottle: worn plate patches + fine grit speckle */
+          float mA = gh(floor(vW.xz / 11.0)), mB = gh(floor(vW.xz / 3.1) + 7.0);
+          col *= 0.90 + mA * 0.14 + mB * 0.06;
           vec2 g1 = abs(fract(vW.xz / 4.0) - 0.5);
           float grid = smoothstep(0.485, 0.5, max(g1.x, g1.y));
           vec2 g2 = abs(fract(vW.xz / 24.0) - 0.5);
@@ -556,6 +603,9 @@ function start() {
           float rim = smoothstep(0.965, 1.0, vUv.y) * (1.0 - upN);
           col += vCol * rim * 0.9;
           if (upN > 0.5) col = base * 1.4 + vCol * 0.05;   /* roofs readable to land on */
+          /* contact shade: the first ~2.5u above grade darkens — cheap AO
+             that seats every tower on the plate instead of floating it */
+          col *= 0.70 + 0.30 * smoothstep(0.0, 2.5, vW.y);
           float fogF = 1.0 - exp(-0.0044 * 0.0044 * dot(vW.xz - cameraPosition.xz, vW.xz - cameraPosition.xz));
           gl_FragColor = vec4(mix(col, uFogC, clamp(fogF, 0.0, 1.0)), 1.0);
         }`,
@@ -611,7 +661,7 @@ function start() {
   {
     const cGeo = new THREE.BoxGeometry(1.7, 1.2, 1.7);
     cGeo.translate(0, 0.6, 0);
-    const cMat = new THREE.MeshStandardMaterial({ color: 0x1c2431, roughness: 0.7, metalness: 0.15, emissive: 0x0c2a10, emissiveIntensity: 0.6 });
+    const cMat = new THREE.MeshStandardMaterial({ color: 0x1c2431, roughness: 0.7, metalness: 0.15, emissive: 0x0c2a10, emissiveIntensity: 0.6, envMapIntensity: ENV_I * 0.8 });
     const spots = [];
     for (let i = 0; i < 46; i++) {
       const a = rng() * Math.PI * 2, r = 12 + rng() * 150;
@@ -630,10 +680,10 @@ function start() {
   /* ---------- the antenna (center landmark, visible everywhere) ---------- */
   {
     const g = new THREE.Group();
-    const mastMat = new THREE.MeshStandardMaterial({ color: 0x2a3342, roughness: 0.55, metalness: 0.25 });
+    const mastMat = new THREE.MeshStandardMaterial({ color: 0x2a3342, roughness: 0.55, metalness: 0.25, envMapIntensity: ENV_I });
     const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 1.4, 64, 8), mastMat);
     mast.position.y = 32; g.add(mast);
-    const dishMat = new THREE.MeshStandardMaterial({ color: 0x0e1218, emissive: COL.lime, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.6 });
+    const dishMat = new THREE.MeshStandardMaterial({ color: 0x0e1218, emissive: COL.lime, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.6, envMapIntensity: ENV_I * 1.3 });
     for (let i = 0; i < 3; i++) {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2 - i * 0.8, 0.12, 6, 32), dishMat);
       ring.position.y = 46 + i * 6; ring.rotation.x = Math.PI / 2;
@@ -765,6 +815,7 @@ function start() {
     barrierCd: 0, kills: 0, dmgDone: 0,
     stormT: 0, lastStep: 0, deployed: false, gliding: false,
     slide: 0, slideCd: 0, crouchKeyWas: false,
+    team: 0, respawnT: 0,
   };
   const SLIDE_T = 0.85, SLIDE_BOOST = 1.45, SLIDE_CD = 1.1, SLIDE_MIN_S = 6.5;
   const EYE = 1.62, EYE_CROUCH = 1.05, RADIUS = 0.42;
@@ -782,6 +833,16 @@ function start() {
   const shake = { t: 0 };
   const addTrauma = (k) => { shake.t = Math.min(1, shake.t + k); };
 
+  /* sniper scope (LANCE ADS): DOM lens overlay + hidden viewmodel.
+     The aim ray is untouched — the scope is presentation only. */
+  let scoped = false;
+  function dropScope() {
+    if (!scoped) return;
+    scoped = false;
+    document.getElementById("gScope")?.classList.remove("is-on");
+    document.getElementById("gCross")?.classList.remove("is-scoped");
+  }
+
   /* ============================================================
      view model — procedural rig + gun, lime accents
      ============================================================ */
@@ -791,7 +852,7 @@ function start() {
   const vmLamp = new THREE.PointLight(0xaebfd8, 2.6, 3.2);
   vmLamp.position.set(0.35, 0.3, 0.3);
   camera.add(vmLamp);
-  const vmMat = new THREE.MeshStandardMaterial({ color: 0x39424f, roughness: 0.5, metalness: 0.25, emissive: 0x171c26, emissiveIntensity: 1 });
+  const vmMat = new THREE.MeshStandardMaterial({ color: 0x39424f, roughness: 0.5, metalness: 0.25, emissive: 0x171c26, emissiveIntensity: 1, envMapIntensity: ENV_I * 1.2 });
   const vmAcc = new THREE.MeshBasicMaterial({ color: COL.lime });
   const guns = [];
   {
@@ -895,15 +956,15 @@ function start() {
     shoulder: new THREE.BoxGeometry(0.19, 0.13, 0.19),
   };
   const rigGunGeo = new THREE.BoxGeometry(0.07, 0.09, 0.55);
-  const rigGunMat = new THREE.MeshStandardMaterial({ color: 0x39424f, roughness: 0.5, metalness: 0.25 });
+  const rigGunMat = new THREE.MeshStandardMaterial({ color: 0x39424f, roughness: 0.5, metalness: 0.25, envMapIntensity: ENV_I });
   const blobGeo = new THREE.CircleGeometry(0.55, 12);
   const blobMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.4, depthWrite: false });
   function makeRig(hue) {
     const g = new THREE.Group(), core = new THREE.Group();
     /* deep-navy suit, darker limbs, the hue lives in ACCENTS — visor,
        chest core, shoulder caps — same discipline as the buildings */
-    const mat = new THREE.MeshStandardMaterial({ color: 0x232c3a, roughness: 0.55, metalness: 0.2, emissive: hue, emissiveIntensity: 0.055 });
-    const matL = new THREE.MeshStandardMaterial({ color: 0x151b25, roughness: 0.6, metalness: 0.18, emissive: hue, emissiveIntensity: 0.03 });
+    const mat = new THREE.MeshStandardMaterial({ color: 0x232c3a, roughness: 0.55, metalness: 0.2, emissive: hue, emissiveIntensity: 0.055, envMapIntensity: ENV_I });
+    const matL = new THREE.MeshStandardMaterial({ color: 0x151b25, roughness: 0.6, metalness: 0.18, emissive: hue, emissiveIntensity: 0.03, envMapIntensity: ENV_I * 0.8 });
     const acc = new THREE.MeshBasicMaterial({ color: hue });
     const torso = new THREE.Mesh(rigGeo.torso, mat); torso.position.y = 1.2;
     const chest = new THREE.Mesh(rigGeo.chest, acc); chest.position.set(0, 1.26, -0.155);
@@ -939,6 +1000,8 @@ function start() {
       g, core, visor, mat,
       /* hit flash lights the whole suit, then settles to the rest tint */
       flash: (k) => { mat.emissiveIntensity = 0.055 + k * 1.4; matL.emissiveIntensity = 0.03 + k * 1.0; },
+      /* team re-tint (TDM): the hue lives in suit emissive + accents */
+      setHue: (h) => { mat.emissive.setHex(h); matL.emissive.setHex(h); acc.color.setHex(h); },
       phase: Math.random() * 6.28, amp: 0, cr: 0,
       parts: { legL, legR, armL, armR, head, gun },
     };
@@ -1020,6 +1083,7 @@ function start() {
       react: 0.35 + rng() * 0.65,       /* s to acquire */
       acquireT: 0, kills: 0, strafeDir: rng() < 0.5 ? 1 : -1, strafeT: 0,
       dropY: 55 + rng() * 25, hitFlash: 0, aimP: 0,
+      team: 0, out: false, respawnT: 0,
       npos: new THREE.Vector3(), nyaw: 0, nfresh: false,   /* guest-side net targets */
     });
   }
@@ -1140,7 +1204,9 @@ function start() {
   const aliveEl = $("gAlive"), killsEl = $("gKills"), stormEl = $("gStorm");
   const feedEl = $("gFeed"), crossEl = $("gCross"), hitEl = $("gHitmark");
   const vigEl = $("gVig"), compEl = $("gCompass"), barCdEl = $("gBarCd");
-  const dmgDirEl = $("gDmgDir");
+  const dmgDirEl = $("gDmgDir"), scopeEl = $("gScope");
+  const scoreEl = $("gScore"), scoreA = $("gScoreA"), scoreB = $("gScoreB");
+  const respawnEl = $("gRespawn"), respawnN = $("gRespawnN");
   const miniCv = $("gMini"), miniCtx = miniCv ? miniCv.getContext("2d") : null;
   const dmgLayer = $("gDmg"), endTitle = $("gEndTitle"), endStats = $("gEndStats");
   const bannerEl = $("gBanner"), specEl = $("gSpec"), specName = $("gSpecName");
@@ -1187,6 +1253,7 @@ function start() {
     phase: 0, phaseT: 0, shrinking: false,
     placement: 12, spectating: null,
     stormFrom: STORM_R0, stormFromC: new THREE.Vector2(),
+    mode: "br", score: [0, 0], scoreTxT: 0,
   };
 
   function stormTargetFor(phase) {
@@ -1199,38 +1266,89 @@ function start() {
     return new THREE.Vector2(prevC.x + Math.cos(a) * r, prevC.y + Math.sin(a) * r);
   }
 
-  function resetMatch() {
+  /* TDM team split: humans alternate down the roster (host = SIGNAL),
+     bots fill so both teams land at 6. Deterministic from the roster,
+     so every client computes the identical split. */
+  function assignTdmTeams(humans) {
+    const ids = humans && humans.length ? humans.map((r) => r[0]) : [NET.id];
+    ids.forEach((id, i) => {
+      const t = i % 2;
+      if (id === NET.id) P.team = t;
+      else { const pr = NET.peers.get(id); if (pr) pr.team = t; }
+    });
+    const botsUsed = 12 - ids.length;
+    let b0 = 6 - Math.ceil(ids.length / 2);      /* bots still owed to team 0 */
+    bots.forEach((b) => { b.team = b.id < botsUsed && b0-- > 0 ? 0 : 1; });
+  }
+  const _sp = new THREE.Vector3();
+  function teamSpawn(t, out) {
+    out.set(TDM_BASE[t][0] + (Math.random() - 0.5) * 16, 0, TDM_BASE[t][1] + (Math.random() - 0.5) * 16);
+    _sp.set(out.x, 0.9, out.z); pushOutSphere(_sp, 0.5);   /* never inside a relay box */
+    out.x = _sp.x; out.z = _sp.z;
+  }
+
+  function resetMatch(mode, humans) {
+    M.mode = mode === "tdm" ? "tdm" : "br";
+    const tdm = M.mode === "tdm";
+    document.body.classList.toggle("game-tdm", tdm);
     M.on = true; M.over = false; M.t = 0; M.phase = 0; M.phaseT = 0; M.shrinking = false;
     M.placement = 12; M.spectating = null;
-    stormU.uR.value = STORM_R0; stormU.uC.value.set(0, 0);
-    stormU.uTR.value = STORM_PHASES[0].r;
-    stormU.uTC.value.copy(stormTargetFor(0));
-    M.stormFrom = STORM_R0; M.stormFromC.set(0, 0);
+    M.score = [0, 0]; M.scoreTxT = 0;
+    if (tdm) {
+      assignTdmTeams(humans);
+      stormU.uR.value = TDM.RING; stormU.uTR.value = TDM.RING;
+      stormU.uC.value.set(0, 0); stormU.uTC.value.set(0, 0);
+      M.stormFrom = TDM.RING; M.stormFromC.set(0, 0);
+    } else {
+      P.team = 0;
+      stormU.uR.value = STORM_R0; stormU.uC.value.set(0, 0);
+      stormU.uTR.value = STORM_PHASES[0].r;
+      stormU.uTC.value.copy(stormTargetFor(0));
+      M.stormFrom = STORM_R0; M.stormFromC.set(0, 0);
+    }
     P.hp = PLAYER_HP; P.sh = PLAYER_SH; P.alive = true; P.kills = 0; P.dmgDone = 0;
     P.loadout = [...lobbyLoadout];
     P.ammo = P.loadout.map((wi) => WEAPONS[wi].mag);
     P.reserve = P.loadout.map((wi) => WEAPONS[wi].rStart);
     P.wIdx = 0; P.reloading = 0; P.burst = 0; P.burstQ = 0; P.adsOn = false; P.barrierCd = 0;
-    P.slide = 0; P.slideCd = 0; P.crouchKeyWas = false; shake.t = 0;
+    P.slide = 0; P.slideCd = 0; P.crouchKeyWas = false; shake.t = 0; P.respawnT = 0;
     syncGunVis();
     wNameEl.textContent = curW().name;
-    const da = Math.PI * 0.3 + rng() * Math.PI * 1.4;
-    P.pos.set(Math.cos(da) * 130, 88, Math.sin(da) * 130);
-    P.vel.set(0, 0, 0); P.yaw = Math.atan2(P.pos.x, P.pos.z) + Math.PI; P.pitch = -0.15;
-    P.gliding = true; P.deployed = true;
+    myRig.setHue(tdm ? TEAM_HUES[P.team] : COL.lime);
+    if (tdm) {
+      /* boots already on the plate at the team base — TDM opens hot */
+      teamSpawn(P.team, P.pos);
+      P.vel.set(0, 0, 0);
+      P.yaw = Math.atan2(P.pos.x, P.pos.z); P.pitch = 0;   /* face the center */
+      P.gliding = false; P.deployed = true;
+    } else {
+      const da = Math.PI * 0.3 + rng() * Math.PI * 1.4;
+      P.pos.set(Math.cos(da) * 130, 88, Math.sin(da) * 130);
+      P.vel.set(0, 0, 0); P.yaw = Math.atan2(P.pos.x, P.pos.z) + Math.PI; P.pitch = -0.15;
+      P.gliding = true; P.deployed = true;
+    }
     bots.forEach((b, i) => {
       b.alive = true; b.hp = BOT_HP; b.sh = BOT_SH; b.kills = 0;
-      const a = (i / 11) * Math.PI * 2 + rng() * 0.5;
-      b.pos.set(Math.cos(a) * (60 + rng() * 70), b.dropY, Math.sin(a) * (60 + rng() * 70));
-      b.vel.set(0, 0, 0); b.state = "drop"; b.g.visible = true; b.target = null;
+      b.out = false; b.respawnT = 0;
+      b.rig.setHue(tdm ? TEAM_HUES[b.team] : b.hue);
+      if (tdm) {
+        teamSpawn(b.team, b.pos);
+        b.state = "wander"; b.tState = 0.3 + rng() * 1.2;
+      } else {
+        const a = (i / 11) * Math.PI * 2 + rng() * 0.5;
+        b.pos.set(Math.cos(a) * (60 + rng() * 70), b.dropY, Math.sin(a) * (60 + rng() * 70));
+        b.state = "drop";
+      }
+      b.vel.set(0, 0, 0); b.g.visible = true; b.target = null;
       b.tHuman = null; b.nfresh = false;
       b.fireT = 0.5 + rng();
     });
     for (const c of dynColliders.splice(0)) { scene.remove(c.mesh); c.mesh.material.dispose(); }
-    pickups.forEach((p) => { p.live = true; p.m.visible = true; });
+    pickups.forEach((p) => { p.live = true; p.m.visible = true; p.rt = 0; });
     feedEl.innerHTML = "";
+    respawnEl?.classList.remove("is-on");
     document.body.classList.add("game-match");
-    banner("DROP LAUNCHED — STEER TO A DISTRICT", "is-lime");
+    banner(tdm ? `TEAM DEATHMATCH — FIRST TO ${TDM.CAP}` : "DROP LAUNCHED — STEER TO A DISTRICT", "is-lime");
     bedsBoot();
   }
 
@@ -1241,24 +1359,76 @@ function start() {
     if (M.over) return;
     M.over = true; M.on = false;
     specEl.classList.remove("is-on");
+    respawnEl?.classList.remove("is-on");
     document.exitPointerLock?.();
-    won ? sfxWin() : sfxLose();
-    endTitle.textContent = won ? "SIGNAL SECURED" : "SIGNAL LOST";
-    endTitle.className = "g-end__title " + (won ? "is-win" : "is-lose");
-    const place = won ? 1 : M.placement;
-    const winner = won ? "YOU" : (aliveBots()[0]?.name || alivePeers()[0]?.name || "NO SIGNAL");
-    endStats.innerHTML =
-      `<span># ${place} <i>/ 12</i></span>` +
-      `<span>${P.kills} <i>ELIMS</i></span>` +
-      `<span>${Math.round(P.dmgDone)} <i>DMG</i></span>` +
-      `<span>${Math.floor(M.t / 60)}:${String(Math.floor(M.t % 60)).padStart(2, "0")} <i>SURVIVED</i></span>` +
-      (NET.started ? `<span>${winner} <i>WINNER</i></span>` : "");
+    if (M.mode === "tdm") {
+      const a = M.score[P.team], bSc = M.score[1 - P.team], draw = a === bSc;
+      won = a > bSc;
+      won ? sfxWin() : sfxLose();
+      endTitle.textContent = draw ? "SIGNAL STALEMATE" : won ? "SIGNAL SECURED" : "SIGNAL LOST";
+      endTitle.className = "g-end__title " + (draw ? "" : won ? "is-win" : "is-lose");
+      endStats.innerHTML =
+        `<span>${M.score[0]} <i>${TEAM_NAMES[0]}</i></span>` +
+        `<span>${M.score[1]} <i>${TEAM_NAMES[1]}</i></span>` +
+        `<span>${P.kills} <i>ELIMS</i></span>` +
+        `<span>${Math.round(P.dmgDone)} <i>DMG</i></span>`;
+    } else {
+      won ? sfxWin() : sfxLose();
+      endTitle.textContent = won ? "SIGNAL SECURED" : "SIGNAL LOST";
+      endTitle.className = "g-end__title " + (won ? "is-win" : "is-lose");
+      const place = won ? 1 : M.placement;
+      const winner = won ? "YOU" : (aliveBots()[0]?.name || alivePeers()[0]?.name || "NO SIGNAL");
+      endStats.innerHTML =
+        `<span># ${place} <i>/ 12</i></span>` +
+        `<span>${P.kills} <i>ELIMS</i></span>` +
+        `<span>${Math.round(P.dmgDone)} <i>DMG</i></span>` +
+        `<span>${Math.floor(M.t / 60)}:${String(Math.floor(M.t % 60)).padStart(2, "0")} <i>SURVIVED</i></span>` +
+        (NET.started ? `<span>${winner} <i>WINNER</i></span>` : "");
+    }
     if (againBtn && NET.on && !iAmHost()) { againBtn.disabled = true; againBtn.textContent = "HOST RELAUNCHES"; }
     setTimeout(() => { endEl.classList.add("is-on"); hudEl.classList.remove("is-live"); }, won ? 1400 : 900);
   }
 
+  /* which team a kill credits — null (THE STORM etc) scores nobody */
+  function teamOfKiller(byPlayer, killerName, srcHid) {
+    if (byPlayer) return P.team;
+    if (srcHid && srcHid !== "me") { const pr = NET.peers.get(srcHid); if (pr) return pr.team; }
+    const b = bots.find((x) => x.name === killerName);
+    return b ? b.team : null;
+  }
+  /* host-authoritative score: everyone else hears it on the sc wire */
+  function txScore(fin) {
+    netSend({ t: "sc", a: M.score[0], b: M.score[1], mt: r1(M.t), fin: fin ? 1 : 0 });
+  }
+  function addScore(t) {
+    if (M.mode !== "tdm" || M.over || !iAmHost() || (t !== 0 && t !== 1)) return;
+    M.score[t]++;
+    if (NET.on && NET.started) txScore(false);
+    if (M.score[0] >= TDM.CAP || M.score[1] >= TDM.CAP) tdmFinish();
+  }
+  function tdmFinish() {
+    if (M.over) return;
+    if (NET.on && NET.started && iAmHost()) txScore(true);
+    endMatch(false);            /* tdm branch reads the score itself */
+  }
+
   function onPlayerDeath(killerName, killerId) {
     P.alive = false;
+    if (M.mode === "tdm") {
+      feed(`<b class="f-them">${killerName}</b> eliminated <b class="f-you">YOU</b>`);
+      banner(`ELIMINATED — REDEPLOY IN ${TDM.RESPAWN}s`, "is-red");
+      tone({ freq: 220, freq2: 120, dur: 0.4, type: "triangle", gain: 0.2 });
+      P.respawnT = TDM.RESPAWN;
+      if (respawnEl) { respawnEl.classList.add("is-on"); respawnN.textContent = String(TDM.RESPAWN); }
+      const kt = teamOfKiller(false, killerName, killerId);
+      if (NET.on && NET.started) netSend({ t: "died", id: NET.id, by: killerName, bid: killerId || null, kt });
+      addScore(kt);                                  /* no-op unless I host */
+      const kp = killerId ? NET.peers.get(killerId) : null;
+      M.spectating = (kp?.inMatch && kp.alive ? kp : null)
+        || aliveBots().find((b) => b.name === killerName) || null;
+      if (M.spectating) { specEl.classList.add("is-on"); specName.textContent = M.spectating.name; }
+      return;
+    }
     M.placement = aliveCount() + 1;
     feed(`<b class="f-them">${killerName}</b> eliminated <b class="f-you">YOU</b>`);
     banner(`ELIMINATED — #${M.placement} OF 12`, "is-red");
@@ -1276,6 +1446,10 @@ function start() {
 
   function killBot(b, byPlayer, killerName, srcHid) {
     b.alive = false; b.g.visible = false;
+    if (M.mode === "tdm") {
+      if (!b.out) b.respawnT = TDM.RESPAWN;
+      addScore(teamOfKiller(byPlayer, killerName, srcHid));
+    }
     if (NET.on && NET.started)
       netSend({ t: "bkill", i: b.id, by: byPlayer ? NET.callsign : killerName, bid: byPlayer ? NET.id : (srcHid && srcHid !== "me" ? srcHid : null) });
     botDeathFx(b, byPlayer, killerName);
@@ -1352,15 +1526,15 @@ function start() {
 
   function humansAll() {
     const out = [];
-    if (P.alive && M.on && !M.over) out.push({ hid: "me", pos: P.pos, eye: playerEye(), vel: P.vel, crouch: P.crouch });
-    for (const pr of alivePeers()) out.push({ hid: pr.id, pos: pr.pos, eye: pr.pos.y + 1.55, vel: pr.vel, crouch: pr.crouch });
+    if (P.alive && M.on && !M.over) out.push({ hid: "me", team: P.team, pos: P.pos, eye: playerEye(), vel: P.vel, crouch: P.crouch });
+    for (const pr of alivePeers()) out.push({ hid: pr.id, team: pr.team, pos: pr.pos, eye: pr.pos.y + 1.55, vel: pr.vel, crouch: pr.crouch });
     return out;
   }
 
   function mkPeer(id, meta) {
     return {
       id, name: feedName(meta.name).replace(/ /g, "-").slice(0, 10), joinT: meta.joinT || Date.now(),
-      hue: hueFor(id),
+      hue: hueFor(id), team: 0,
       inMatch: false, alive: false, hp: PLAYER_HP, sh: PLAYER_SH,
       rig: null, pos: new THREE.Vector3(), yaw: 0, pitch: 0, vel: new THREE.Vector3(),
       gliding: false, crouch: false, wIdx: 0, p0: null, p1: null,
@@ -1442,6 +1616,8 @@ function start() {
     if (was && was !== NET.hostId && NET.hostId === NET.id && NET.started && M.on && !M.over) {
       /* promoted mid-match: adopt the replicated bots + storm as sim state */
       for (const b of aliveBots()) { b.state = "wander"; b.tState = 0.3; b.target = null; b.tHuman = null; b.vel.set(0, 0, 0); }
+      /* tdm: dead bots had host-side respawn clocks — start fresh ones */
+      if (M.mode === "tdm") for (const b of bots) if (!b.alive && !b.out && !(b.respawnT > 0)) b.respawnT = TDM.RESPAWN;
       banner("SIGNAL AUTHORITY ASSUMED", "is-amber");
     }
   }
@@ -1507,24 +1683,29 @@ function start() {
   }
 
   /* ---------- match lifecycle over the wire ---------- */
-  function startNetMatch(roster) {
+  function startNetMatch(roster, md) {
     endEl.classList.remove("is-on");
     M.over = false;
-    resetMatch();
+    resetMatch(md, roster);
     NET.started = true;
     const ids = roster.map((r) => r[0]);
     const botsUsed = Math.max(0, 12 - ids.length);
-    for (const b of bots) if (b.id >= botsUsed) { b.alive = false; b.g.visible = false; }
+    for (const b of bots) if (b.id >= botsUsed) { b.alive = false; b.g.visible = false; b.out = true; }
+    const tdm = M.mode === "tdm";
     for (const pr of NET.peers.values()) {
       const inR = ids.includes(pr.id);
       pr.inMatch = inR; pr.alive = inR;
       pr.hp = PLAYER_HP; pr.sh = PLAYER_SH;
       pr.p0 = pr.p1 = null;
+      /* team tint (or restore) — rebuild the rig so suit + sprite match */
+      const hue = tdm && inR ? TEAM_HUES[pr.team] : hueFor(pr.id);
+      if (pr.hue !== hue || tdm) { pr.hue = hue; removePeerRig(pr); }
       if (inR) peerRig(pr);
       if (pr.rig) pr.rig.g.visible = false;    /* until the first snap */
     }
     if (againBtn) { againBtn.disabled = false; againBtn.textContent = "RE-DEPLOY"; }
-    banner(`SQUAD DROP — ${ids.length} NODE${ids.length > 1 ? "S" : ""} LINKED`, "is-lime");
+    banner(tdm ? `SQUAD TDM — ${ids.length} NODE${ids.length > 1 ? "S" : ""} · FIRST TO ${TDM.CAP}`
+      : `SQUAD DROP — ${ids.length} NODE${ids.length > 1 ? "S" : ""} LINKED`, "is-lime");
     syncSquadUi();
   }
 
@@ -1533,8 +1714,8 @@ function start() {
     for (const pr of NET.peers.values()) rows.push({ id: pr.id, name: pr.name, joinT: pr.joinT });
     rows.sort((a, b) => a.joinT - b.joinT || (a.id < b.id ? -1 : 1));
     const roster = rows.slice(0, 4).map((r) => [r.id, r.name]);
-    startNetMatch(roster);
-    netSend({ t: "go", roster, st0: { tr: stormU.uTR.value, tc: [stormU.uTC.value.x, stormU.uTC.value.y] } });
+    startNetMatch(roster, MODE);
+    netSend({ t: "go", roster, md: MODE, st0: { tr: stormU.uTR.value, tc: [stormU.uTC.value.x, stormU.uTC.value.y] } });
   }
 
   function onGo(m) {
@@ -1542,8 +1723,8 @@ function start() {
       $("gMenuTitle").textContent = "MATCH IN PROGRESS — WAIT FOR THE NEXT DROP";
       return;
     }
-    startNetMatch(m.roster);
-    if (m.st0) { stormU.uTR.value = m.st0.tr; stormU.uTC.value.set(m.st0.tc[0], m.st0.tc[1]); }
+    startNetMatch(m.roster, m.md === "tdm" ? "tdm" : "br");
+    if (m.st0 && M.mode !== "tdm") { stormU.uTR.value = m.st0.tr; stormU.uTC.value.set(m.st0.tc[0], m.st0.tc[1]); }
     if (!locked && !SIM) {
       menuEl.classList.add("is-on");
       $("gMenuTitle").textContent = "SQUAD DEPLOYED — DIVE NOW";
@@ -1567,6 +1748,8 @@ function start() {
       pr = mkPeer(m.id, { name: "UNIT", joinT: Date.now() }); NET.peers.set(m.id, pr);
     }
     if (NET.started && !pr.inMatch) { pr.inMatch = true; pr.alive = !!m.al; peerRig(pr); }  /* snap-before-presence heal */
+    /* tdm: peers respawn themselves — their own snaps flip them back on */
+    if (M.mode === "tdm" && NET.started && pr.inMatch && !!m.al !== pr.alive) pr.alive = !!m.al;
     pr.hp = m.hp; pr.sh = m.sh;
     pr.gliding = !!m.gl; pr.crouch = !!m.cr; pr.wIdx = m.w || 0;
     pr.pitch = Number.isFinite(m.pt) ? m.pt : 0;
@@ -1607,14 +1790,24 @@ function start() {
   /* ---------- host authority broadcast: bots + storm ---------- */
   function txBots() {
     const rows = [];
-    for (const b of aliveBots()) rows.push([b.id, r1(b.pos.x), r1(b.pos.y), r1(b.pos.z), r2(b.yaw), Math.round(b.hp), Math.round(b.sh)]);
+    for (const b of bots) {
+      if (b.out) continue;
+      rows.push([b.id, r1(b.pos.x), r1(b.pos.y), r1(b.pos.z), r2(b.yaw), Math.round(b.hp), Math.round(b.sh), b.alive ? 1 : 0]);
+    }
     netSend({ t: "bs", b: rows });
   }
   function onBotSnap(m) {
     for (const row of m.b) {
       if (!Array.isArray(row) || !row.slice(1).every(Number.isFinite)) continue;
       const b = bots[row[0]];
-      if (!b || !b.alive) continue;
+      if (!b || b.out) continue;
+      /* tdm: the al flag is how guests learn a bot respawned (deaths
+         still arrive as bkill for feed credit — this only revives) */
+      if (M.mode === "tdm" && row.length > 7 && !!row[7] !== b.alive) {
+        b.alive = !!row[7]; b.g.visible = b.alive;
+        if (b.alive) { b.pos.set(row[1], row[2], row[3]); b.hitFlash = 0; }
+      }
+      if (!b.alive) continue;
       b.npos.set(row[1], row[2], row[3]); b.nyaw = row[4]; b.nfresh = true;
       b.hp = row[5]; b.sh = row[6];
     }
@@ -1657,13 +1850,14 @@ function start() {
 
   /* ---------- deaths over the wire ---------- */
   function endCheck() {
+    if (M.mode === "tdm") return;                /* tdm ends on score/clock, not headcount */
     if (M.on && !M.over && aliveCount() <= 1) endMatch(P.alive);
   }
   function nextSpectate() {
     const cands = [...aliveBots(), ...alivePeers()];
     M.spectating = cands[0] || null;
     if (M.spectating) { specEl.classList.add("is-on"); specName.textContent = M.spectating.name; }
-    else if (M.on && !M.over) endMatch(false);
+    else if (M.on && !M.over && M.mode !== "tdm") endMatch(false);
   }
   /* kill pop: the moment of an elimination lands physically —
      trauma kick, red X flash, one lime vignette pulse */
@@ -1700,6 +1894,7 @@ function start() {
     const pr = NET.peers.get(m.id);
     if (!pr || !pr.alive) return;
     pr.alive = false;
+    if (M.mode === "tdm") addScore(m.kt === 0 || m.kt === 1 ? m.kt : null);   /* host-only inside */
     if (pr.rig) pr.rig.g.visible = false;
     spawnSparks(pr.pos.clone().setY(pr.pos.y + 1.2), 8, pr.hue);
     const mine = m.bid === NET.id;
@@ -1723,8 +1918,17 @@ function start() {
     switch (m.t) {
       case "s": onSnap(m); break;
       case "go": onGo(m); break;
-      case "st": if (!iAmHost()) onStorm(m); break;
+      case "st": if (!iAmHost() && M.mode !== "tdm") onStorm(m); break;
       case "bs": if (!iAmHost()) onBotSnap(m); break;
+      case "sc": {
+        if (M.mode !== "tdm" || iAmHost()) break;
+        const si = (v) => Math.min(999, Math.max(0, Math.round(+v) || 0));
+        M.score[0] = si(m.a); M.score[1] = si(m.b);
+        if (Number.isFinite(+m.mt)) M.t = +m.mt;
+        if (m.fin) endMatch(false);              /* tdm branch reads the score itself */
+        break;
+      }
+      case "pkr": { const p = pickups[m.i]; if (p && !p.live) { p.live = true; p.m.visible = true; p.rt = 0; } break; }
       case "hit": {
         const d = saneDmg(m.dmg);
         if (d && m.tgt === NET.id && NET.started) hurtPlayer(d, feedName(m.by), m.bid || null, m.bid ? NET.peers.get(m.bid)?.pos : null);
@@ -1817,6 +2021,19 @@ function start() {
     paintArsenal();
   }
 
+  /* ---------- mode picker: battle royale ↔ team deathmatch ---------- */
+  let MODE = loadMode();
+  const modeBr = $("gModeBr"), modeTdm = $("gModeTdm");
+  function setMode(m) {
+    MODE = m === "tdm" ? "tdm" : "br";
+    try { localStorage.setItem("game-mode", MODE); } catch (e) { /* private mode */ }
+    modeBr?.classList.toggle("is-sel", MODE === "br");
+    modeTdm?.classList.toggle("is-sel", MODE === "tdm");
+  }
+  modeBr?.addEventListener("click", () => { setMode("br"); sfxUi(); });
+  modeTdm?.addEventListener("click", () => { setMode("tdm"); sfxUi(); });
+  setMode(MODE);
+
   /* ---------- first ↔ third person ---------- */
   let VIEW = 0;
   try { VIEW = localStorage.getItem("game-view") === "tp" ? 1 : 0; } catch (e) { /* private mode */ }
@@ -1833,7 +2050,7 @@ function start() {
      keeps announcing itself (throttled to 1Hz, still alive) */
   setInterval(txSnap, 100);
   setInterval(() => { if (NET.on && NET.started && iAmHost() && M.on && !M.over) txBots(); }, 125);
-  setInterval(() => { if (NET.on && NET.started && iAmHost() && M.on && !M.over) txStorm(); }, 500);
+  setInterval(() => { if (NET.on && NET.started && iAmHost() && M.on && !M.over && M.mode !== "tdm") txStorm(); }, 500);
 
   /* ============================================================
      input — pointer lock + WASD; menu drives lock acquisition.
@@ -1862,7 +2079,7 @@ function start() {
   const SENS = 0.00185;
   addEventListener("mousemove", (e) => {
     if (!locked) return;   /* SIM aims via __gameDrive.look, not events */
-    const zoomK = 1 - P.ads * 0.6;   /* ads lowers sens like Valorant */
+    const zoomK = 1 - P.ads * (curW().scope ? 0.72 : 0.6);   /* ads lowers sens; scope trims harder */
     P.yaw -= e.movementX * SENS * zoomK;
     P.pitch -= e.movementY * SENS * zoomK;
     P.pitch = Math.max(-1.45, Math.min(1.45, P.pitch));
@@ -1871,7 +2088,7 @@ function start() {
   function enterMatch() {
     menuEl.classList.remove("is-on");
     hudEl.classList.add("is-live");
-    if (!M.on && !M.over) resetMatch();
+    if (!M.on && !M.over) resetMatch(MODE, null);
     audioBoot(); bedsBoot();
     if (AC?.state === "suspended") AC.resume().catch(() => {});
   }
@@ -1891,7 +2108,7 @@ function start() {
     audioBoot();
     if (NET.on && !iAmHost() && (!M.on || M.over)) { syncSquadUi(); return; }  /* guests wait for host */
     if (NET.on && iAmHost() && (!M.on || M.over)) launchSquad();
-    else if (M.over) { M.over = false; endEl.classList.remove("is-on"); resetMatch(); }
+    else if (M.over) { M.over = false; endEl.classList.remove("is-on"); resetMatch(MODE, null); }
     if (SIM) { locked = true; enterMatch(); return; }
     try {
       const r = canvas.requestPointerLock?.();
@@ -2004,9 +2221,11 @@ function start() {
 
       /* world first */
       const wh = rayWorld(_o, _dir, MAXT);
-      /* then bots — nearest capsule hit that's in front of the wall */
+      /* then bots — nearest capsule hit that's in front of the wall.
+         tdm: teammates are ghosts to my bullets — no friendly fire */
       let hitBot = null, hitT = wh.t, crit = false;
       for (const b of aliveBots()) {
+        if (M.mode === "tdm" && b.team === P.team) continue;
         const t = rayCapsule(_o, _dir, b.pos.x, b.pos.y + 0.35, b.pos.y + 1.55, b.pos.z, 0.5, Math.min(MAXT, hitT));
         if (t < hitT) {
           /* head test: tighter capsule near the top */
@@ -2018,6 +2237,7 @@ function start() {
       let hitPeer = null;
       if (NET.on && NET.started) {
         for (const pr of alivePeers()) {
+          if (M.mode === "tdm" && pr.team === P.team) continue;
           const t = rayCapsule(_o, _dir, pr.pos.x, pr.pos.y + 0.35, pr.pos.y + 1.55, pr.pos.z, 0.5, Math.min(MAXT, hitT));
           if (t < hitT) {
             const th = rayCapsule(_o, _dir, pr.pos.x, pr.pos.y + 1.55, pr.pos.y + 1.9, pr.pos.z, 0.3, Math.min(MAXT, hitT));
@@ -2107,17 +2327,21 @@ function start() {
     /* proximity acquisition: humans are spotted at 70u, other bots
        only at 45u — the shrinking ring escalates encounters naturally.
        At most 2 bots pressure any one human at a time. */
+    const tdm = M.mode === "tdm";
     let best = null, bestH = null, bestD = 70 * 70;
     for (const h of _hum) {
+      if (tdm && h.team === b.team) continue;          /* teammates are not targets */
       const engagers = bots.filter((o) => o.alive && o !== b && o.state === "engage" && o.tHuman === h.hid).length;
       if (engagers >= 2) continue;
       const d2 = b.pos.distanceToSquared(h.pos);
       if (d2 < bestD && los(b.pos.x, b.pos.y + 1.6, b.pos.z, h.pos.x, h.eye, h.pos.z)) { bestH = h.hid; bestD = d2; }
     }
-    /* other bots are only spotted close — and a NEARER bot beats a human */
-    bestD = Math.min(bestD, 45 * 45);
+    /* other bots are only spotted close — and a NEARER bot beats a human.
+       tdm: bot fights ARE the match, so enemy bots read at full range */
+    bestD = Math.min(bestD, (tdm ? 70 : 45) * (tdm ? 70 : 45));
     for (const o of aliveBots()) {
       if (o === b) continue;
+      if (tdm && o.team === b.team) continue;
       const d2 = b.pos.distanceToSquared(o.pos);
       if (d2 < bestD && los(b.pos.x, b.pos.y + 1.6, b.pos.z, o.pos.x, o.pos.y + 1.6, o.pos.z)) { best = o; bestH = null; bestD = d2; }
     }
@@ -2149,7 +2373,7 @@ function start() {
     const tSpeed = Math.hypot(tv.x, tv.z);
     let acc = b.aim * (1 - Math.min(0.55, dist / 160)) * (1 - Math.min(0.45, tSpeed / 18));
     if (h && h.crouch) acc *= 0.85;
-    if (!h) acc *= 0.32;
+    if (!h) acc *= M.mode === "tdm" ? 0.8 : 0.32;   /* tdm: bot duels carry the score */
     const hits = Math.random() < acc;
 
     /* the shot must also clear world geometry */
@@ -2193,7 +2417,7 @@ function start() {
       else netSend({ t: "hit", tgt: h.hid, dmg: Math.round(7 + Math.random() * 6), by: b.name, bid: null });
     } else {
       const tgt = b.target;
-      hurtBot(tgt, 5 + Math.random() * 4, false, b.pos, false, b.name);
+      hurtBot(tgt, M.mode === "tdm" ? 8 + Math.random() * 6 : 5 + Math.random() * 4, false, b.pos, false, b.name);
       if (!tgt.alive) {
         b.kills++;
         /* breathe after a kill: back to roaming for a beat */
@@ -2325,6 +2549,27 @@ function start() {
      ============================================================ */
   function stormStep(dt) {
     if (!M.on || M.over) return;
+    if (M.mode === "tdm") {
+      /* fixed ring — the clock is the timer, the ring is the arena
+         bound; outside still burns so nobody camps the void */
+      const left = Math.max(0, TDM.TIME - M.t);
+      stormEl.textContent = `TDM ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, "0")}`;
+      if (P.alive) {
+        const d = Math.hypot(P.pos.x - stormU.uC.value.x, P.pos.z - stormU.uC.value.y);
+        if (d > stormU.uR.value) {
+          P.stormT += dt;
+          if (P.stormT >= 1) { P.stormT -= 1; hurtPlayer(5, "THE STORM"); banner("OUT OF BOUNDS — TURN BACK", "is-red"); }
+          vigEl.classList.add("is-storm");
+        } else { vigEl.classList.remove("is-storm"); P.stormT = 0; }
+      }
+      stormWall.position.set(stormU.uC.value.x, 36, stormU.uC.value.y);
+      stormWall.scale.set(stormU.uR.value, 1, stormU.uR.value);
+      if (bedNodes && P.alive) {
+        const d = Math.abs(Math.hypot(P.pos.x - stormU.uC.value.x, P.pos.z - stormU.uC.value.y) - stormU.uR.value);
+        bedNodes.storm.g.gain.setTargetAtTime(Math.max(0, 1 - d / 40) * 0.14, AC.currentTime, 0.3);
+      }
+      return;
+    }
     const ph = STORM_PHASES[Math.min(M.phase, STORM_PHASES.length - 1)];
     const auth = iAmHost();          /* guests ease locally, never advance phase */
     M.phaseT += dt;
@@ -2561,16 +2806,21 @@ function start() {
     miniCtx.beginPath(); miniCtx.arc(stormU.uC.value.x * scale, stormU.uC.value.y * scale, stormU.uR.value * scale, 0, Math.PI * 2); miniCtx.stroke();
     miniCtx.strokeStyle = "rgba(255,255,255,0.75)"; miniCtx.lineWidth = 1;
     miniCtx.beginPath(); miniCtx.arc(stormU.uTC.value.x * scale, stormU.uTC.value.y * scale, stormU.uTR.value * scale, 0, Math.PI * 2); miniCtx.stroke();
-    /* bots: radar rule — only pinged within 55u of the player */
-    miniCtx.fillStyle = "rgba(255,79,163,0.85)";
+    /* bots: radar rule — enemies ping within 55u; tdm teammates are
+       always lime so the squad reads at a glance */
+    const tdm = M.mode === "tdm";
     for (const b of aliveBots()) {
-      if (b.pos.distanceToSquared(P.pos) > 55 * 55) continue;
+      const ally = tdm && b.team === P.team;
+      if (!ally && b.pos.distanceToSquared(P.pos) > 55 * 55) continue;
+      miniCtx.fillStyle = ally ? "rgba(184,255,60,0.85)" : "rgba(255,79,163,0.85)";
       miniCtx.beginPath(); miniCtx.arc(b.pos.x * scale, b.pos.z * scale, 2, 0, Math.PI * 2); miniCtx.fill();
     }
-    /* squad humans: always pinged — friends can find (or hunt) each other */
+    /* squad humans: allies always pinged; tdm enemy humans obey radar */
     if (NET.on && NET.started) {
-      miniCtx.fillStyle = "rgba(233,242,255,0.95)";
       for (const pr of alivePeers()) {
+        const ally = !tdm || pr.team === P.team;
+        if (!ally && pr.pos.distanceToSquared(P.pos) > 55 * 55) continue;
+        miniCtx.fillStyle = ally ? (tdm ? "rgba(184,255,60,0.95)" : "rgba(233,242,255,0.95)") : "rgba(255,79,163,0.95)";
         miniCtx.beginPath(); miniCtx.arc(pr.pos.x * scale, pr.pos.z * scale, 2.4, 0, Math.PI * 2); miniCtx.fill();
       }
     }
@@ -2616,12 +2866,71 @@ function start() {
     killsEl.textContent = String(P.kills).padStart(2, "0");
     barCdEl.textContent = P.barrierCd > 0 ? Math.ceil(P.barrierCd) : "Q";
     barCdEl.classList.toggle("is-ready", P.barrierCd <= 0);
+    if (M.mode === "tdm" && scoreEl) {
+      scoreA.textContent = String(M.score[0]).padStart(2, "0");
+      scoreB.textContent = String(M.score[1]).padStart(2, "0");
+      scoreEl.classList.toggle("is-t0", P.team === 0);
+      scoreEl.classList.toggle("is-t1", P.team === 1);
+    }
     /* crosshair spread visual */
     const speed2 = P.vel.x * P.vel.x + P.vel.z * P.vel.z;
     const sp = 4 + Math.min(1, speed2 / 30) * 10 + (P.grounded ? 0 : 12) + P.burst * 1.1;
     crossEl.style.setProperty("--gap", sp.toFixed(1) + "px");
     crossEl.classList.toggle("is-ads", P.ads > 0.5);
     drawMini(); drawCompass();
+  }
+
+  /* ---------- TDM lifecycle: respawns, pickup recycling, clock ---------- */
+  function respawnPlayer() {
+    P.hp = PLAYER_HP; P.sh = PLAYER_SH;
+    P.ammo = P.loadout.map((wi) => WEAPONS[wi].mag);
+    P.reserve = P.loadout.map((wi) => WEAPONS[wi].rStart);
+    P.reloading = 0; P.burst = 0; P.burstQ = 0; P.shotT = 0; P.adsOn = false;
+    P.slide = 0; P.stormT = 0;
+    teamSpawn(P.team, P.pos);
+    P.vel.set(0, 0, 0);
+    P.yaw = Math.atan2(P.pos.x, P.pos.z); P.pitch = 0;
+    P.alive = true; P.respawnT = 0;
+    M.spectating = null; specEl.classList.remove("is-on");
+    respawnEl?.classList.remove("is-on");
+    vigEl.className = "g-vig";
+    banner("REDEPLOYED — PUSH THE SIGNAL", "is-lime");
+  }
+  function respawnBot(b) {
+    b.alive = true; b.hp = BOT_HP; b.sh = BOT_SH; b.respawnT = 0;
+    teamSpawn(b.team, b.pos);
+    b.vel.set(0, 0, 0); b.state = "wander"; b.tState = 0.3 + Math.random();
+    b.target = null; b.tHuman = null; b.hitFlash = 0; b.g.visible = true;
+    b.g.position.copy(b.pos);
+  }
+  function tdmStep(dt) {
+    /* my own respawn clock — every client owns its player */
+    if (!P.alive && !M.over) {
+      P.respawnT -= dt;
+      if (respawnN) respawnN.textContent = String(Math.max(1, Math.ceil(P.respawnT)));
+      if (P.respawnT <= 0) respawnPlayer();
+      else if (!M.spectating || !M.spectating.alive) nextSpectate();
+    }
+    if (!iAmHost() || M.over) return;
+    /* host: bot respawns + pickup recycling + score/clock authority */
+    for (const b of bots) {
+      if (b.alive || b.out) continue;
+      if (b.respawnT > 0) { b.respawnT -= dt; if (b.respawnT <= 0) respawnBot(b); }
+    }
+    for (const pk of pickups) {
+      if (pk.live) continue;
+      if (!(pk.rt > 0)) { pk.rt = TDM.PICKUP_RT; continue; }
+      pk.rt -= dt;
+      if (pk.rt <= 0) {
+        pk.live = true; pk.m.visible = true; pk.rt = 0;
+        if (NET.on && NET.started) netSend({ t: "pkr", i: pk.i });
+      }
+    }
+    if (NET.on && NET.started) {
+      M.scoreTxT -= dt;
+      if (M.scoreTxT <= 0) { M.scoreTxT = 2; txScore(false); }
+    }
+    if (M.t >= TDM.TIME) tdmFinish();
   }
 
   /* one simulation tick — the loop calls this per frame; the QA
@@ -2634,6 +2943,7 @@ function start() {
     if (NET.on && NET.started && !iAmHost()) guestBotStep(dt);
     else for (const b of bots) botStep(b, dt);
     stormStep(dt);
+    if (M.mode === "tdm") tdmStep(dt);
   }
 
   /* ============================================================
@@ -2648,12 +2958,45 @@ function start() {
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.5, 0.55, 0.82);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  /* FXAA on the sRGB output — the renderer itself runs MSAA-off */
+  const fxaa = new ShaderPass(FXAAShader);
+  const setFxaaRes = () =>
+    fxaa.material.uniforms.resolution.value.set(1 / (innerWidth * renderer.getPixelRatio()), 1 / (innerHeight * renderer.getPixelRatio()));
+  setFxaaRes();
+  composer.addPass(fxaa);
+  /* grade: radial CA fringe + gentle S-curve + vignette + live grain.
+     A REAL ShaderMaterial handed to ShaderPass — adopted by reference,
+     so uniform writes stay live (ShaderPass CLONES plain shader
+     objects; that trap shipped about v3's grade frozen). */
+  const gradeMat = new THREE.ShaderMaterial({
+    uniforms: { tDiffuse: { value: null }, uT: { value: 0 } },
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+    fragmentShader: `
+      varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uT;
+      float gn(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      void main(){
+        vec2 d = vUv - 0.5;
+        float r2 = dot(d, d);
+        vec2 ca = d * r2 * 0.028;
+        vec3 col = vec3(
+          texture2D(tDiffuse, vUv - ca).r,
+          texture2D(tDiffuse, vUv).g,
+          texture2D(tDiffuse, vUv + ca).b);
+        col = mix(col, col * col * (3.0 - 2.0 * col), 0.20);   /* gentle S-curve pop */
+        col *= 1.0 - smoothstep(0.16, 0.62, r2) * 0.32;        /* vignette */
+        col += (gn(vUv * 913.7 + fract(uT * 0.613) * 61.3) - 0.5) * 0.028;
+        gl_FragColor = vec4(col, 1.0);
+      }`,
+  });
+  const grade = new ShaderPass(gradeMat);
+  composer.addPass(grade);
 
   addEventListener("resize", () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
     composer.setSize(innerWidth, innerHeight);
+    setFxaaRes();
   });
 
   /* attract cam for the lobby: slow orbit high above the arena */
@@ -2673,9 +3016,14 @@ function start() {
     const t = clock.elapsedTime;
     stormU.uT.value = t;
 
-    /* quality governor: one step, DPR only */
+    /* quality governor: one step — DPR down, post extras off */
     emaMs += (dt * 1000 - emaMs) * 0.05;
-    if (!qLow && emaMs > 34 && frames > 120) { qLow = true; renderer.setPixelRatio(Math.min(DPR, 1)); bloom.enabled = false; }
+    if (!qLow && emaMs > 34 && frames > 120) {
+      qLow = true; renderer.setPixelRatio(Math.min(DPR, 1));
+      bloom.enabled = false; fxaa.enabled = false; grade.enabled = false;
+      setFxaaRes();
+    }
+    gradeMat.uniforms.uT.value = t;
 
     const beacon = stormWall.userData.beacon;
     if (beacon) beacon.material.color.setHex(Math.sin(t * 2.4) > 0 ? COL.lime : 0x2a4a12);
@@ -2733,10 +3081,19 @@ function start() {
       vm.position.y += (0 - vm.position.y) * Math.min(1, dt * 6);
       vm.rotation.z = Math.sin(bobT) * 0.006 * Math.min(1, hs / WALK);
 
+      /* sniper scope: fp + LANCE + settled ADS = the lens overlay owns
+         the frame; the viewmodel ducks out so glass, not gun, reads */
+      const wantScope = VIEW === 0 && !!w.scope && P.ads > 0.75 && P.reloading <= 0;
+      if (wantScope !== scoped) {
+        scoped = wantScope;
+        scopeEl?.classList.toggle("is-on", scoped);
+        crossEl.classList.toggle("is-scoped", scoped);
+        scoped ? tone({ freq: 1180, dur: 0.06, gain: 0.1 }) : tone({ freq: 840, dur: 0.05, gain: 0.07 });
+      }
       /* first ↔ third person: the aim ray never changes (camera basis
          is rotation-identical on the boom) — only the lens moves.
          Boom pulls in when world geometry would occlude the player. */
-      vm.visible = VIEW === 0; vmLamp.visible = VIEW === 0;
+      vm.visible = VIEW === 0 && !scoped; vmLamp.visible = VIEW === 0;
       myRig.g.visible = VIEW === 1;
       if (VIEW === 1) {
         /* over-shoulder boom; ADS tucks it closer */
@@ -2766,11 +3123,14 @@ function start() {
       yawG.rotation.y = b.yaw;
       pitchG.rotation.x = -0.24;
       camera.position.set(0, 0, 0);
+      camera.rotation.z = 0;
       vm.visible = false; vmLamp.visible = false; myRig.g.visible = false;
+      dropScope();
       syncHud(dt);
     } else if (!M.on) {
       attractCam(t);
       vm.visible = false; vmLamp.visible = false; myRig.g.visible = false;
+      dropScope();
     }
 
     /* trauma decays linearly — heavier hits ring longer */
@@ -2839,6 +3199,10 @@ function start() {
     alive: aliveCount(), botsAlive: aliveBots().length,
     p: { x: +P.pos.x.toFixed(1), y: +P.pos.y.toFixed(1), z: +P.pos.z.toFixed(1), hp: Math.round(P.hp), sh: Math.round(P.sh), kills: P.kills, gliding: P.gliding, alive: P.alive, sliding: P.slide > 0 },
     trauma: Math.round(shake.t * 100) / 100,
+    mode: M.mode, team: P.team, score: [...M.score],
+    respawnIn: P.alive ? 0 : Math.max(0, Math.ceil(P.respawnT)),
+    scoped,
+    fx: { fxaa: fxaa.enabled, grade: grade.enabled, bloom: bloom.enabled, env: !!scene.environment },
     view: VIEW ? "tp" : "fp", rig3p: myRig.g.visible,
     weapon: curW().id, ammo: [...P.ammo], reserve: [...P.reserve],
     loadout: P.loadout.map((wi) => WEAPONS[wi].id),
@@ -2864,6 +3228,9 @@ function start() {
       reload: () => tryReload(),
       weapon: (i) => switchW(i),
       view: (v) => { setView(v ? 1 : 0); },
+      ads: (on) => { P.adsOn = !!on; },
+      mode: (m) => { setMode(m); return MODE; },
+      die: () => { hurtPlayer(9999, "QA-TERMINATE", null, null); },
       pick: (slot, wi) => { pickWeapon(slot, wi); return lobbyLoadout.map((x) => WEAPONS[x].id); },
       warp: (x, z) => { P.pos.x = x; P.pos.z = z; P.vel.set(0, 0, 0); },
       aimNearest: () => {

@@ -213,11 +213,13 @@ await metrics(1440, 900);
 await go(BASE + "/game.html", 4000);
 check("game: world booted (honesty marker)", await evalJs(`new Promise((res) => { const t0 = Date.now(); const poll = () => document.body.classList.contains("game-live") ? res(true) : (document.body.classList.contains("game-no3d") || Date.now() - t0 > 15000 ? res(false) : setTimeout(poll, 250)); poll(); })`));
 check("game: lobby menu shown with DEPLOY", await evalJs(`document.getElementById("gMenu").classList.contains("is-on") && document.getElementById("gPlay").textContent.trim() === "DEPLOY"`));
-check("game: frames actually rendering", await evalJs(`new Promise((res) => { const f0 = window.__gameQ().frames; setTimeout(() => res(window.__gameQ().frames > f0 + 5), 600); })`));
+check("game: frames actually rendering", await evalJs(`new Promise((res) => { const f0 = window.__gameQ().frames, t0 = Date.now(); const poll = () => window.__gameQ().frames > f0 + 5 ? res(true) : (Date.now() - t0 > 8000 ? res(false) : setTimeout(poll, 300)); setTimeout(poll, 300); })`));
 check("game: own hashed css bundle served", await evalJs(`!![...document.styleSheets].find((s) => s.href && s.href.includes("/assets/game."))`));
 check("game: arena seeded (12 combatants, colliders up)", await evalJs(`(() => { const q = window.__gameQ(); return q.alive === 12 && q.botsAlive === 11 && q.colliders > 100; })()`));
 check("game: arsenal lists 5 weapons, 2 picked into slots", await evalJs(`(() => { const l = document.getElementById("gGuns"); return l.children.length === 5 && l.querySelectorAll("li.is-picked").length === 2; })()`));
 check("game: camera toggle button mounted", await evalJs(`/CAMERA · (FIRST|THIRD) PERSON/.test(document.getElementById("gViewBtn").textContent)`));
+check("game: post chain live (fxaa+grade+env+bloom)", await evalJs(`(() => { const f = window.__gameQ().fx; return !!(f && f.fxaa && f.grade && f.env && f.bloom); })()`));
+check("game: mode picker mounted, BR default", await evalJs(`(() => { const br = document.getElementById("gModeBr"), td = document.getElementById("gModeTdm"); return !!br && !!td && br.classList.contains("is-sel") && !td.classList.contains("is-sel"); })()`));
 /* sim-mode match: deploy → land → storm advances → bots fight to a winner */
 await go(BASE + "/game.html?sim=1", 4000);
 /* pick a non-default loadout in the lobby: SMG into slot 1, shotgun into slot 2 */
@@ -235,6 +237,21 @@ check("game: barrier places + collides", await evalJs(`(() => { window.__gameDri
 check("game: storm shrinks + match resolves (ff)", await evalJs(`(() => { const q = window.__gameDrive.ff(500); return q.stormR < 150 && q.over; })()`), await evalJs(`JSON.stringify(window.__gameQ())`));
 check("game: end screen with placement", await evalJs(`new Promise((res) => setTimeout(() => res(document.getElementById("gEnd").classList.contains("is-on") && /#\\s*\\d+/.test(document.getElementById("gEndStats").textContent)), 2600))`));
 check("game: kill feed recorded eliminations", (await evalJs(`document.getElementById("gFeed").children.length`)) >= 0 && await evalJs(`window.__gameQ().alive <= 1`));
+/* sniper scope: LANCE ADS = lens overlay, viewmodel ducks, hip drops it */
+await go(BASE + "/game.html?sim=1", 4000);
+await evalJs(`document.getElementById("gPlay").click()`);
+await sleep(400);
+check("game: dmr scope overlays on ads", await evalJs(`(async () => { const D = window.__gameDrive; D.look(Math.PI, -1.35); D.ff(16); D.warp(170, 170); D.weapon(1); D.ads(true); D.ff(1); const t0 = Date.now(); while (Date.now() - t0 < 5000) { const q = window.__gameQ(); if (q.p.alive && !q.p.gliding && q.weapon === "dmr" && q.scoped && document.getElementById("gScope").classList.contains("is-on")) return true; await new Promise((r) => setTimeout(r, 150)); } return false; })()`), await evalJs(`JSON.stringify({ w: window.__gameQ().weapon, sc: window.__gameQ().scoped, gl: window.__gameQ().p.gliding, al: window.__gameQ().p.alive })`));
+check("game: scope drops back to hip", await evalJs(`(async () => { window.__gameDrive.ads(false); const t0 = Date.now(); while (Date.now() - t0 < 3000) { if (!window.__gameQ().scoped) return true; await new Promise((r) => setTimeout(r, 120)); } return false; })()`));
+/* team deathmatch: grounded 6v6, 5s respawn, bot duels move the score */
+await go(BASE + "/game.html?sim=1", 4000);
+check("game: tdm lobby pick arms", await evalJs(`(() => { const b = document.getElementById("gModeTdm"); b.click(); return b.classList.contains("is-sel"); })()`));
+await evalJs(`document.getElementById("gPlay").click()`);
+await sleep(400);
+check("game: tdm starts grounded 6v6 on the fixed ring", await evalJs(`(() => { const q = window.__gameQ(); return q.mode === "tdm" && q.match && !q.p.gliding && q.team === 0 && q.alive === 12 && q.stormR === 85 && document.body.classList.contains("game-tdm"); })()`), await evalJs(`JSON.stringify(window.__gameQ())`));
+check("game: tdm death respawns in 5s", await evalJs(`(() => { const D = window.__gameDrive; D.die(); const dead = !window.__gameQ().p.alive && window.__gameQ().respawnIn >= 4; const still = !D.ff(3).p.alive; const back = D.ff(3).p; return dead && still && back.alive && back.hp === 100; })()`), await evalJs(`JSON.stringify(window.__gameQ().p)`));
+check("game: tdm scoreboard ticks, match keeps running", await evalJs(`(() => { const q = window.__gameDrive.ff(90); return (q.score[0] + q.score[1]) > 0 && !q.over && q.alive >= 10; })()`), await evalJs(`JSON.stringify({ score: window.__gameQ().score, alive: window.__gameQ().alive })`));
+await evalJs(`try { localStorage.removeItem("game-mode"); localStorage.removeItem("game-loadout"); } catch (e) {}`);
 /* squad link over the offline stub wire — the REAL room/replica/damage
    pipeline with a scripted phantom peer, zero network */
 await go(BASE + "/game.html?net=stub&sim=1", 4000);
@@ -249,7 +266,7 @@ check("game: wire damage reaches the player", await evalJs(`new Promise((res) =>
 await metrics(720, 900);
 await go(BASE + "/game.html", 3000);
 check("game: small viewport honest fallback", await evalJs(`document.body.classList.contains("game-no3d") && getComputedStyle(document.querySelector(".game-fallback")).display === "block"`));
-check("game: fallback copy substantive + honest", await evalJs(`(() => { const t = document.querySelector(".game-fallback__body").textContent; return t.length > 800 && t.includes("eleven AI units") && t.includes("pointer lock") && t.includes("room code") && t.includes("solo matches never open a connection"); })()`));
+check("game: fallback copy substantive + honest", await evalJs(`(() => { const t = document.querySelector(".game-fallback__body").textContent; return t.length > 800 && t.includes("eleven AI units") && t.includes("pointer lock") && t.includes("room code") && t.includes("solo matches never open a connection") && t.includes("Team Deathmatch") && t.includes("telescopic scope"); })()`));
 await metrics(1440, 900);
 
 /* ---- 3 · consent gating ---- */

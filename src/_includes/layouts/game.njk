@@ -32,16 +32,22 @@ extraStylesheet: gamecss
 <!-- lobby / pause menu -->
 <div class="g-menu is-on" id="gMenu">
   <div class="g-menu__core">
-    <p class="g-menu__eyebrow">[ ARENA · SOLO VS 11 · SQUADS OF 4 ]</p>
+    <p class="g-menu__eyebrow">[ ARENA · BATTLE ROYALE + TEAM DEATHMATCH · SQUADS OF 4 ]</p>
     <h1 class="g-menu__title">SIGNAL<i>STRIKE</i></h1>
     <p class="g-menu__sub" id="gMenuTitle">LAST NODE STANDING · THE RING ALWAYS CLOSES</p>
     <button class="g-menu__play" id="gPlay" type="button">DEPLOY</button>
     <ul class="g-menu__keys" aria-label="Controls">
       <li><b>WASD</b> move</li><li><b>SHIFT</b> sprint</li><li><b>SPACE</b> jump</li>
-      <li><b>CTRL</b> crouch / slide</li><li><b>LMB</b> fire</li><li><b>RMB</b> aim (LANCE)</li>
+      <li><b>CTRL</b> crouch / slide</li><li><b>LMB</b> fire</li><li><b>RMB</b> aim / scope (LANCE)</li>
       <li><b>R</b> refeed</li><li><b>1/2</b> weapon</li><li><b>Q</b> hardlight wall</li>
       <li><b>V</b> camera view</li>
     </ul>
+
+    <!-- MODE — battle royale or team deathmatch; the host's pick rules a squad -->
+    <div class="g-modes" id="gModes" aria-label="Match mode">
+      <button class="g-modes__btn is-sel" id="gModeBr" type="button"><b>BATTLE ROYALE</b><span>LAST NODE STANDING · THE RING CLOSES</span></button>
+      <button class="g-modes__btn" id="gModeTdm" type="button"><b>TEAM DEATHMATCH</b><span>6V6 · 5S RESPAWN · FIRST TO 30</span></button>
+    </div>
 
     <!-- ARSENAL — pick two weapons into the deploy loadout -->
     <div class="g-arsenal" id="gArsenal">
@@ -83,7 +89,9 @@ extraStylesheet: gamecss
   <div class="g-cross" id="gCross"><i></i><i></i><i></i><i></i><s></s></div>
   <div class="g-hitmark" id="gHitmark"><i></i><i></i><i></i><i></i></div>
   <div class="g-dmgdir" id="gDmgDir" aria-hidden="true"><i></i></div>
+  <div class="g-scope" id="gScope" aria-hidden="true"><i></i><b></b><b></b><s></s><u></u></div>
   <div class="g-compass" id="gCompass"></div>
+  <div class="g-score" id="gScore" aria-hidden="true"><b id="gScoreA">00</b><span>SIGNAL · STATIC</span><b id="gScoreB">00</b></div>
   <p class="g-banner" id="gBanner"></p>
 
   <div class="g-vitals">
@@ -109,6 +117,7 @@ extraStylesheet: gamecss
 </div>
 
 <div class="g-spec" id="gSpec"><span>SPECTATING</span><b id="gSpecName">—</b></div>
+<div class="g-respawn" id="gRespawn" aria-hidden="true"><span>REDEPLOY IN</span><b id="gRespawnN">5</b></div>
 <div class="g-dmg" id="gDmg" aria-hidden="true"></div>
 
 <!-- end screen -->

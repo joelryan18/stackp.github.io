@@ -7,6 +7,61 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
 
 ## Current state (2026-07-18)
 
+- **/game.html v4 — SNIPER SCOPE + GRAPHICS PASS + TEAM DEATHMATCH —
+  IN TREE, UNCOMMITTED (2026-07-20), suite 304 ALL PASS, NOT pushed
+  (user hasn't sanctioned a push this session).**
+  (1) **Scope** — LANCE-1 `scope:true`, zoomFov 30→22, ADS ≥0.75 in fp
+  = `#gScope` DOM lens (blackout plate w/ radial cutout, ring, hairs,
+  mil ticks, lime center dot; `.g-cross.is-scoped` hides crosshair),
+  viewmodel hidden while scoped, harder sens trim (0.72), scope
+  in/out tones. `dropScope()` called in spectate/attract branches.
+  (2) **Graphics** — PMREM RoomEnvironment `scene.environment`
+  (ENV_I 0.45, per-material envMapIntensity trims — full washes the
+  navy), FXAA ShaderPass + grade ShaderPass AFTER OutputPass (radial
+  CA 0.028 — 0.05 doubled edges at frame borders — S-curve 0.20,
+  vignette, live grain; grade is a REAL ShaderMaterial by reference,
+  the about-v3 clone trap), sky gained aurora curtains + moon + horizon
+  glow (uT shared w/ stormU — stormU decl MOVED above the sky block),
+  ground 2-scale mottle, building shader contact-AO (`0.70+0.30*
+  smoothstep(0,2.5,vW.y)`). Governor now also kills fxaa+grade on qLow.
+  `__gameQ().fx` = {fxaa,grade,bloom,env}.
+  (3) **TDM** — lobby `.g-modes` picker (gModeBr/gModeTdm, localStorage
+  `game-mode`, `__gameDrive.mode()`); `resetMatch(mode, humans)` — TDM
+  = fixed ring 85, ground spawns at TDM_BASE ±west/east (teamSpawn →
+  pushOutSphere so never inside a box), teams via assignTdmTeams
+  (humans alternate host-first, bots fill to 6v6, deterministic from
+  roster), `rig.setHue()` re-tints suits (TEAM_HUES lime/magenta;
+  peer rigs REBUILT in startNetMatch for tint+sprite). 5s respawn:
+  player clock in tdmStep (respawnPlayer full refresh + `#gRespawn`
+  overlay), host runs bot respawns + pickup recycle (TDM.PICKUP_RT 20,
+  `pkr` wire msg) + score authority (`sc` msg {a,b,mt,fin} @2Hz +
+  on every kill; guests clamp+adopt, fin=1 → endMatch). Kills credit
+  `teamOfKiller`; `died` msg gained `kt`. First to 30 or 5:00 clock
+  (`TDM.TIME`, storm cell shows countdown). No friendly fire (fireShot
+  + botPickTarget skip same-team), bot-v-bot acc 0.8 + dmg 8-14 in tdm
+  (score must move), bots spot bots at 70u. txBots rows +alive flag →
+  guests revive bots from `bs` (deaths still via bkill); onSnap flips
+  peer alive from `al` in tdm. `endCheck`/`nextSpectate` no-op the
+  BR last-man path in tdm. Storm txStorm suppressed in tdm; `st`
+  ignored in tdm. Host promotion seeds fresh respawn clocks. Minimap:
+  allies always lime; enemies radar-gated. `game-tdm` body class,
+  `.g-score` strip, end screen shows SIGNAL/STATIC lines.
+  QA: `__gameQ` +{mode,team,score,respawnIn,scoped,fx}; `__gameDrive`
+  +{ads,mode,die}. Smoke 2f grew +8, suite 304 total (fx chain, mode picker,
+  scope on/off, tdm grounded 6v6/respawn 5s/score ticks, fallback pins
+  "Team Deathmatch"+"telescopic scope"); frames check + scope check
+  hardened (poll + warp clear of the drop path). Drivers:
+  /tmp/game-v4-qa.mjs (solo: scope/tdm/graphics/br-regression ALL
+  PASS), /tmp/game-squad-v4-qa.mjs (REAL Supabase two-tab: invite-link
+  auto-join, presence, single host, TDM go w/ `md`, guest team 1 east
+  base grounded, replicas both ways, score sync to guest, guest 5s
+  respawn seen by host, leave shrinks roster — ALL PASS; eval GOTCHA:
+  send pure EXPRESSIONS to Runtime.evaluate, statement wrappers
+  swallow values). Supabase: NO schema changes (Realtime
+  broadcast+presence only). game.html copy updated (scope/TDM/post
+  chain paragraphs; all smoke-pinned strings kept). NEXT: user-
+  sanctioned push + live verify on stackwith.me.
+
 - **/game.html "Signal Strike" — ARSENAL + CHARACTER RIGS + 3RD-PERSON
   PASS + IMPACT & FEEDBACK PASS — SHIPPED LIVE 2026-07-19** (commit
   `a169910`, push user-sanctioned "push all"; Actions deploy success;
