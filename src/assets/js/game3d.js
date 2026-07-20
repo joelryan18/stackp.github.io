@@ -384,6 +384,11 @@ function start() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070c);
   scene.fog = new THREE.FogExp2(0x070a12, 0.0044);
+  /* fog density as a live uniform — the sniper scope THINS it while
+     glassed (light-gathering optic), else long-range targets drown
+     in haze at 5x. Shared by scene.fog + the ground/building shaders
+     (which compute their own fog). */
+  const fogU = { value: 0.0044 };
 
   /* image-based light: one PMREM'd studio env so every standard
      material (rigs, guns, crates, the antenna) picks up real
@@ -474,7 +479,7 @@ function start() {
   /* ---------- ground ---------- */
   {
     const gMat = new THREE.ShaderMaterial({
-      uniforms: { ...stormU, uFogC: { value: new THREE.Color(0x070a12) } },
+      uniforms: { ...stormU, uFogC: { value: new THREE.Color(0x070a12) }, uFogD: fogU },
       vertexShader: `
         varying vec3 vW;
         void main(){
@@ -484,7 +489,7 @@ function start() {
         }`,
       fragmentShader: `
         varying vec3 vW;
-        uniform float uR, uTR, uT; uniform vec2 uC, uTC; uniform vec3 uFogC;
+        uniform float uR, uTR, uT, uFogD; uniform vec2 uC, uTC; uniform vec3 uFogC;
         float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
         void main(){
           /* carbon plate + fine grid */
@@ -515,7 +520,7 @@ function start() {
           col += vec3(0.85) * tEdge * 0.085;
           /* radial shade toward horizon + cheap fog */
           col *= 1.0 - smoothstep(60.0, 240.0, d0) * 0.35;
-          float fogF = 1.0 - exp(-0.0044 * 0.0044 * dot(vW.xz - cameraPosition.xz, vW.xz - cameraPosition.xz));
+          float fogF = 1.0 - exp(-uFogD * uFogD * dot(vW.xz - cameraPosition.xz, vW.xz - cameraPosition.xz));
           gl_FragColor = vec4(mix(col, uFogC, clamp(fogF, 0.0, 1.0)), 1.0);
         }`,
     });
@@ -570,7 +575,7 @@ function start() {
     const bGeo = new THREE.BoxGeometry(1, 1, 1);
     bGeo.translate(0, 0.5, 0); /* origin at feet — scale.y = height */
     const bMat = new THREE.ShaderMaterial({
-      uniforms: { uT: stormU.uT, uFogC: { value: new THREE.Color(0x070a12) } },
+      uniforms: { uT: stormU.uT, uFogC: { value: new THREE.Color(0x070a12) }, uFogD: fogU },
       vertexShader: `
         attribute vec3 iCol;
         varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vCol; varying vec3 vScale;
@@ -584,7 +589,7 @@ function start() {
         }`,
       fragmentShader: `
         varying vec2 vUv; varying vec3 vN; varying vec3 vW; varying vec3 vCol; varying vec3 vScale;
-        uniform float uT; uniform vec3 uFogC;
+        uniform float uT, uFogD; uniform vec3 uFogC;
         float hx(vec2 p){ return fract(sin(dot(p, vec2(269.5, 183.3))) * 43758.5453); }
         void main(){
           vec3 base = vec3(0.045, 0.052, 0.070);
@@ -607,7 +612,7 @@ function start() {
           /* contact shade: the first ~2.5u above grade darkens — cheap AO
              that seats every tower on the plate instead of floating it */
           col *= 0.70 + 0.30 * smoothstep(0.0, 2.5, vW.y);
-          float fogF = 1.0 - exp(-0.0044 * 0.0044 * dot(vW.xz - cameraPosition.xz, vW.xz - cameraPosition.xz));
+          float fogF = 1.0 - exp(-uFogD * uFogD * dot(vW.xz - cameraPosition.xz, vW.xz - cameraPosition.xz));
           gl_FragColor = vec4(mix(col, uFogC, clamp(fogF, 0.0, 1.0)), 1.0);
         }`,
     });
@@ -839,7 +844,7 @@ function start() {
      releasing returns to whatever view you were in. Breath sway is
      real camera motion (shots follow the reticle exactly); SHIFT
      holds the breath. Scope-shadow parallax is presentation only. */
-  let scoped = false, breath = 0;
+  let scoped = false, breath = 0, scopeK = 0;   /* scopeK eases 0→1 while glassed */
   const scopeShadow = { x: 0, y: 0, tx: 0, ty: 0 };
   function dropScope() {
     if (!scoped) return;
@@ -3003,21 +3008,23 @@ function start() {
      so uniform writes stay live (ShaderPass CLONES plain shader
      objects; that trap shipped about v3's grade frozen). */
   const gradeMat = new THREE.ShaderMaterial({
-    uniforms: { tDiffuse: { value: null }, uT: { value: 0 } },
+    uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uScope: { value: 0 } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: `
-      varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uT;
+      varying vec2 vUv; uniform sampler2D tDiffuse; uniform float uT, uScope;
       float gn(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       void main(){
         vec2 d = vUv - 0.5;
         float r2 = dot(d, d);
-        vec2 ca = d * r2 * 0.028;
+        /* scoped: CA + vignette bow out, the optic gathers light */
+        vec2 ca = d * r2 * 0.028 * (1.0 - uScope);
         vec3 col = vec3(
           texture2D(tDiffuse, vUv - ca).r,
           texture2D(tDiffuse, vUv).g,
           texture2D(tDiffuse, vUv + ca).b);
         col = mix(col, col * col * (3.0 - 2.0 * col), 0.20);   /* gentle S-curve pop */
-        col *= 1.0 - smoothstep(0.16, 0.62, r2) * 0.32;        /* vignette */
+        col *= 1.0 - smoothstep(0.16, 0.62, r2) * 0.32 * (1.0 - uScope);   /* vignette */
+        col *= 1.0 + uScope * 0.42;                            /* scoped exposure lift */
         col += (gn(vUv * 913.7 + fract(uT * 0.613) * 61.3) - 0.5) * 0.028;
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -3060,6 +3067,12 @@ function start() {
       setFxaaRes();
     }
     gradeMat.uniforms.uT.value = t;
+    /* scoped light-gathering: ease fog off + exposure up while glassed.
+       fogU feeds the ground/building shaders; scene.fog covers the rest. */
+    scopeK += ((scoped ? 1 : 0) - scopeK) * Math.min(1, dt * 10);
+    fogU.value = 0.0044 * (1 - scopeK * 0.82);
+    scene.fog.density = fogU.value;
+    gradeMat.uniforms.uScope.value = scopeK;
 
     const beacon = stormWall.userData.beacon;
     if (beacon) beacon.material.color.setHex(Math.sin(t * 2.4) > 0 ? COL.lime : 0x2a4a12);

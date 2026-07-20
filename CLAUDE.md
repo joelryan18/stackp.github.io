@@ -45,6 +45,15 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   container translate; `.g-scope` inset −80px so edges never peek).
   dropScope() resets transform/steady. Probe gained tp-scope +
   release-returns-to-tp checks (ALL PASS); suite 304 ALL PASS.
+  **+ SCOPE CLARITY FIX (2026-07-20, user: "cant see through it"):**
+  two occluders — the lens's 12vmin/.94 inset shadow ate the glass,
+  and DISTANCE FOG at 5× (200u+ targets sit in e^-(0.0044·d)² haze;
+  the ground/building shaders hardcoded 0.0044). Fix: fog density is
+  now the shared uniform `fogU` (scene.fog + ground + buildings);
+  `scopeK` eases 0→1 while glassed → fog ×(1−0.82·scopeK), grade
+  gained `uScope` (kills CA+vignette, +42% exposure lift inside the
+  glass), lens inset shadow cut to a 2.6vmin/.55 rim. Light-gathering
+  CoD read: bright lens vs dark surround, crisp towers at 150u+.
   (1) **Scope** — LANCE-1 `scope:true`, zoomFov 30→22, ADS ≥0.75 in fp
   = `#gScope` DOM lens (blackout plate w/ radial cutout, ring, hairs,
   mil ticks, lime center dot; `.g-cross.is-scoped` hides crosshair),
