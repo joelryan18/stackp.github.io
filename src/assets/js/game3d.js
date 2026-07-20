@@ -78,7 +78,7 @@ const WEAPONS = [
   },
   {
     id: "dmr", name: "LANCE-1", rpm: 150, mag: 12, reload: 2.6,
-    dmg: 70, hsMult: 2.3, kick: 2.2, ads: true, zoomFov: 22, scope: true,
+    dmg: 70, hsMult: 2.3, kick: 2.2, ads: true, zoomFov: 14, scope: true,
     pat: [[0.0, 1.55]], patTail: 1,
     spreadBase: 0.020, spreadAds: 0.0006, spreadMove: 0.030, spreadAir: 0.05,
     rStart: 48, rPick: 12, rMax: 60, trace: 0xbfe8ff, blurb: "MARKSMAN · TELESCOPIC SCOPE",
@@ -835,12 +835,18 @@ function start() {
   const addTrauma = (k) => { shake.t = Math.min(1, shake.t + k); };
 
   /* sniper scope (LANCE ADS): DOM lens overlay + hidden viewmodel.
-     The aim ray is untouched — the scope is presentation only. */
-  let scoped = false;
+     Works from EITHER camera — scoping snaps to the glass (CoD),
+     releasing returns to whatever view you were in. Breath sway is
+     real camera motion (shots follow the reticle exactly); SHIFT
+     holds the breath. Scope-shadow parallax is presentation only. */
+  let scoped = false, breath = 0;
+  const scopeShadow = { x: 0, y: 0, tx: 0, ty: 0 };
   function dropScope() {
     if (!scoped) return;
     scoped = false;
-    document.getElementById("gScope")?.classList.remove("is-on");
+    scopeShadow.x = scopeShadow.y = scopeShadow.tx = scopeShadow.ty = 0;
+    const el = document.getElementById("gScope");
+    if (el) { el.classList.remove("is-on", "is-steady"); el.style.transform = ""; }
     document.getElementById("gCross")?.classList.remove("is-scoped");
   }
 
@@ -2080,10 +2086,15 @@ function start() {
   const SENS = 0.00185;
   addEventListener("mousemove", (e) => {
     if (!locked) return;   /* SIM aims via __gameDrive.look, not events */
-    const zoomK = 1 - P.ads * (curW().scope ? 0.72 : 0.6);   /* ads lowers sens; scope trims harder */
+    const zoomK = 1 - P.ads * (curW().scope ? 0.84 : 0.6);   /* ads lowers sens; the deep scope trims hard */
     P.yaw -= e.movementX * SENS * zoomK;
     P.pitch -= e.movementY * SENS * zoomK;
     P.pitch = Math.max(-1.45, Math.min(1.45, P.pitch));
+    if (scoped) {
+      /* scope shadow: the tube lags a fast swing (CoD parallax) */
+      scopeShadow.tx = Math.max(-30, Math.min(30, scopeShadow.tx - e.movementX * 0.5));
+      scopeShadow.ty = Math.max(-24, Math.min(24, scopeShadow.ty - e.movementY * 0.5));
+    }
   });
 
   function enterMatch() {
@@ -3106,21 +3117,42 @@ function start() {
       vm.position.y += (0 - vm.position.y) * Math.min(1, dt * 6);
       vm.rotation.z = Math.sin(bobT) * 0.006 * Math.min(1, hs / WALK);
 
-      /* sniper scope: fp + LANCE + settled ADS = the lens overlay owns
-         the frame; the viewmodel ducks out so glass, not gun, reads */
-      const wantScope = VIEW === 0 && !!w.scope && P.ads > 0.75 && P.reloading <= 0;
-      if (wantScope !== scoped) {
-        scoped = wantScope;
-        scopeEl?.classList.toggle("is-on", scoped);
-        crossEl.classList.toggle("is-scoped", scoped);
-        scoped ? tone({ freq: 1180, dur: 0.06, gain: 0.1 }) : tone({ freq: 840, dur: 0.05, gain: 0.07 });
+      /* sniper scope: LANCE + settled ADS = the glass owns the frame
+         from EITHER camera (CoD snap-in); the viewmodel and the
+         third-person rig both duck out so only scope + world read */
+      const wantScope = !!w.scope && P.ads > 0.75 && P.reloading <= 0;
+      if (wantScope && !scoped) {
+        scoped = true;
+        scopeEl?.classList.add("is-on");
+        crossEl.classList.add("is-scoped");
+        tone({ freq: 1180, dur: 0.06, gain: 0.1 });
+        nBurst({ dur: 0.12, type: "lowpass", freq: 900, gain: 0.12 });
+      } else if (!wantScope && scoped) {
+        dropScope();
+        tone({ freq: 840, dur: 0.05, gain: 0.07 });
+      }
+      if (scoped) {
+        /* breath sway — REAL camera motion (shots follow the reticle
+           exactly); SHIFT holds the breath near-still */
+        const steady = !!keys.ShiftLeft;
+        breath += dt * (steady ? 0.25 : 1);
+        const amp = steady ? 0.16 : 1;
+        pitchG.rotation.x += Math.sin(breath * 1.9) * 0.0016 * amp;
+        yawG.rotation.y += Math.sin(breath * 1.3 + 1.7) * 0.0019 * amp;
+        scopeEl?.classList.toggle("is-steady", steady);
+        /* scope-shadow parallax eases back to center */
+        scopeShadow.tx -= scopeShadow.tx * Math.min(1, dt * 8);
+        scopeShadow.ty -= scopeShadow.ty * Math.min(1, dt * 8);
+        scopeShadow.x += (scopeShadow.tx - scopeShadow.x) * Math.min(1, dt * 18);
+        scopeShadow.y += (scopeShadow.ty - scopeShadow.y) * Math.min(1, dt * 18);
+        if (scopeEl) scopeEl.style.transform = `translate(${scopeShadow.x.toFixed(1)}px, ${scopeShadow.y.toFixed(1)}px)`;
       }
       /* first ↔ third person: the aim ray never changes (camera basis
          is rotation-identical on the boom) — only the lens moves.
          Boom pulls in when world geometry would occlude the player. */
-      vm.visible = VIEW === 0 && !scoped; vmLamp.visible = VIEW === 0;
-      myRig.g.visible = VIEW === 1;
-      if (VIEW === 1) {
+      vm.visible = VIEW === 0 && !scoped; vmLamp.visible = VIEW === 0 && !scoped;
+      myRig.g.visible = VIEW === 1 && !scoped;
+      if (VIEW === 1 && !scoped) {
         /* over-shoulder boom; ADS tucks it closer */
         const wantB = (P.gliding ? 6.2 : 4.1) - P.ads * 2.2;
         _tpO.set(P.pos.x, playerEye(), P.pos.z);

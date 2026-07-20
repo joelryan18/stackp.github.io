@@ -31,6 +31,20 @@ Multi-section site live at https://stackwith.me via GitHub Pages, repo
   check asserts ao presence only (governor may shed it on
   swiftshader). Suite 304 ALL PASS + /tmp/game-v4-qa.mjs ALL PASS on
   the AO bundle.
+  **+ CoD SCOPE REWORK (2026-07-20, shipped with the SSAO commit
+  push):** user reported scope "not working" — root cause was the
+  persisted THIRD-PERSON view (localStorage `game-view`): old scope
+  required fp. Now `wantScope` ignores VIEW — scoping snaps to the
+  glass from either camera (tp block gated `VIEW===1 && !scoped`,
+  myRig/vm/vmLamp all hidden while scoped), releasing returns to tp.
+  zoomFov 22→14 (~5×), sens trim 0.84 while scoped, quick-scope black
+  blink (`.g-scope.is-on::after` anim), breath sway = REAL camera
+  motion added to pitchG/yawG AFTER recoil (shots follow reticle;
+  SHIFT = steady, `is-steady` hides the "HOLD SHIFT · STEADY" em),
+  scope-shadow parallax (mousemove deltas → scopeShadow spring →
+  container translate; `.g-scope` inset −80px so edges never peek).
+  dropScope() resets transform/steady. Probe gained tp-scope +
+  release-returns-to-tp checks (ALL PASS); suite 304 ALL PASS.
   (1) **Scope** — LANCE-1 `scope:true`, zoomFov 30→22, ADS ≥0.75 in fp
   = `#gScope` DOM lens (blackout plate w/ radial cutout, ring, hairs,
   mil ticks, lime center dot; `.g-cross.is-scoped` hides crosshair),
